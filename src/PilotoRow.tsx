@@ -4,9 +4,10 @@ import type { Piloto } from "./types";
 interface PilotoRowProps {
     piloto: Piloto;
     onTimeChange: (pilotoId: number, pasadaId: number, tramoId: number, tiempo: number | null) => void;
+    onDeletePiloto: (pilotoId: number) => void;
 }
 
-const PilotoRow: React.FC<PilotoRowProps> = ({ piloto, onTimeChange }) => {
+const PilotoRow: React.FC<PilotoRowProps> = ({ piloto, onTimeChange, onDeletePiloto}) => {
     return (
         <tr>
             <td>{piloto.nombre} {piloto.apellido}</td>
@@ -32,6 +33,9 @@ const PilotoRow: React.FC<PilotoRowProps> = ({ piloto, onTimeChange }) => {
                 </React.Fragment>
             ))}
             <td>{piloto.total.toFixed(2)}</td>
+            <td>
+                <button onClick={() => onDeletePiloto(piloto.id)}>Eliminar</button>
+            </td>
         </tr>
     );
 };
