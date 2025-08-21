@@ -1,4 +1,4 @@
-import React, {useState, useCallback} from "react";
+import React, {useState, useCallback, useEffect} from "react";
 import type { Piloto, Pasada, Tramo } from "../types";
 import PilotoRow from "../PilotoRow"; // Asegúrate de importar PilotoRow
 
@@ -29,9 +29,24 @@ const initialState: Piloto[] = [
 ];
 
 const RallyTable: React.FC = () => {
-    const [pilotos, setPilotos] = useState<Piloto[]>(initialState);
+    const [pilotos, setPilotos] = useState<Piloto[]>(() => {
+        // We get the data form localStorage
+        const savedPilotos = localStorage.getItem('pilotos');
+        //if there is data we parse it, and return it
+        if (savedPilotos) {
+            return JSON.parse(savedPilotos);
+        }
+        return initialState;
+        }
+    );
     const [nuevoPilotoNombre, setNuevoPilotoNombre] = useState('');
     const [nuevoPilotoApellido, setNuevoPilotoApellido] = useState('');
+
+    // Hook to save racers when it changes
+    useEffect(() => {
+        //We save the data in localStorage
+        localStorage.setItem('pilotos', JSON.stringify(pilotos));
+    }, [pilotos]);
 
     const recalcularTotales = (piloto: Piloto): Piloto => {
         let totalGeneral = 0;
