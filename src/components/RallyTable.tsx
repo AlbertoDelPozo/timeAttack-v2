@@ -92,6 +92,10 @@ const RallyTable: React.FC = () => {
         setNuevoPilotoApellido('');
     };
 
+    const handleDeletePiloto = useCallback((pilotoId: number) => {
+        setPilotos(pilotosActuales => pilotosActuales.filter(p => p.id !== pilotoId));
+    }, []);
+
     const tableHeaders = [];
     for (let i = 0; i < NUM_PASADAS; i++) {
         for (let j = 0; j < NUM_TRAMOS_POR_PASADA; j++) {
@@ -118,6 +122,7 @@ const RallyTable: React.FC = () => {
                             key={piloto.id}
                             piloto={piloto}
                             onTimeChange={handleTimeChange}
+                            onDeletePiloto={handleDeletePiloto}
                         />
                     ))}
                 </tbody>
