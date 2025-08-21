@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import './App.css'
 import RallyTable from './components/RallyTable';
 
