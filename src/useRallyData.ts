@@ -25,6 +25,8 @@ export const useRallyData = () => {
     const [pilotoToDelete, setPilotoToDelete] = useState<Piloto | null>(null);
 
     const [selectedPasada, setSelectedPasada] = useState<number | null>(0);
+
+    const [modoVista, setModoVista] = useState<'edicion' | 'lectura'>('edicion');
     // Efecto para guardar en localStorage
     useEffect(() => {
         localStorage.setItem('pilotos', JSON.stringify(pilotos));
@@ -98,5 +100,7 @@ export const useRallyData = () => {
         handleDeletePiloto,
         selectedPasada,
         setSelectedPasada,
+        setModoVista,
+        modoVista,
     };
 };
