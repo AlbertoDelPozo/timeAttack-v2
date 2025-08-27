@@ -13,9 +13,12 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@headlessui/react": "^2.2.7",
+    "@heroicons/react": "^2.2.0",
     "@mui/material": "^7.3.1",
+    "@tailwindcss/vite": "^4.1.12",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "tailwindcss": "^4.1.12"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",
