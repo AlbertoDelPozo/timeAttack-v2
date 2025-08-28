@@ -1,5 +1,3 @@
-// src/PilotoRow.tsx
-
 import React from "react";
 import type { Piloto, Pasada } from "./types";
 import { TrashIcon } from '@heroicons/react/24/outline';
@@ -27,22 +25,22 @@ const PilotoRow: React.FC<PilotoRowProps> = ({ piloto, onTimeChange, onDeletePil
                     {piloto.pasadas.map(pasada => (
                         <td 
                             key={`pasada-subtotal-${pasada.id}`} 
-                            className="px-2 py-2 sm:px-3 sm:py-3 whitespace-nowrap text-center text-sm font-medium text-gray-800 bg-gray-50"
+                            className="text-center text-nowrap align-middle"
                         >
                             {pasada.subtotal.toFixed(2)}
                         </td>
                     ))}
-                    <td className="px-2 py-2 sm:px-3 sm:py-3 whitespace-nowrap text-center text-sm sm:text-base font-bold text-gray-900 bg-gray-100">
+                    <td className="text-center text-nowrap align-middle table-active fw-bold">
                         {piloto.total.toFixed(2)}
                     </td>
-                    <td className="px-2 py-2 sm:px-3 sm:py-3 whitespace-nowrap text-center text-sm font-medium">
+                    <td className="text-center text-nowrap align-middle">
                         {!isReadOnly && (
                             <button
                                 onClick={() => onDeletePiloto(piloto)}
-                                className="p-1 sm:p-2 text-red-600 hover:text-red-900 transition-colors"
+                                className="btn btn-sm btn-outline-danger"
                                 aria-label="Eliminar piloto"
                             >
-                                <TrashIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                                <TrashIcon style={{ width: '1.25rem', height: '1.25rem' }} />
                             </button>
                         )}
                     </td>
@@ -59,19 +57,19 @@ const PilotoRow: React.FC<PilotoRowProps> = ({ piloto, onTimeChange, onDeletePil
                                               tramo.tiempo !== null && 
                                               roundToTwoDecimals(tramo.tiempo) === roundToTwoDecimals(fastestTimes[tramo.id]);
                     
+                    const cellClass = `text-center text-nowrap align-middle ${esTiempoMasRapido ? 'table-success fw-bold' : ''}`;
+                    
                     return (
                         <td 
                             key={`${piloto.id}-${pasadaSeleccionada.id}-${tramo.id}`} 
-                            className={`px-1 py-1 sm:px-2 sm:py-2 whitespace-nowrap text-center text-xs sm:text-sm
-                                ${esTiempoMasRapido ? 'bg-green-200 font-bold text-gray-900' : 'text-gray-500'}
-                            `}
+                            className={cellClass}
                         >
                             {isReadOnly ? (
                                 tramo.tiempo !== null ? tramo.tiempo.toFixed(2) : '-'
                             ) : (
                                 <input
                                     type="number"
-                                    className="w-12 sm:w-16 text-center border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                    className="form-control text-center"
                                     value={tramo.tiempo ?? ''}
                                     onChange={(e) => onTimeChange(piloto.id, selectedPasada, tramo.id, e.target.value === '' ? null : Number(e.target.value))}
                                 />
@@ -79,17 +77,17 @@ const PilotoRow: React.FC<PilotoRowProps> = ({ piloto, onTimeChange, onDeletePil
                         </td>
                     );
                 })}
-                <td className="px-2 py-2 sm:px-3 sm:py-3 whitespace-nowrap text-center text-sm font-medium text-gray-800 bg-gray-50">
+                <td className="text-center text-nowrap align-middle table-active">
                     {pasadaSeleccionada.subtotal.toFixed(2)}
                 </td>
-                <td className="px-2 py-2 sm:px-3 sm:py-3 whitespace-nowrap text-center text-sm font-medium">
+                <td className="text-center text-nowrap align-middle">
                     {!isReadOnly && (
                         <button
                             onClick={() => onDeletePiloto(piloto)}
-                            className="p-1 sm:p-2 text-red-600 hover:text-red-900 transition-colors"
+                            className="btn btn-sm btn-outline-danger"
                             aria-label="Eliminar piloto"
                         >
-                            <TrashIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                            <TrashIcon style={{ width: '1.25rem', height: '1.25rem' }} />
                         </button>
                     )}
                 </td>
@@ -98,8 +96,8 @@ const PilotoRow: React.FC<PilotoRowProps> = ({ piloto, onTimeChange, onDeletePil
     };
 
     return (
-        <tr className="hover:bg-gray-100">
-            <td className="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+        <tr>
+            <td className="text-nowrap align-middle">
                 {piloto.nombre} {piloto.apellido}
             </td>
             {renderRunData()}
