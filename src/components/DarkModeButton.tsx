@@ -1,4 +1,4 @@
-import React, { useState, useEffect, FC } from 'react';
+import { useState, useEffect, type FC } from 'react';
 import { Button } from 'react-bootstrap';
 
 const DarkModeButton: FC = () => {
