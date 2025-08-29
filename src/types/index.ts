@@ -14,6 +14,8 @@ export interface Piloto {
     id: number;
     nombre: string;
     apellido: string;
+    category: string;
+    car: string;
     pasadas: Pasada[];
     total: number;
 }
