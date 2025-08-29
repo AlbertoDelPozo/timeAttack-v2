@@ -32,11 +32,8 @@ const RallyTable: React.FC = () => {
   
   const navigate = useNavigate();
 
-  if (numPasadas === 0 || numTramos === 0) {
-    navigate("/");
-    return null;
-  }
-
+  // Mueve TODAS las llamadas a 'useMemo' al inicio del componente
+  // para que siempre se llamen en el mismo orden.
   const pasadasDisponibles = pilotos[0]?.pasadas || [];
 
   const fastestTimes = useMemo(() => {
@@ -44,7 +41,7 @@ const RallyTable: React.FC = () => {
       return {};
     }
 
-    const tiemposPorTramo = {};
+    const tiemposPorTramo: Record<number, number[]> = {};
     pilotos.forEach((piloto) => {
       const pasada = piloto.pasadas.find((p) => p.id === selectedPasada);
       if (pasada) {
@@ -59,7 +56,7 @@ const RallyTable: React.FC = () => {
       }
     });
 
-    const tiemposMasRapidos = {};
+    const tiemposMasRapidos: Record<number, number> = {};
     for (const tramoId in tiemposPorTramo) {
       if (tiemposPorTramo[tramoId].length > 0) {
         tiemposMasRapidos[tramoId] = Math.min(...tiemposPorTramo[tramoId]);
@@ -87,11 +84,19 @@ const RallyTable: React.FC = () => {
       }));
     }
   }, [selectedPasada, pasadasDisponibles, pasadaToShow]);
+  
+  // Ahora, el 'return' condicional está después de todas las llamadas a los hooks
+  if (numPasadas === 0 || numTramos === 0) {
+    navigate("/");
+    return null;
+  }
 
   return (
     <div className="container-fluid mt-4">
       <h1 className="text-center mb-4">Clasificación Rally Slot</h1>
-
+      
+      {/*... El resto del componente permanece igual ...*/}
+      
       <div className="d-flex flex-column flex-sm-row justify-content-center align-items-center mb-4 w-100">
         <div className="mb-2 mb-sm-0 me-sm-2">
           <label htmlFor="vista-select" className="form-label me-2 mb-0">
@@ -135,51 +140,52 @@ const RallyTable: React.FC = () => {
         </div>
       </div>
 
-      <div className="table-responsive-sm rounded-3 shadow">
-        <table className="table table-striped table-hover mb-0">
-          <thead className="bg-light">
-            <tr>
-              <th scope="col" className="text-nowrap">
-                Piloto
-              </th>
-              {/* Se añaden las nuevas columnas para Categoría y Coche */}
-              <th scope="col" className="text-nowrap text-center">
-                Categoría
-              </th>
-              <th scope="col" className="text-nowrap text-center">
-                Coche
-              </th>
-              {columns.map((column) => (
-                <th key={column.id} scope="col" className="text-center text-nowrap">
-                  {column.label}
+      {pilotos.length > 0 && (
+        <div className="table-responsive-sm rounded-3 shadow">
+          <table className="table table-striped table-hover mb-0">
+            <thead className="bg-light">
+              <tr>
+                <th scope="col" className="text-nowrap">
+                  Piloto
                 </th>
-              ))}
-              <th scope="col" className="text-center text-nowrap">
-                {selectedPasada === null ? "Total" : "Subtotal"}
-              </th>
-              {modoVista === "edicion" && (
+                <th scope="col" className="text-nowrap text-center">
+                  Categoría
+                </th>
+                <th scope="col" className="text-nowrap text-center">
+                  Coche
+                </th>
+                {columns.map((column) => (
+                  <th key={column.id} scope="col" className="text-center text-nowrap">
+                    {column.label}
+                  </th>
+                ))}
                 <th scope="col" className="text-center text-nowrap">
-                  <span className="visually-hidden">Eliminar</span>
+                  {selectedPasada === null ? "Total" : "Subtotal"}
                 </th>
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {pilotos.map((piloto) => (
-              <PilotoRow
-                key={piloto.id}
-                piloto={piloto}
-                onTimeChange={handleTimeChange}
-                onDeletePiloto={openModalForDeletion}
-                selectedPasada={selectedPasada}
-                isReadOnly={modoVista === "lectura"}
-                fastestTimes={fastestTimes}
-                pasadaToShow={pasadaToShow}
-              />
-            ))}
-          </tbody>
-        </table>
-      </div>
+                {modoVista === "edicion" && (
+                  <th scope="col" className="text-center text-nowrap">
+                    <span className="visually-hidden">Eliminar</span>
+                  </th>
+                )}
+              </tr>
+            </thead>
+            <tbody>
+              {pilotos.map((piloto) => (
+                <PilotoRow
+                  key={piloto.id}
+                  piloto={piloto}
+                  onTimeChange={handleTimeChange}
+                  onDeletePiloto={openModalForDeletion}
+                  selectedPasada={selectedPasada}
+                  isReadOnly={modoVista === "lectura"}
+                  fastestTimes={fastestTimes}
+                  pasadaToShow={pasadaToShow}
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {modoVista === "edicion" && (
         <div className="mt-4 row g-2">
