@@ -1,108 +1,114 @@
 import React from "react";
-import type { Piloto, Pasada } from "./types";
-import { TrashIcon } from '@heroicons/react/24/outline';
+import type { Piloto, Tramo, Pasada } from "./types";
 
 interface PilotoRowProps {
-    piloto: Piloto;
-    onTimeChange: (pilotoId: number, pasadaId: number, tramoId: number, tiempo: number | null) => void;
-    onDeletePiloto: (piloto: Piloto) => void;
-    selectedPasada: number | null;
-    isReadOnly: boolean;
-    fastestTimes: { [tramoId: number]: number };
+  piloto: Piloto;
+  onTimeChange: (
+    pilotoId: number,
+    pasadaId: number,
+    tramoId: number,
+    tiempo: number | null
+  ) => void;
+  onDeletePiloto: (piloto: Piloto) => void;
+  selectedPasada: number | null;
+  isReadOnly: boolean;
+  fastestTimes: { [key: number]: number };
+  pasadaToShow: Pasada | null;
 }
 
-// Función auxiliar para redondear a 2 decimales y evitar errores de precisión
-const roundToTwoDecimals = (num: number): number => {
-    return Math.round(num * 100) / 100;
-};
+const PilotoRow: React.FC<PilotoRowProps> = ({
+  piloto,
+  onTimeChange,
+  onDeletePiloto,
+  selectedPasada,
+  isReadOnly,
+  fastestTimes,
+  pasadaToShow,
+}) => {
+  const getDisplayValue = (value: number | null): string => {
+    if (value === null) return "";
+    return (value / 1000).toFixed(2);
+  };
 
-const PilotoRow: React.FC<PilotoRowProps> = ({ piloto, onTimeChange, onDeletePiloto, selectedPasada, isReadOnly, fastestTimes }) => {
+  const getStyle = (
+    tramo: Tramo,
+    fastestTimes: { [key: number]: number }
+  ): React.CSSProperties => {
+    if (tramo.tiempo === fastestTimes[tramo.id]) {
+      return { backgroundColor: "#d4edda", fontWeight: "bold" };
+    }
+    return {};
+  };
 
-    const renderRunData = () => {
-        if (selectedPasada === null) {
-            return (
-                <>
-                    {piloto.pasadas.map(pasada => (
-                        <td 
-                            key={`pasada-subtotal-${pasada.id}`} 
-                            className="text-center text-nowrap align-middle"
-                        >
-                            {pasada.subtotal.toFixed(2)}
-                        </td>
-                    ))}
-                    <td className="text-center text-nowrap align-middle table-active fw-bold">
-                        {piloto.total.toFixed(2)}
-                    </td>
-                    <td className="text-center text-nowrap align-middle">
-                        {!isReadOnly && (
-                            <button
-                                onClick={() => onDeletePiloto(piloto)}
-                                className="btn btn-sm btn-outline-danger"
-                                aria-label="Eliminar piloto"
-                            >
-                                <TrashIcon style={{ width: '1.25rem', height: '1.25rem' }} />
-                            </button>
-                        )}
-                    </td>
-                </>
-            );
-        }
+  return (
+    <tr>
+      <td>{`${piloto.nombre} ${piloto.apellido}`}</td>
+      {/* Se añaden las celdas para Categoría y Coche */}
+      <td>{piloto.category}</td>
+      <td>{piloto.car}</td>
+      {selectedPasada === null ? (
+        piloto.pasadas.map((pasada) => (
+          <td key={pasada.id} className="text-center">
+            {getDisplayValue(pasada.subtotal)}
+          </td>
+        ))
+      ) : (
+        pasadaToShow?.tramos.map((tramo) => {
+          const pilotoTramo = piloto.pasadas
+            .find((p) => p.id === selectedPasada)
+            ?.tramos.find((t) => t.id === tramo.id);
+          const tramoTiempo = pilotoTramo ? pilotoTramo.tiempo : null;
 
-        const pasadaSeleccionada = piloto.pasadas.find(pasada => pasada.id === selectedPasada) as Pasada;
-
-        return (
-            <>
-                {pasadaSeleccionada.tramos.map(tramo => {
-                    const esTiempoMasRapido = isReadOnly && 
-                                              tramo.tiempo !== null && 
-                                              roundToTwoDecimals(tramo.tiempo) === roundToTwoDecimals(fastestTimes[tramo.id]);
-                    
-                    const cellClass = `text-center text-nowrap align-middle ${esTiempoMasRapido ? 'table-success fw-bold' : ''}`;
-                    
-                    return (
-                        <td 
-                            key={`${piloto.id}-${pasadaSeleccionada.id}-${tramo.id}`} 
-                            className={cellClass}
-                        >
-                            {isReadOnly ? (
-                                tramo.tiempo !== null ? tramo.tiempo.toFixed(2) : '-'
-                            ) : (
-                                <input
-                                    type="number"
-                                    className="form-control text-center"
-                                    value={tramo.tiempo ?? ''}
-                                    onChange={(e) => onTimeChange(piloto.id, selectedPasada, tramo.id, e.target.value === '' ? null : Number(e.target.value))}
-                                />
-                            )}
-                        </td>
-                    );
-                })}
-                <td className="text-center text-nowrap align-middle table-active">
-                    {pasadaSeleccionada.subtotal.toFixed(2)}
-                </td>
-                <td className="text-center text-nowrap align-middle">
-                    {!isReadOnly && (
-                        <button
-                            onClick={() => onDeletePiloto(piloto)}
-                            className="btn btn-sm btn-outline-danger"
-                            aria-label="Eliminar piloto"
-                        >
-                            <TrashIcon style={{ width: '1.25rem', height: '1.25rem' }} />
-                        </button>
-                    )}
-                </td>
-            </>
-        );
-    };
-
-    return (
-        <tr>
-            <td className="text-nowrap align-middle">
-                {piloto.nombre} {piloto.apellido}
+          return (
+            <td key={tramo.id} className="text-center">
+              {isReadOnly ? (
+                <span style={getStyle(tramo, fastestTimes)}>
+                  {getDisplayValue(tramoTiempo)}
+                </span>
+              ) : (
+                <input
+                  type="number"
+                  step="any"
+                  value={tramoTiempo === null ? "" : tramoTiempo / 1000}
+                  onChange={(e) =>
+                    onTimeChange(
+                      piloto.id,
+                      selectedPasada,
+                      tramo.id,
+                      e.target.value === ""
+                        ? null
+                        : parseFloat(e.target.value) * 1000
+                    )
+                  }
+                  className="form-control form-control-sm text-center"
+                  style={getStyle(tramo, fastestTimes)}
+                  disabled={isReadOnly}
+                />
+              )}
             </td>
-            {renderRunData()}
-        </tr>
-    );
+          );
+        })
+      )}
+      <td className="text-center">
+        {getDisplayValue(
+          selectedPasada === null
+            ? piloto.total
+            : piloto.pasadas.find((p) => p.id === selectedPasada)?.subtotal ||
+                null
+        )}
+      </td>
+      {!isReadOnly && (
+        <td className="text-center">
+          <button
+            onClick={() => onDeletePiloto(piloto)}
+            className="btn btn-danger btn-sm"
+          >
+            &times;
+          </button>
+        </td>
+      )}
+    </tr>
+  );
 };
 
 export default PilotoRow;
