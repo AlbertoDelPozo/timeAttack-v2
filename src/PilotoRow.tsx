@@ -1,5 +1,5 @@
 import React from "react";
-import type { Piloto, Tramo, Pasada } from "./types";
+import type { Piloto, Pasada } from "./types";
 
 interface PilotoRowProps {
   piloto: Piloto;
@@ -30,25 +30,27 @@ const PilotoRow: React.FC<PilotoRowProps> = ({
     return (value / 1000).toFixed(2);
   };
 
-  const getStyle = (
-    tramo: Tramo,
-    fastestTimes: { [key: number]: number }
-  ): React.CSSProperties => {
-    if (tramo.tiempo === fastestTimes[tramo.id]) {
-      return { backgroundColor: "#d4edda", fontWeight: "bold" };
-    }
-    return {};
+  const isFastestTime = (tramoId: number, tiempo: number | null): boolean => {
+    return tiempo !== null && tiempo === fastestTimes[tramoId];
   };
 
   return (
-    <tr>
-      <td>{`${piloto.nombre} ${piloto.apellido}`}</td>
-      {/* Se añaden las celdas para Categoría y Coche */}
-      <td>{piloto.category}</td>
-      <td>{piloto.car}</td>
+    <tr className="hover:bg-gray-700 transition-colors duration-200">
+      <td className="px-4 py-3 whitespace-nowrap text-white font-medium">
+        {`${piloto.nombre} ${piloto.apellido}`}
+      </td>
+      <td className="px-4 py-3 whitespace-nowrap text-center text-sm text-gray-400">
+        {piloto.category}
+      </td>
+      <td className="px-4 py-3 whitespace-nowrap text-center text-sm text-gray-400">
+        {piloto.car}
+      </td>
       {selectedPasada === null ? (
         piloto.pasadas.map((pasada) => (
-          <td key={pasada.id} className="text-center">
+          <td
+            key={pasada.id}
+            className="px-4 py-3 text-center whitespace-nowrap text-sm text-gray-400"
+          >
             {getDisplayValue(pasada.subtotal)}
           </td>
         ))
@@ -60,9 +62,13 @@ const PilotoRow: React.FC<PilotoRowProps> = ({
           const tramoTiempo = pilotoTramo ? pilotoTramo.tiempo : null;
 
           return (
-            <td key={tramo.id} className="text-center">
+            <td key={tramo.id} className="px-4 py-3 text-center">
               {isReadOnly ? (
-                <span style={getStyle(tramo, fastestTimes)}>
+                <span className={
+                    isFastestTime(tramo.id, tramoTiempo)
+                      ? "font-bold text-green-400"
+                      : "text-gray-200"
+                  }>
                   {getDisplayValue(tramoTiempo)}
                 </span>
               ) : (
@@ -80,16 +86,14 @@ const PilotoRow: React.FC<PilotoRowProps> = ({
                         : parseFloat(e.target.value) * 1000
                     )
                   }
-                  className="form-control form-control-sm text-center"
-                  style={getStyle(tramo, fastestTimes)}
-                  disabled={isReadOnly}
+                  className={`w-24 p-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 placeholder-gray-500 transition-colors duration-200 ${isFastestTime(tramo.id, tramoTiempo) ? "font-bold text-green-400" : ""}`}
                 />
               )}
             </td>
           );
         })
       )}
-      <td className="text-center">
+      <td className="px-4 py-3 text-center whitespace-nowrap text-sm font-bold text-white">
         {getDisplayValue(
           selectedPasada === null
             ? piloto.total
@@ -98,10 +102,10 @@ const PilotoRow: React.FC<PilotoRowProps> = ({
         )}
       </td>
       {!isReadOnly && (
-        <td className="text-center">
+        <td className="px-4 py-3 text-center whitespace-nowrap">
           <button
             onClick={() => onDeletePiloto(piloto)}
-            className="btn btn-danger btn-sm"
+            className="text-red-600 hover:text-red-400 transition-colors duration-200"
           >
             &times;
           </button>
