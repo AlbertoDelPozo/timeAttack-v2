@@ -1,4 +1,14 @@
+@import "tailwindcss";
+/* Este código CSS se debe agregar a tu archivo de estilos principal, como index.css */
+.spin-button-none::-webkit-outer-spin-button,
+.spin-button-none::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
 
+.spin-button-none {
+  -moz-appearance: textfield; /* Para Firefox */
+}
 /* :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
