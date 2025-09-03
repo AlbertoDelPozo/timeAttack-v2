@@ -8,8 +8,8 @@ function App() {
   return (
     <BrowserRouter>
       <RallyDataProvider>
-        <div className="min-h-screen bg-gray-950 text-white font-sans">
-          <main className="container mx-auto p-4 md:p-8">
+        <div className="min-h-screen bg-gray-950 text-white font-sans p-4 md:p-8">
+          <main>
             <Routes>
               <Route path="/" element={<ConfigPage />} />
               <Route path="/rally" element={<RallyTable />} />

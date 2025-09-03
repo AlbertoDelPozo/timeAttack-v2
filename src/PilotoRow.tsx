@@ -36,20 +36,22 @@ const PilotoRow: React.FC<PilotoRowProps> = ({
 
   return (
     <tr className="hover:bg-gray-700 transition-colors duration-200">
-      <td className="px-4 py-3 whitespace-nowrap text-white font-medium">
-        {`${piloto.nombre} ${piloto.apellido}`}
+      <td className="px-2 py-2 text-white font-medium text-xs flex flex-col items-center justify-center overflow-hidden">
+        <span className="flex-shrink flex-grow-0">
+          {`${piloto.nombre} ${piloto.apellido}`}
+        </span>
       </td>
-      <td className="px-4 py-3 whitespace-nowrap text-center text-sm text-gray-400">
+      <td className="px-2 py-2 text-center text-xs text-gray-400">
         {piloto.category}
       </td>
-      <td className="px-4 py-3 whitespace-nowrap text-center text-sm text-gray-400">
+      <td className="px-2 py-2 text-center text-xs text-gray-400">
         {piloto.car}
       </td>
       {selectedPasada === null ? (
         piloto.pasadas.map((pasada) => (
           <td
             key={pasada.id}
-            className="px-4 py-3 text-center whitespace-nowrap text-sm text-gray-400"
+            className="px-2 py-2 text-center text-xs text-gray-400"
           >
             {getDisplayValue(pasada.subtotal)}
           </td>
@@ -62,13 +64,13 @@ const PilotoRow: React.FC<PilotoRowProps> = ({
           const tramoTiempo = pilotoTramo ? pilotoTramo.tiempo : null;
 
           return (
-            <td key={tramo.id} className="px-4 py-3 text-center">
+            <td key={tramo.id} className="px-2 py-2 text-center">
               {isReadOnly ? (
                 <span className={
-                    isFastestTime(tramo.id, tramoTiempo)
-                      ? "font-bold text-green-400"
-                      : "text-gray-200"
-                  }>
+                  isFastestTime(tramo.id, tramoTiempo)
+                    ? "font-bold text-green-400"
+                    : "text-gray-200"
+                }>
                   {getDisplayValue(tramoTiempo)}
                 </span>
               ) : (
@@ -86,23 +88,23 @@ const PilotoRow: React.FC<PilotoRowProps> = ({
                         : parseFloat(e.target.value) * 1000
                     )
                   }
-                  className={`w-24 p-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 placeholder-gray-500 transition-colors duration-200 ${isFastestTime(tramo.id, tramoTiempo) ? "font-bold text-green-400" : ""}`}
+                  className={`w-20 p-1 rounded-lg bg-gray-700 text-white text-sm border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 placeholder-gray-500 transition-colors duration-200 ${isFastestTime(tramo.id, tramoTiempo) ? "font-bold text-green-400" : ""}`}
                 />
               )}
             </td>
           );
         })
       )}
-      <td className="px-4 py-3 text-center whitespace-nowrap text-sm font-bold text-white">
+      <td className="px-2 py-2 text-center text-xs font-bold text-white">
         {getDisplayValue(
           selectedPasada === null
             ? piloto.total
             : piloto.pasadas.find((p) => p.id === selectedPasada)?.subtotal ||
-                null
+            null
         )}
       </td>
       {!isReadOnly && (
-        <td className="px-4 py-3 text-center whitespace-nowrap">
+        <td className="px-2 py-2 text-center">
           <button
             onClick={() => onDeletePiloto(piloto)}
             className="text-red-600 hover:text-red-400 transition-colors duration-200"
