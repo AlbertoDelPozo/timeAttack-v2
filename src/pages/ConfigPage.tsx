@@ -37,7 +37,7 @@ const ConfigPage = () => {
               type="number"
               className="w-full p-3 rounded-lg bg-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 transition duration-200 spin-button-none"
               value={numPasadas}
-              onChange={(e) => setNumPasadas(Number(e.target.value))}
+              onChange={(e) => setNumPasadas(parseInt(e.target.value, 10))}
               min="1"
               required
             />
@@ -54,7 +54,7 @@ const ConfigPage = () => {
               type="number"
               className="w-full p-3 rounded-lg bg-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 transition duration-200 spin-button-none"
               value={numTramos}
-              onChange={(e) => setNumTramos(Number(e.target.value))}
+              onChange={(e) => setNumTramos(parseInt(e.target.value, 10))}
               min="1"
               required
             />
