@@ -4,6 +4,7 @@ import PilotoRow from "../PilotoRow";
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
 import { useRallyData } from "../useRallyData";
 
+
 const RallyTable: React.FC = () => {
     const {
         pilotos,

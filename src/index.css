@@ -9,6 +9,26 @@
 .spin-button-none {
   -moz-appearance: textfield; /* Para Firefox */
 }
+
+/* Estilos de tema por defecto (claro) */
+:root {
+  --bg-color: #f3f4f6;
+  --text-color: #1f2937;
+  --card-bg: #e5e7eb;
+  --nav-bg: #4b5563;
+  --accent-color: #4f46e5;
+  --button-hover-bg: #4338ca;
+}
+
+/* Estilos para el tema oscuro */
+.theme-dark {
+  --bg-color: #111827;
+  --text-color: #d1d5db;
+  --card-bg: #1f2937;
+  --nav-bg: #1f2937;
+  --accent-color: #6366f1;
+  --button-hover-bg: #4f46e5;
+}
 /* :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
