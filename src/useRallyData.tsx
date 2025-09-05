@@ -1,4 +1,4 @@
-import React, { useState, useContext, createContext, useMemo } from "react";
+import React, { useState, useContext, createContext, useMemo, useCallback } from "react";
 import { Piloto } from "./types";
 
 interface RallyDataContextType {
@@ -32,6 +32,7 @@ interface RallyDataContextType {
   handleSaveConfig: () => void;
   setNumPasadas: React.Dispatch<React.SetStateAction<number>>;
   setNumTramos: React.Dispatch<React.SetStateAction<number>>;
+  resetRallyData: () => void; // Añadida la nueva función de reseteo
 }
 
 const RallyContext = createContext<RallyDataContextType | undefined>(undefined);
@@ -64,6 +65,16 @@ export const RallyDataProvider: React.FC<{ children: React.ReactNode }> = ({
     "edicion"
   );
 
+  // Nueva función para resetear el estado y el localStorage
+  const resetRallyData = useCallback(() => {
+    setPilotos([]);
+    setNumPasadas(0);
+    setNumTramos(0);
+    localStorage.removeItem("rallyPilotos");
+    localStorage.removeItem("rallyNumPasadas");
+    localStorage.removeItem("rallyNumTramos");
+  }, []);
+
   const calculateTotal = (pasadas: Piloto["pasadas"]): number => {
     return pasadas.reduce((total, pasada) => {
       const subtotal = pasada.tramos.reduce(
@@ -75,36 +86,39 @@ export const RallyDataProvider: React.FC<{ children: React.ReactNode }> = ({
     }, 0);
   };
 
-  const handleTimeChange = (
-    pilotoId: number,
-    pasadaId: number,
-    tramoId: number,
-    tiempo: number | null
-  ) => {
-    setPilotos((prevPilotos) => {
-      const newPilotos = prevPilotos.map((piloto) => {
-        if (piloto.id === pilotoId) {
-          const newPasadas = piloto.pasadas.map((pasada) => {
-            if (pasada.id === pasadaId) {
-              const newTramos = pasada.tramos.map((tramo) =>
-                tramo.id === tramoId ? { ...tramo, tiempo } : tramo
-              );
-              return { ...pasada, tramos: newTramos };
-            }
-            return pasada;
-          });
+  const handleTimeChange = useCallback(
+    (
+      pilotoId: number,
+      pasadaId: number,
+      tramoId: number,
+      tiempo: number | null
+    ) => {
+      setPilotos((prevPilotos) => {
+        const newPilotos = prevPilotos.map((piloto) => {
+          if (piloto.id === pilotoId) {
+            const newPasadas = piloto.pasadas.map((pasada) => {
+              if (pasada.id === pasadaId) {
+                const newTramos = pasada.tramos.map((tramo) =>
+                  tramo.id === tramoId ? { ...tramo, tiempo } : tramo
+                );
+                return { ...pasada, tramos: newTramos };
+              }
+              return pasada;
+            });
 
-          const total = calculateTotal(newPasadas);
-          return { ...piloto, pasadas: newPasadas, total };
-        }
-        return piloto;
+            const total = calculateTotal(newPasadas);
+            return { ...piloto, pasadas: newPasadas, total };
+          }
+          return piloto;
+        });
+        localStorage.setItem("rallyPilotos", JSON.stringify(newPilotos));
+        return newPilotos;
       });
-      localStorage.setItem("rallyPilotos", JSON.stringify(newPilotos));
-      return newPilotos;
-    });
-  };
+    },
+    []
+  );
 
-  const handleAddPiloto = () => {
+  const handleAddPiloto = useCallback(() => {
     if (nuevoPilotoNombre.trim() && nuevoPilotoApellido.trim()) {
       setPilotos((prevPilotos) => {
         const newPiloto: Piloto = {
@@ -133,14 +147,14 @@ export const RallyDataProvider: React.FC<{ children: React.ReactNode }> = ({
       setNuevoPilotoCategory("");
       setNuevoPilotoCar("");
     }
-  };
+  }, [nuevoPilotoNombre, nuevoPilotoApellido, nuevoPilotoCategory, nuevoPilotoCar, numPasadas, numTramos]);
 
-  const openModalForDeletion = (piloto: Piloto) => {
+  const openModalForDeletion = useCallback((piloto: Piloto) => {
     setPilotoToDelete(piloto);
     setIsModalOpen(true);
-  };
+  }, []);
 
-  const handleDeletePiloto = () => {
+  const handleDeletePiloto = useCallback(() => {
     if (pilotoToDelete) {
       const updatedPilotos = pilotos.filter(
         (piloto) => piloto.id !== pilotoToDelete.id
@@ -150,12 +164,12 @@ export const RallyDataProvider: React.FC<{ children: React.ReactNode }> = ({
       setIsModalOpen(false);
       setPilotoToDelete(null);
     }
-  };
+  }, [pilotos, pilotoToDelete]);
 
-  const handleSaveConfig = () => {
+  const handleSaveConfig = useCallback(() => {
     localStorage.setItem("rallyNumPasadas", String(numPasadas));
     localStorage.setItem("rallyNumTramos", String(numTramos));
-  };
+  }, [numPasadas, numTramos]);
 
   const sortedPilotos = useMemo(() => {
     return [...pilotos].sort((a, b) => a.total - b.total);
@@ -188,6 +202,7 @@ export const RallyDataProvider: React.FC<{ children: React.ReactNode }> = ({
       handleSaveConfig,
       setNumPasadas,
       setNumTramos,
+      resetRallyData,
     }),
     [
       sortedPilotos,
@@ -206,6 +221,7 @@ export const RallyDataProvider: React.FC<{ children: React.ReactNode }> = ({
       selectedPasada,
       modoVista,
       handleSaveConfig,
+      resetRallyData,
     ]
   );
 
