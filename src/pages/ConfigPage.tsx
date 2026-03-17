@@ -19,7 +19,7 @@ const ConfigPage = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-950 font-sans p-4">
+    <div className="flex items-center justify-center content-center min-h-screen bg-gray-950 font-sans p-4">
       <div className="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-sm border border-gray-700">
         <h1 className="text-3xl md:text-4xl text-white font-bold text-center mb-6">
           Configuración del Rally

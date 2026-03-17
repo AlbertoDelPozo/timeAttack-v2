@@ -1,5 +1,25 @@
 @import "tailwindcss";
-/* Este código CSS se debe agregar a tu archivo de estilos principal, como index.css */
+
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
+
+:root {
+  /* High-Performance Palette Overrides */
+  --b1: 0 0% 9%;      /* #171717 base-100 (Negro profundo) */
+  --b2: 0 0% 12%;     /* un pelín más claro para contrastes menores */
+  --b3: 0 0% 27%;     /* #444444 base-300 (Gris oscuro) */
+  --bc: 0 0% 93%;     /* #ededed (Blanco roto) */
+  --p: 345 100% 43%;  /* #DA0037 primary (Rojo competición) */
+  --pc: 0 0% 100%;    /* texto blanco sobre primario */
+}
+
+body {
+  background-color: #171717;
+  color: #EDEDED;
+}
+
 .spin-button-none::-webkit-outer-spin-button,
 .spin-button-none::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -9,135 +29,3 @@
 .spin-button-none {
   -moz-appearance: textfield; /* Para Firefox */
 }
-
-/* Estilos de tema por defecto (claro) */
-:root {
-  --bg-color: #f3f4f6;
-  --text-color: #1f2937;
-  --card-bg: #e5e7eb;
-  --nav-bg: #4b5563;
-  --accent-color: #4f46e5;
-  --button-hover-bg: #4338ca;
-}
-
-/* Estilos para el tema oscuro */
-.theme-dark {
-  --bg-color: #111827;
-  --text-color: #d1d5db;
-  --card-bg: #1f2937;
-  --nav-bg: #1f2937;
-  --accent-color: #6366f1;
-  --button-hover-bg: #4f46e5;
-}
-/* :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
-}
-
-
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
-} */
