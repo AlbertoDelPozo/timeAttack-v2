@@ -13,6 +13,8 @@ export default function Gestion() {
   const [nuevoDorsal, setNuevoDorsal] = useState('');
   const [nuevaCategoria, setNuevaCategoria] = useState('');
 
+  const [pilotoAEliminar, setPilotoAEliminar] = useState<any | null>(null);
+
   // Configuración de Carrera
   const [tramos, setTramos] = useState<number | ''>('');
   const [pasadas, setPasadas] = useState<number | ''>('');
@@ -85,16 +87,29 @@ export default function Gestion() {
     cargarDatos();
   };
 
-  const handleDeletePiloto = async (id: string | number) => {
-    if (window.confirm("¿Estás seguro de que quieres eliminar este piloto?")) {
-      const { error } = await supabase.from('pilots').delete().eq('id', id);
-      if (error) {
-        console.error("Error exacto de Supabase al borrar piloto:", error);
-        alert(`Error al borrar piloto: ${error.message}`);
-      } else {
-        setPilotos((prev) => prev.filter(p => p.id !== id));
-      }
+  const confirmarBorradoPiloto = async () => {
+    if (!pilotoAEliminar) return;
+
+    // Paso A: Borrar tiempos asociados
+    const { error: errTiempos } = await supabase.from('lap_times').delete().eq('pilot_id', pilotoAEliminar.id);
+    if (errTiempos) {
+      console.error("Error al borrar tiempos asociados:", errTiempos);
+      alert(`Error al vaciar tiempos del piloto: ${errTiempos.message}`);
+      return;
     }
+
+    // Paso B: Borrar piloto
+    const { error: errPiloto } = await supabase.from('pilots').delete().eq('id', pilotoAEliminar.id);
+    if (errPiloto) {
+      console.error("Error exacto de Supabase al borrar piloto:", errPiloto);
+      alert(`Error al borrar piloto: ${errPiloto.message}`);
+      return;
+    }
+
+    // Paso C: Refrescar y cerrar modal
+    setPilotos((prev) => prev.filter(p => p.id !== pilotoAEliminar.id));
+    setTiempos((prev) => prev.filter(t => t.pilot_id !== pilotoAEliminar.id));
+    setPilotoAEliminar(null);
   };
 
   const handleDeleteCategoria = async (id: string | number) => {
@@ -225,7 +240,7 @@ export default function Gestion() {
                         <td className="text-center py-2 px-2 md:py-4 md:px-4">
                           <button 
                             className="btn btn-ghost btn-md text-[#ef4444] hover:bg-[#ef4444]/10 hover:text-[#ff0000] rounded-full transition-colors"
-                            onClick={() => handleDeletePiloto(p.id)}
+                            onClick={() => setPilotoAEliminar(p)}
                             title="Eliminar Piloto"
                           >
                             <Trash2 size={20} />
@@ -340,6 +355,36 @@ export default function Gestion() {
         </div>
 
       </div>
+
+      {/* Modal de Confirmación para Elitear Pilotos */}
+      {pilotoAEliminar && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#1e1e1e] p-6 md:p-8 rounded-3xl max-w-md w-full border border-error/50 shadow-[0_0_30px_rgba(255,0,0,0.15)] flex flex-col items-center text-center">
+            <div className="w-16 h-16 rounded-full bg-error/10 flex items-center justify-center text-error mb-6 ring-2 ring-error">
+              <Trash2 size={32} />
+            </div>
+            <h3 className="text-2xl font-bold text-[#ededed] mb-4">⚠️ Eliminar Piloto</h3>
+            <p className="text-[#a1a1aa] mb-8 text-base leading-relaxed">
+              ¿Estás seguro de que quieres eliminar a <strong className="text-error">{pilotoAEliminar.name}</strong>? Si lo haces, se borrarán TAMBIÉN todos los tiempos que tenga registrados en cualquier pasada de la competición. <br/><br/>Esta acción no se puede deshacer.
+            </p>
+            <div className="flex gap-4 w-full">
+              <button 
+                className="btn flex-1 bg-[#333333] hover:bg-[#444444] border-none text-[#ededed] rounded-xl h-14"
+                onClick={() => setPilotoAEliminar(null)}
+              >
+                Cancelar
+              </button>
+              <button 
+                className="btn flex-1 bg-error hover:bg-red-700 border-none text-white rounded-xl h-14 font-bold"
+                onClick={confirmarBorradoPiloto}
+              >
+                Eliminar Todo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
