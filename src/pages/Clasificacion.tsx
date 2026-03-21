@@ -91,7 +91,7 @@ export default function Clasificacion() {
       });
 
       const totalGeneral = acumuladoAnterior + totalPasadaActual;
-      const tieneTiempos = tiemposPasadaActual.length > 0 || totalGeneral > 0;
+      const tieneTiempos = tiemposPasadaActual.length > 0;
 
       return {
         ...p,
