@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 
 // Helper to format ms to sec.ms
@@ -11,6 +11,7 @@ export default function Clasificacion() {
   const [pasadaSeleccionada, setPasadaSeleccionada] = useState(1);
   const [config, setConfig] = useState({ num_tramos: 1, num_pasadas: 1 });
   const [tiemposReales, setTiemposReales] = useState<any[]>([]);
+  const [categoriasLista, setCategoriasLista] = useState<any[]>([]);
   const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
@@ -71,6 +72,27 @@ export default function Clasificacion() {
     };
   }, []);
 
+  // Generador de Map de Estilos Dinámicos (El Ángulo Dorado)
+  const estilosCategorias = useMemo(() => {
+    const map: Record<number | string, React.CSSProperties> = {};
+    categoriasLista.forEach((cat, index) => {
+      // El ángulo dorado (137.5 grados) asegura máxima distancia cromática visual entre categorías adyacentes
+      let hue = Math.floor((index * 137.5) % 360);
+      
+      // Proteger el territorio Morado (Récord Absoluto)
+      if (hue > 250 && hue < 310) {
+        hue = (hue + 70) % 360; 
+      }
+
+      map[cat.id] = {
+        color: `hsl(${hue}, 100%, 65%)`,
+        textShadow: `0 0 8px hsla(${hue}, 100%, 65%, 0.6)`,
+        fontWeight: 'bold'
+      };
+    });
+    return map;
+  }, [categoriasLista]);
+
   // Filtrar y mapear los datos listos para renderizar
   const procesarClasificacion = () => {
     // 1. Agrupar por piloto
@@ -84,6 +106,7 @@ export default function Clasificacion() {
           piloto: row.pilots?.name || 'Desconocido',
           dorsal: row.pilots?.dorsal || null, // from updated select
           categoria: row.categories?.name || 'Desconocida',
+          categoria_id: row.category_id,
           tiempos: []
         });
       }
@@ -121,6 +144,39 @@ export default function Clasificacion() {
       };
     });
 
+    // 2.5 Calcular Récords (absolutos y por categoría) de la Pasada
+    const recordsAbsolutos = { tramos: {} as Record<number, number>, totalPasada: Infinity };
+    const recordsCategorias: Record<number, { tramos: Record<number, number>, totalPasada: number }> = {};
+
+    clasificacion.forEach(p => {
+      if (!p.tieneTiempos) return;
+      
+      const catId = p.categoria_id;
+      if (!recordsCategorias[catId]) {
+        recordsCategorias[catId] = { tramos: {}, totalPasada: Infinity };
+      }
+
+      // Record Total Pasada
+      if (p.totalPasadaActual > 0) {
+        if (p.totalPasadaActual < recordsAbsolutos.totalPasada) recordsAbsolutos.totalPasada = p.totalPasadaActual;
+        if (p.totalPasadaActual < recordsCategorias[catId].totalPasada) recordsCategorias[catId].totalPasada = p.totalPasadaActual;
+      }
+
+      // Record Tramos
+      Object.entries(p.tramosActuales).forEach(([tramoStr, tData]: [string, any]) => {
+        const tramoNum = Number(tramoStr);
+        const timeMs = tData.total_time_ms;
+        if (timeMs > 0) {
+          if (!recordsAbsolutos.tramos[tramoNum] || timeMs < recordsAbsolutos.tramos[tramoNum]) {
+            recordsAbsolutos.tramos[tramoNum] = timeMs;
+          }
+          if (!recordsCategorias[catId].tramos[tramoNum] || timeMs < recordsCategorias[catId].tramos[tramoNum]) {
+            recordsCategorias[catId].tramos[tramoNum] = timeMs;
+          }
+        }
+      });
+    });
+
     // 3. Filtrar por categoría y si tienen tiempos, luego ordenar
     const filtradosYOrdenados = clasificacion
       .filter((p) => {
@@ -130,7 +186,7 @@ export default function Clasificacion() {
       .sort((a, b) => a.totalGeneral - b.totalGeneral);
 
     // 4. Calcular diferencias y posiciones
-    return filtradosYOrdenados.map((row, index, arr) => {
+    const finalData = filtradosYOrdenados.map((row, index, arr) => {
       const bestTimeMs = arr[0].totalGeneral;
       const diffMs = row.totalGeneral - bestTimeMs;
 
@@ -140,9 +196,11 @@ export default function Clasificacion() {
         diferencia: diffMs === 0 ? '-' : `+${formatMs(diffMs)}`,
       };
     });
+
+    return { datosFiltrados: finalData, recordsAbsolutos, recordsCategorias };
   };
 
-  const datosFiltrados = procesarClasificacion();
+  const { datosFiltrados, recordsAbsolutos, recordsCategorias } = procesarClasificacion();
 
   return (
     <div className="bg-[#171717] min-h-screen p-2 md:p-8 w-full flex flex-col items-center">
@@ -205,12 +263,7 @@ export default function Clasificacion() {
           {/* Body */}
           <tbody className="text-sm">
             {datosFiltrados.map((row) => {
-              // Categoría -> Color de Badge dinámico
-              let badgeClass = "badge-neutral";
-              if (row.categoria.toUpperCase().includes('WRC')) badgeClass = "badge-error"; // Rojo
-              else if (row.categoria.toUpperCase().includes('CLÁSICOS') || row.categoria.toUpperCase().includes('CLASICOS')) badgeClass = "badge-info"; // Azul
-              else if (row.categoria.toUpperCase().includes('INFANTIL')) badgeClass = "badge-success"; // Verde
-              else if (row.categoria.toUpperCase().includes('SUPER N')) badgeClass = "badge-secondary";
+              const categoryColorStyle = estilosCategorias[row.categoria_id] || {};
 
               return (
               <tr key={row.id} className="hover:bg-[#2a2a2a] transition-colors border-none even:bg-[#262626]/40 odd:bg-transparent">
@@ -248,7 +301,12 @@ export default function Clasificacion() {
 
                 {/* 4. Categoría */}
                 <td className="px-2 py-1 md:px-4 md:py-2 align-middle">
-                  <span className={`badge ${badgeClass} badge-sm font-bold border-none rounded-full px-2`}>{row.categoria}</span>
+                  <span 
+                    className="px-3 py-1 text-xs font-bold rounded-full bg-[#121212] border border-[#333333] tracking-wide inline-block"
+                    style={categoryColorStyle}
+                  >
+                    {row.categoria}
+                  </span>
                 </td>
 
                 {/* 5. Acumulado Anterior (Condicional) */}
@@ -261,9 +319,23 @@ export default function Clasificacion() {
                 {/* 6. Tramos Dinámicos */}
                 {Array.from({ length: config.num_tramos }, (_, i) => i + 1).map(num => {
                   const tramoData = row.tramosActuales[num];
-                  return (
-                    <td key={`tramo-data-${num}`} className="text-right font-mono text-[#ededed] text-sm px-2 py-1 md:px-4 md:py-2 align-middle">
-                      {tramoData ? (
+                  if (tramoData) {
+                    const timeMs = tramoData.total_time_ms;
+                    const esRecordAbsoluto = timeMs === recordsAbsolutos.tramos[num] && timeMs > 0;
+                    const esRecordCategoria = timeMs === recordsCategorias[row.categoria_id]?.tramos[num] && timeMs > 0;
+
+                    let formatClass = "text-[#ededed]";
+                    let formatStyle: React.CSSProperties = {};
+                    
+                    if (esRecordAbsoluto) {
+                      formatClass = "text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.8)]";
+                    } else if (esRecordCategoria) {
+                      formatClass = "";
+                      formatStyle = estilosCategorias[row.categoria_id] || {};
+                    }
+
+                    return (
+                      <td key={`tramo-data-${num}`} className={`text-right font-mono text-sm px-2 py-1 md:px-4 md:py-2 align-middle ${formatClass}`} style={formatStyle}>
                         <div className="flex flex-col items-end">
                           <span>{formatMs(tramoData.track_time_ms)}</span>
                           {tramoData.penalty_ms > 0 && (
@@ -272,17 +344,39 @@ export default function Clasificacion() {
                             </span>
                           )}
                         </div>
-                      ) : (
-                        <span className="text-[#444444]">-</span>
-                      )}
-                    </td>
-                  );
+                      </td>
+                    );
+                  } else {
+                    return (
+                      <td key={`tramo-data-${num}`} className="text-right font-mono text-[#444444] text-sm px-2 py-1 md:px-4 md:py-2 align-middle">
+                        -
+                      </td>
+                    );
+                  }
                 })}
 
                 {/* 7. Total Pasada Actual */}
-                <td className="text-right font-mono text-lg text-[#ededed] px-2 py-1 md:px-4 md:py-2 align-middle font-semibold">
-                  {row.totalPasadaActual > 0 ? formatMs(row.totalPasadaActual) : '-'}
-                </td>
+                {(() => {
+                  const timeMs = row.totalPasadaActual;
+                  const esRecAbs = timeMs === recordsAbsolutos.totalPasada && timeMs > 0;
+                  const esRecCat = timeMs === recordsCategorias[row.categoria_id]?.totalPasada && timeMs > 0;
+                  
+                  let formatClass = "text-[#ededed]";
+                  let formatStyle: React.CSSProperties = {};
+                  
+                  if (esRecAbs) {
+                    formatClass = "text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.8)]";
+                  } else if (esRecCat) {
+                    formatClass = "";
+                    formatStyle = estilosCategorias[row.categoria_id] || {};
+                  }
+
+                  return (
+                    <td className={`text-right font-mono text-lg px-2 py-1 md:px-4 md:py-2 align-middle font-semibold ${formatClass}`} style={formatStyle}>
+                      {timeMs > 0 ? formatMs(timeMs) : '-'}
+                    </td>
+                  );
+                })()}
 
                 {/* 8. Total General (Estilo LED) */}
                 <td className="text-right px-2 py-1 md:px-4 md:py-2 align-middle">
