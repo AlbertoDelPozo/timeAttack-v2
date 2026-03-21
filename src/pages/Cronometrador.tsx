@@ -251,7 +251,7 @@ export default function Cronometrador() {
           <div className="divider my-2 md:my-4">TIEMPOS DE TRAMOS</div>
 
           {/* Fila 3: Grid de Tramos (Multi-Input) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="flex flex-col gap-2 md:gap-4">
             {Array.from({ length: config.num_tramos }, (_, i) => i + 1).map(num => (
               <div key={`tramo-input-${num}`} className="flex flex-col md:flex-row gap-4 items-center bg-[#121212] p-4 rounded-2xl border border-[#333333]">
                 <div className="w-full md:w-32 flex-shrink-0">
