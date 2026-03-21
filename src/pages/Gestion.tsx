@@ -1,10 +1,274 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus, Pencil, Check, X, ChevronDown, ChevronRight, Trophy, Flag, Clock } from 'lucide-react';
 
 const formatMs = (ms: number) => (ms / 1000).toFixed(3);
 
-export default function Gestion() {
+function CampeonatosManager({ userId }: { userId: string }) {
+  const [campeonatos, setCampeonatos] = useState<any[]>([]);
+  const [rallies, setRallies] = useState<any[]>([]);
+  const [sesiones, setSesiones] = useState<any[]>([]);
+  const isMounted = React.useRef(true);
+
+  // States for Accordions
+  const [expandedCamp, setExpandedCamp] = useState<string | null>(null);
+  const [expandedRally, setExpandedRally] = useState<string | null>(null);
+
+  // States for Modals
+  const [modalCamp, setModalCamp] = useState(false);
+  const [formCamp, setFormCamp] = useState({ name: '', tramos: 5, pasadas: 3, multi: false, points: '25, 18, 15, 12, 10, 8, 6, 4, 2, 1' });
+
+  const [modalRally, setModalRally] = useState<{ open: boolean, campId: string | null }>({ open: false, campId: null });
+  const [formRallyName, setFormRallyName] = useState('');
+
+  const [modalSesion, setModalSesion] = useState<{ open: boolean, rallyId: string | null }>({ open: false, rallyId: null });
+  const [formSesion, setFormSesion] = useState({ name: '', datetime: '' });
+
+  const cargarJerarquia = async () => {
+    try {
+      const { data: cData, error: cErr } = await supabase.from('championships').select('*').eq('club_id', userId).order('created_at', { ascending: false });
+      if (cErr) throw cErr;
+      if (isMounted.current) setCampeonatos(cData || []);
+
+      if (cData && cData.length > 0) {
+        const campIds = cData.map((c: any) => c.id);
+        const { data: rData, error: rErr } = await supabase.from('rallies').select('*').in('championship_id', campIds).order('created_at', { ascending: true });
+        if (rErr) throw rErr;
+        if (isMounted.current) setRallies(rData || []);
+
+        if (rData && rData.length > 0) {
+          const rallyIds = rData.map((r: any) => r.id);
+          const { data: sData, error: sErr } = await supabase.from('rally_sessions').select('*').in('rally_id', rallyIds).order('created_at', { ascending: true });
+          if (sErr) throw sErr;
+          if (isMounted.current) setSesiones(sData || []);
+        } else {
+          if (isMounted.current) setSesiones([]);
+        }
+      } else {
+        if (isMounted.current) {
+          setRallies([]);
+          setSesiones([]);
+        }
+      }
+    } catch (error: any) {
+      if (error.name !== 'AbortError') console.error("Error al cargar jerarquía de campeonatos:", error);
+    }
+  };
+
+  useEffect(() => {
+    cargarJerarquia();
+    return () => { isMounted.current = false; };
+  }, [userId]);
+
+  const handleCreateCampeonato = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formCamp.name.trim()) return;
+    const ptsArray = formCamp.points.split(',').map(p => Number(p.trim())).filter(p => !isNaN(p));
+    
+    await supabase.from('championships').insert({
+      club_id: userId,
+      name: formCamp.name,
+      default_tramos: formCamp.tramos,
+      default_pasadas: formCamp.pasadas,
+      multi_category: formCamp.multi,
+      points_system: ptsArray
+    });
+    setModalCamp(false);
+    setFormCamp({ name: '', tramos: 5, pasadas: 3, multi: false, points: '25, 18, 15, 12, 10, 8, 6, 4, 2, 1' });
+    cargarJerarquia();
+  };
+
+  const handleCreateRally = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formRallyName.trim() || !modalRally.campId) return;
+    await supabase.from('rallies').insert({ championship_id: modalRally.campId, name: formRallyName });
+    setModalRally({ open: false, campId: null });
+    setFormRallyName('');
+    cargarJerarquia();
+  };
+
+  const handleCreateSesion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formSesion.name.trim() || !modalSesion.rallyId) return;
+    const payload: any = { rally_id: modalSesion.rallyId, name: formSesion.name };
+    if (formSesion.datetime) payload.datetime = new Date(formSesion.datetime).toISOString();
+    await supabase.from('rally_sessions').insert(payload);
+    setModalSesion({ open: false, rallyId: null });
+    setFormSesion({ name: '', datetime: '' });
+    cargarJerarquia();
+  };
+
+  return (
+    <div className="w-full max-w-7xl flex flex-col gap-6">
+      <div className="flex justify-between items-center bg-[#1e1e1e] p-6 rounded-3xl border border-[#333333] shadow-lg">
+        <div>
+          <h2 className="text-2xl font-bold text-[#ededed] flex items-center gap-3">
+            <Trophy className="text-yellow-500" /> Mis Campeonatos
+          </h2>
+          <p className="text-[#a1a1aa] mt-1">Estructura tus pruebas, rallies y sesiones de cronometraje.</p>
+        </div>
+        <button className="btn bg-[#DA0037] hover:bg-[#b9002f] text-white border-none rounded-xl font-bold shadow-lg shadow-[#DA0037]/20" onClick={() => setModalCamp(true)}>
+          <Plus size={18} /> Nuevo Campeonato
+        </button>
+      </div>
+
+      <div className="flex flex-col gap-4">
+        {campeonatos.map(camp => (
+          <div key={camp.id} className="bg-[#1e1e1e] border border-[#333333] rounded-2xl overflow-hidden shadow-md">
+            <div 
+              className="p-4 flex items-center justify-between cursor-pointer hover:bg-[#262626] transition-colors"
+              onClick={() => setExpandedCamp(expandedCamp === camp.id ? null : camp.id)}
+            >
+              <div className="flex items-center gap-4">
+                {expandedCamp === camp.id ? <ChevronDown className="text-[#DA0037]" /> : <ChevronRight className="text-[#a1a1aa]" />}
+                <h3 className="text-xl font-bold text-[#ededed]">{camp.name}</h3>
+                <span className="badge badge-neutral shadow-sm border border-[#333333] text-xs">Puntos: {camp.points_system.length}</span>
+              </div>
+            </div>
+
+            {expandedCamp === camp.id && (
+              <div className="p-4 border-t border-[#333333] bg-[#121212]/50 flex flex-col gap-4">
+                {/* Rallies */}
+                {rallies.filter(r => r.championship_id === camp.id).length === 0 ? (
+                  <p className="text-[#a1a1aa] italic ml-8 py-2 text-sm">Aún no hay rallies en este campeonato.</p>
+                ) : (
+                  rallies.filter(r => r.championship_id === camp.id).map(rally => (
+                    <div key={rally.id} className="ml-8 bg-[#1e1e1e] border border-[#333333] rounded-xl overflow-hidden shadow-sm">
+                      <div 
+                        className="p-3 flex items-center justify-between cursor-pointer hover:bg-[#262626] transition-colors"
+                        onClick={() => setExpandedRally(expandedRally === rally.id ? null : rally.id)}
+                      >
+                        <div className="flex items-center gap-3">
+                          {expandedRally === rally.id ? <ChevronDown size={18} className="text-blue-500" /> : <ChevronRight size={18} className="text-[#a1a1aa]" />}
+                          <Flag size={18} className="text-blue-500" />
+                          <h4 className="text-lg font-semibold text-[#ededed]">{rally.name}</h4>
+                        </div>
+                      </div>
+
+                      {expandedRally === rally.id && (
+                        <div className="p-3 border-t border-[#333333] bg-[#171717]/80 flex flex-col gap-3">
+                          {sesiones.filter(s => s.rally_id === rally.id).length === 0 ? (
+                            <p className="text-[#a1a1aa] italic ml-8 text-sm">Sin sesiones (cortes) asignadas.</p>
+                          ) : (
+                            sesiones.filter(s => s.rally_id === rally.id).map(sesion => (
+                              <div key={sesion.id} className="ml-8 p-3 bg-[#1e1e1e] border border-[#333333] rounded-lg flex justify-between items-center text-sm shadow-sm">
+                                <span className="font-semibold flex items-center gap-2"><Clock size={16} className="text-green-500"/> {sesion.name}</span>
+                                {sesion.datetime && <span className="text-[#a1a1aa] font-mono">{new Date(sesion.datetime).toLocaleString()}</span>}
+                              </div>
+                            ))
+                          )}
+                          <div className="ml-8 mt-2">
+                            <button className="btn btn-sm btn-ghost text-green-500 hover:bg-green-500/10 border border-green-500/20 rounded-lg text-xs" onClick={() => setModalSesion({ open: true, rallyId: rally.id })}>
+                              <Plus size={14} /> Añadir Corte / Sesión
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+                
+                <div className="ml-8 mt-2">
+                  <button className="btn btn-sm bg-[#333333] hover:bg-[#444444] text-[#ededed] border-none rounded-lg shadow-sm" onClick={() => setModalRally({ open: true, campId: camp.id })}>
+                    <Plus size={16} /> Añadir Rally a este Campeonato
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+        {campeonatos.length === 0 && (
+          <div className="text-center py-12 border border-dashed border-[#333333] rounded-3xl bg-[#1e1e1e]/50">
+            <Trophy size={48} className="mx-auto text-[#333333] mb-4" />
+            <p className="text-[#a1a1aa] text-lg">No has creado ningún campeonato todavía.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Modal Nuevo Campeonato */}
+      {modalCamp && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#1e1e1e] p-6 md:p-8 rounded-3xl max-w-lg w-full border border-[#333333] shadow-2xl">
+            <h3 className="text-2xl font-bold text-[#ededed] mb-6 flex items-center gap-2"><Trophy className="text-yellow-500" /> Crear Campeonato</h3>
+            <form onSubmit={handleCreateCampeonato} className="flex flex-col gap-4">
+              <div>
+                <label className="label"><span className="label-text text-[#a1a1aa] font-bold">Nombre del Campeonato</span></label>
+                <input type="text" required className="input w-full bg-[#121212] border-[#333333] text-white focus:border-[#DA0037] outline-none" value={formCamp.name} onChange={e => setFormCamp({...formCamp, name: e.target.value})} />
+              </div>
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <label className="label"><span className="label-text text-[#a1a1aa] font-bold">Tramos (X Defecto)</span></label>
+                  <input type="number" required min="1" className="input w-full bg-[#121212] border-[#333333] text-white focus:border-[#DA0037] outline-none" value={formCamp.tramos} onChange={e => setFormCamp({...formCamp, tramos: Number(e.target.value)})} />
+                </div>
+                <div className="flex-1">
+                  <label className="label"><span className="label-text text-[#a1a1aa] font-bold">Pasadas (X Defecto)</span></label>
+                  <input type="number" required min="1" className="input w-full bg-[#121212] border-[#333333] text-white focus:border-[#DA0037] outline-none" value={formCamp.pasadas} onChange={e => setFormCamp({...formCamp, pasadas: Number(e.target.value)})} />
+                </div>
+              </div>
+              <div className="form-control">
+                <label className="label cursor-pointer justify-start gap-4 p-0 mt-2">
+                  <input type="checkbox" className="toggle toggle-error bg-[#121212] hover:bg-[#121212]" checked={formCamp.multi} onChange={e => setFormCamp({...formCamp, multi: e.target.checked})} />
+                  <span className="label-text text-[#ededed] font-semibold">Permitir Multi-Categoría (Un piloto en varias)</span>
+                </label>
+              </div>
+              <div className="mt-2">
+                <label className="label flex flex-col items-start gap-1 p-0 mb-2">
+                  <span className="label-text text-[#a1a1aa] font-bold">Sistema de Puntuación</span>
+                  <span className="text-xs text-[#666666]">Posiciones del 1º hacia abajo, separadas por comas.</span>
+                </label>
+                <input type="text" required className="input w-full bg-[#121212] border-[#333333] text-white focus:border-[#DA0037] font-mono outline-none" value={formCamp.points} onChange={e => setFormCamp({...formCamp, points: e.target.value})} />
+              </div>
+              <div className="flex gap-4 mt-6">
+                <button type="button" className="btn flex-1 bg-[#333333] border-none text-white hover:bg-[#444] rounded-xl" onClick={() => setModalCamp(false)}>Cancelar</button>
+                <button type="submit" className="btn flex-1 bg-[#DA0037] border-none text-white hover:bg-[#b9002f] rounded-xl">Crear</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Nuevo Rally */}
+      {modalRally.open && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#1e1e1e] p-6 rounded-3xl max-w-sm w-full border border-[#333333] shadow-2xl">
+            <h3 className="text-xl font-bold text-[#ededed] mb-4 flex items-center gap-2"><Flag className="text-blue-500" /> Nuevo Rally / Prueba</h3>
+            <form onSubmit={handleCreateRally} className="flex flex-col gap-4">
+              <input type="text" placeholder="Ej: Rally de Sierra Morena" required className="input w-full bg-[#121212] border-[#333333] text-white focus:border-[#DA0037] outline-none" value={formRallyName} onChange={e => setFormRallyName(e.target.value)} />
+              <div className="flex gap-2">
+                <button type="button" className="btn flex-1 btn-sm h-10 bg-[#333333] border-none text-white hover:bg-[#444] rounded-lg" onClick={() => setModalRally({ open: false, campId: null })}>Cancelar</button>
+                <button type="submit" className="btn flex-1 btn-sm h-10 bg-blue-600 border-none text-white hover:bg-blue-700 rounded-lg">Añadir</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Nueva Sesión */}
+      {modalSesion.open && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#1e1e1e] p-6 rounded-3xl max-w-sm w-full border border-[#333333] shadow-2xl">
+            <h3 className="text-xl font-bold text-[#ededed] mb-4 flex items-center gap-2"><Clock className="text-green-500" /> Añadir Corte / Sesión</h3>
+            <form onSubmit={handleCreateSesion} className="flex flex-col gap-4">
+              <input type="text" placeholder="Nombre (Ej: Domingo - Mañana)" required className="input w-full bg-[#121212] border-[#333333] text-white focus:border-green-500 outline-none" value={formSesion.name} onChange={e => setFormSesion({...formSesion, name: e.target.value})} />
+              <div className="flex flex-col gap-1">
+                <label className="text-xs text-[#a1a1aa] font-bold uppercase">Fecha y Hora (Opcional)</label>
+                <input type="datetime-local" className="input w-full bg-[#121212] border-[#333333] text-white focus:border-green-500 outline-none" value={formSesion.datetime} onChange={e => setFormSesion({...formSesion, datetime: e.target.value})} />
+              </div>
+              <div className="flex gap-2 mt-2">
+                <button type="button" className="btn flex-1 btn-sm h-10 bg-[#333333] border-none text-white hover:bg-[#444] rounded-lg" onClick={() => setModalSesion({ open: false, rallyId: null })}>Cancelar</button>
+                <button type="submit" className="btn flex-1 btn-sm h-10 bg-green-600 border-none text-white hover:bg-green-700 rounded-lg">Guardar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function Gestion({ userId }: { userId?: string }) {
+  const [activeTab, setActiveTab] = useState<'evento' | 'campeonatos'>('evento');
+
   const [pilotos, setPilotos] = useState<any[]>([]);
   const [categorias, setCategorias] = useState<any[]>([]);
   const [tiempos, setTiempos] = useState<any[]>([]);
@@ -20,28 +284,55 @@ export default function Gestion() {
   const [pasadas, setPasadas] = useState<number | ''>('');
   const [mensajeConfig, setMensajeConfig] = useState<{ texto: string, tipo: 'success' | 'error' } | null>(null);
 
+  // Edición Inline de Tiempos
+  const [editandoTramoId, setEditandoTramoId] = useState<string | number | null>(null);
+  const [tiempoEditado, setTiempoEditado] = useState('');
+  const [penalizacionEditada, setPenalizacionEditada] = useState('');
+  const [mensajeTiempos, setMensajeTiempos] = useState<{ texto: string, tipo: 'success' | 'error' } | null>(null);
+
+  const isMounted = React.useRef(true);
+  useEffect(() => {
+    isMounted.current = true;
+    return () => { isMounted.current = false; };
+  }, []);
+
   const cargarDatos = async () => {
-    // Cargar Pilotos
-    const { data: pData } = await supabase.from('pilots').select('*').order('name');
-    if (pData) setPilotos(pData);
+    if (!userId) return;
 
-    // Cargar Categorías
-    const { data: cData } = await supabase.from('categories').select('*').order('name');
-    if (cData) setCategorias(cData);
+    try {
+      // Cargar Pilotos
+      const { data: pData, error: pError } = await supabase.from('pilots').select('*').eq('club_id', userId).order('name');
+      if (pError) throw pError;
+      if (isMounted.current && pData) setPilotos(pData);
 
-    // Cargar últimos 10 tiempos
-    const { data: tData } = await supabase
-      .from('lap_times')
-      .select('*, pilots(name), categories(name)')
-      .order('created_at', { ascending: false })
-      .limit(10);
-    if (tData) setTiempos(tData);
+      // Cargar Categorías
+      const { data: cData, error: cError } = await supabase.from('categories').select('*').eq('club_id', userId).order('name');
+      if (cError) throw cError;
+      if (isMounted.current && cData) setCategorias(cData);
 
-    // Cargar Configuración de Carrera
-    const { data: configData } = await supabase.from('race_config').select('*').eq('id', 1).single();
-    if (configData) {
-      setTramos(configData.num_tramos || 1);
-      setPasadas(configData.num_pasadas || 1);
+      // Cargar últimos 10 tiempos
+      const { data: tData, error: tError } = await supabase
+        .from('lap_times')
+        .select('*, pilots(name), categories(name)')
+        .eq('club_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(10);
+      if (tError) throw tError;
+      if (isMounted.current && tData) setTiempos(tData);
+
+      // Cargar Configuración de Carrera
+      const { data: configData, error: configError } = await supabase.from('race_config').select('*').eq('club_id', userId).maybeSingle();
+      if (configError) throw configError;
+      if (isMounted.current && configData) {
+        setTramos(configData.num_tramos || 1);
+        setPasadas(configData.num_pasadas || 1);
+      }
+    } catch (error: any) {
+      if (error.name === 'AbortError' || error?.message?.includes('Lock broken') || error?.message?.includes('Fetch is aborted')) {
+        console.warn("Petición de gestión abortada por concurrencia (ignorando).");
+        return;
+      }
+      console.error('Error fetching datos de gestión:', error);
     }
   };
 
@@ -51,9 +342,11 @@ export default function Gestion() {
 
   const handleInsertPiloto = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nuevoPiloto.trim()) return;
+    if (!nuevoPiloto.trim() || !userId) return;
+
     const dorsalValue = nuevoDorsal.trim() ? parseInt(nuevoDorsal, 10) : null;
-    await supabase.from('pilots').insert({ name: nuevoPiloto, dorsal: dorsalValue });
+    await supabase.from('pilots').insert({ name: nuevoPiloto, dorsal: dorsalValue, club_id: userId });
+    
     setNuevoPiloto('');
     setNuevoDorsal('');
     cargarDatos();
@@ -63,12 +356,24 @@ export default function Gestion() {
     e.preventDefault();
     setMensajeConfig(null);
     
-    if (tramos === '' || pasadas === '') return;
-    
-    const { error } = await supabase
-      .from('race_config')
-      .update({ num_tramos: Number(tramos), num_pasadas: Number(pasadas) })
-      .eq('id', 1);
+    if (tramos === '' || pasadas === '' || !userId) return;
+
+    // Verificar si existe configuración para este club
+    const { data: exist } = await supabase.from('race_config').select('id').eq('club_id', userId).maybeSingle();
+
+    let error;
+    if (exist) {
+      const { error: updateError } = await supabase
+        .from('race_config')
+        .update({ num_tramos: Number(tramos), num_pasadas: Number(pasadas) })
+        .eq('club_id', userId);
+      error = updateError;
+    } else {
+      const { error: insertError } = await supabase
+        .from('race_config')
+        .insert({ num_tramos: Number(tramos), num_pasadas: Number(pasadas), club_id: userId });
+      error = insertError;
+    }
       
     if (error) {
       console.error("Error al actualizar la configuración:", error);
@@ -81,8 +386,9 @@ export default function Gestion() {
 
   const handleInsertCategoria = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nuevaCategoria.trim()) return;
-    await supabase.from('categories').insert({ name: nuevaCategoria });
+    if (!nuevaCategoria.trim() || !userId) return;
+
+    await supabase.from('categories').insert({ name: nuevaCategoria, club_id: userId });
     setNuevaCategoria('');
     cargarDatos();
   };
@@ -136,10 +442,61 @@ export default function Gestion() {
     }
   };
 
+  const guardarEdicionTiempo = async (id: string | number) => {
+    const trackMs = Math.round(parseFloat(tiempoEditado) * 1000);
+    const penaltyMs = Math.round(parseFloat(penalizacionEditada) * 1000);
+
+    if (isNaN(trackMs) || isNaN(penaltyMs)) {
+      setMensajeTiempos({ texto: "Error: Por favor, introduce números válidos.", tipo: 'error' });
+      setTimeout(() => setMensajeTiempos(null), 3000);
+      return;
+    }
+
+    const totalMs = trackMs + penaltyMs;
+
+    console.log("Intentando guardar -> ID:", id, "| Pista (ms):", trackMs, "| Penalty (ms):", penaltyMs);
+
+    const { data, error } = await supabase
+      .from('lap_times')
+      .update({ track_time_ms: trackMs, penalty_ms: penaltyMs, total_time_ms: totalMs })
+      .eq('id', id)
+      .select();
+
+    console.log("Respuesta BD:", data, "Error BD:", error);
+
+    if (error) {
+      console.error("Error al actualizar:", error);
+      setMensajeTiempos({ texto: `Error al guardar: ${error.message}`, tipo: 'error' });
+    } else {
+      setEditandoTramoId(null);
+      cargarDatos();
+      setMensajeTiempos({ texto: "Tiempo actualizado con éxito", tipo: 'success' });
+      setTimeout(() => setMensajeTiempos(null), 3000);
+    }
+  };
+
   return (
     <div className="bg-[#171717] min-h-screen p-2 md:p-8 flex flex-col items-center">
       <h1 className="text-3xl md:text-4xl font-extrabold text-[#ededed] mb-4 md:mb-8 drop-shadow-sm text-center">Panel de Gestión</h1>
 
+      {/* Tabs Menu */}
+      <div className="tabs tabs-boxed bg-[#1e1e1e] p-2 rounded-2xl border border-[#333333] mb-8 w-full max-w-md mx-auto grid grid-cols-2 shadow-2xl">
+        <button 
+          className={`tab h-12 text-base font-bold rounded-xl transition-all ${activeTab === 'evento' ? 'bg-[#DA0037] text-white shadow-lg' : 'text-[#a1a1aa] hover:text-[#ededed]'}`}
+          onClick={() => setActiveTab('evento')}
+        >
+          🏁 Prueba Actual
+        </button>
+        <button 
+          className={`tab h-12 text-base font-bold rounded-xl transition-all ${activeTab === 'campeonatos' ? 'bg-[#DA0037] text-white shadow-lg' : 'text-[#a1a1aa] hover:text-[#ededed]'}`}
+          onClick={() => setActiveTab('campeonatos')}
+        >
+          🏆 Campeonatos
+        </button>
+      </div>
+
+      {activeTab === 'evento' && (
+        <>
       {/* Configuración de Carrera (WRC Mode) */}
       <div className="w-full max-w-7xl mb-4 md:mb-8">
         <div className="card bg-[#1e1e1e] shadow-2xl border border-[#333333] mb-4 md:mb-0 rounded-2xl md:rounded-3xl w-full">
@@ -315,7 +672,13 @@ export default function Gestion() {
         <div className="card bg-[#1e1e1e] shadow-2xl border border-[#333333] rounded-2xl md:rounded-3xl h-full">
           <div className="card-body p-4 md:p-8">
             <h2 className="card-title text-2xl font-bold mb-4 text-[#ededed]">Últimos 10 Tiempos Registrados</h2>
-            <p className="text-sm text-[#a1a1aa] mb-4">Usa el botón borrar en caso de cometer un error al introducir el tiempo de un coche.</p>
+            <p className="text-sm text-[#a1a1aa] mb-4">Puedes editar ✏️ o borrar 🗑️ los registros en caso de error.</p>
+
+            {mensajeTiempos && (
+              <div className={`alert ${mensajeTiempos.tipo === 'success' ? 'alert-success' : 'alert-error'} mb-4 shadow-sm text-white font-bold rounded-xl border-none`}>
+                <span>{mensajeTiempos.texto}</span>
+              </div>
+            )}
 
             <div className="overflow-x-auto rounded-2xl border border-[#333333] flex-1">
               <table className="table w-full text-sm shrink-0">
@@ -323,27 +686,90 @@ export default function Gestion() {
                   <tr>
                     <th>Piloto</th>
                     <th>Cat.</th>
-                    <th className="text-right">T. Total</th>
-                    <th className="w-16 text-center">Borrar</th>
+                    <th className="text-right">T. Pista + Pen.</th>
+                    <th className="w-20 text-center">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {tiempos.map((t) => (
-                    <tr key={t.id} className="hover:bg-[#2a2a2a] transition-colors border-b border-[#333333]">
-                      <td className="font-semibold py-2 px-2 md:py-4 md:px-4">{t.pilots?.name}</td>
-                      <td className="py-2 px-2 md:py-4 md:px-4"><span className="badge badge-sm badge-neutral rounded-full px-2">{t.categories?.name}</span></td>
-                      <td className="text-right font-mono font-bold py-2 px-2 md:py-4 md:px-4">{formatMs(t.total_time_ms)}</td>
-                      <td className="text-center py-2 px-2 md:py-4 md:px-4">
-                        <button 
-                          className="btn btn-ghost btn-md text-[#ef4444] hover:bg-[#ef4444]/10 hover:text-[#ff0000] rounded-full transition-colors"
-                          onClick={() => handleDeleteTiempo(t.id)}
-                          title="Borrar Tiempo Erróneo"
-                        >
-                          <Trash2 size={20} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {tiempos.map((t) => {
+                    const isEditing = t.id === editandoTramoId;
+                    return (
+                      <tr key={t.id} className="hover:bg-[#2a2a2a] transition-colors border-b border-[#333333]">
+                        <td className="font-semibold py-2 px-2 md:py-4 md:px-4 align-middle">{t.pilots?.name}</td>
+                        <td className="py-2 px-2 md:py-4 md:px-4 align-middle"><span className="badge badge-sm badge-neutral rounded-full px-2">{t.categories?.name}</span></td>
+                        
+                        <td className="text-right font-mono py-2 px-2 md:py-4 md:px-4 align-middle">
+                          {isEditing ? (
+                            <div className="flex flex-col gap-1 items-end">
+                              <input
+                                type="number"
+                                step="0.001"
+                                className="input input-xs md:input-sm w-20 md:w-24 bg-[#121212] border border-[#333333] text-[#ededed] text-right font-mono rounded"
+                                value={tiempoEditado}
+                                onChange={(e) => setTiempoEditado(e.target.value)}
+                                title="Tiempo Pista (seg)"
+                              />
+                              <input
+                                type="number"
+                                step="0.1"
+                                className="input input-xs md:input-sm w-20 md:w-24 bg-error/10 border border-error/50 text-error text-right font-mono mt-1 rounded"
+                                value={penalizacionEditada}
+                                onChange={(e) => setPenalizacionEditada(e.target.value)}
+                                title="Penalización (seg)"
+                              />
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-end">
+                              <span className="font-bold text-[#ededed]">{formatMs(t.track_time_ms)}</span>
+                              {t.penalty_ms > 0 && <span className="text-error text-xs font-bold mt-1">(+{(t.penalty_ms / 1000).toFixed(1)}s)</span>}
+                            </div>
+                          )}
+                        </td>
+                        
+                        <td className="text-center py-2 px-2 md:py-4 md:px-4 align-middle">
+                          {isEditing ? (
+                            <div className="flex justify-center gap-1">
+                              <button 
+                                className="btn btn-ghost btn-xs text-green-500 hover:bg-green-500/20 rounded" 
+                                onClick={() => guardarEdicionTiempo(t.id)} 
+                                title="Guardar cambios"
+                              >
+                                <Check size={18} />
+                              </button>
+                              <button 
+                                className="btn btn-ghost btn-xs text-[#a1a1aa] hover:bg-[#333333] rounded" 
+                                onClick={() => setEditandoTramoId(null)} 
+                                title="Cancelar"
+                              >
+                                <X size={18} />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex justify-center gap-1 md:gap-2">
+                              <button 
+                                className="btn btn-ghost btn-xs md:btn-sm text-[#3b82f6] hover:bg-[#3b82f6]/10 rounded-full transition-colors"
+                                onClick={() => {
+                                  setEditandoTramoId(t.id);
+                                  setTiempoEditado((t.track_time_ms / 1000).toFixed(3));
+                                  setPenalizacionEditada((t.penalty_ms / 1000).toFixed(1));
+                                }}
+                                title="Editar Tiempo"
+                              >
+                                <Pencil size={18} />
+                              </button>
+                              <button 
+                                className="btn btn-ghost btn-xs md:btn-sm text-[#ef4444] hover:bg-[#ef4444]/10 hover:text-[#ff0000] rounded-full transition-colors"
+                                onClick={() => handleDeleteTiempo(t.id)}
+                                title="Borrar Tiempo Erróneo"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                   {tiempos.length === 0 && (
                     <tr><td colSpan={4} className="text-center italic text-base-content/50 p-4">No hay tiempos en el historial</td></tr>
                   )}
@@ -383,6 +809,13 @@ export default function Gestion() {
             </div>
           </div>
         </div>
+      )}
+      
+        </>
+      )}
+
+      {activeTab === 'campeonatos' && userId && (
+        <CampeonatosManager userId={userId} />
       )}
 
     </div>

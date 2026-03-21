@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
-export default function Cronometrador() {
+export default function Cronometrador({ userId }: { userId?: string }) {
   const [pilotos, setPilotos] = useState<any[]>([]);
   const [categorias, setCategorias] = useState<any[]>([]);
   const [config, setConfig] = useState({ num_tramos: 1, num_pasadas: 1 });
@@ -16,45 +16,54 @@ export default function Cronometrador() {
 
   // Fetch pilotos and categorias on mount
   useEffect(() => {
+    let isMounted = true;
+
     const fetchSelectData = async () => {
-      // 1. Fetch pilots
-      const { data: pilotsData, error: pilotsError } = await supabase
-        .from('pilots')
-        .select('id, name');
-      
-      if (pilotsError) {
-        console.error('Error fetching pilotos:', pilotsError);
-      } else if (pilotsData) {
-        setPilotos(pilotsData);
-      }
+      if (!userId) return;
 
-      // 2. Fetch categories
-      const { data: categoriesData, error: categoriesError } = await supabase
-        .from('categories')
-        .select('id, name');
+      try {
+        // 1. Fetch pilots
+        const { data: pilotsData, error: pilotsError } = await supabase
+          .from('pilots')
+          .select('id, name')
+          .eq('club_id', userId);
         
-      if (categoriesError) {
-        console.error('Error fetching categorias:', categoriesError);
-      } else if (categoriesData) {
-        setCategorias(categoriesData);
-      }
+        if (pilotsError) throw pilotsError;
+        if (isMounted && pilotsData) setPilotos(pilotsData);
 
-      // 3. Fetch race config
-      const { data: configData, error: configError } = await supabase
-        .from('race_config')
-        .select('*')
-        .eq('id', 1)
-        .single();
-        
-      if (configError) {
-        console.error('Error fetching config:', configError);
-      } else if (configData) {
-        setConfig({ num_tramos: configData.num_tramos, num_pasadas: configData.num_pasadas });
+        // 2. Fetch categories
+        const { data: categoriesData, error: categoriesError } = await supabase
+          .from('categories')
+          .select('id, name')
+          .eq('club_id', userId);
+          
+        if (categoriesError) throw categoriesError;
+        if (isMounted && categoriesData) setCategorias(categoriesData);
+
+        // 3. Fetch race config
+        const { data: configData, error: configError } = await supabase
+          .from('race_config')
+          .select('*')
+          .eq('club_id', userId)
+          .maybeSingle();
+          
+        if (configError) throw configError;
+        if (isMounted && configData) setConfig({ num_tramos: configData.num_tramos || 1, num_pasadas: configData.num_pasadas || 1 });
+      } catch (error: any) {
+        if (error.name === 'AbortError' || error?.message?.includes('Lock broken') || error?.message?.includes('Fetch is aborted')) {
+          console.warn("Petición de cronómetro abortada por concurrencia (ignorando).");
+          return;
+        }
+        console.error('Error fetching datos de cronómetro:', error);
       }
     };
 
-    fetchSelectData();
-  }, []);
+    if (userId) {
+      fetchSelectData();
+    }
+
+    return () => { isMounted = false; };
+  }, [userId]);
 
   // Set default values automatically if lists are populated but selection is empty
   useEffect(() => {
@@ -89,8 +98,8 @@ export default function Cronometrador() {
 
   const guardarTiempo = async () => {
     try {
-      if (!pilotoId || !categoriaId || !pasada) {
-        setMensaje({ texto: 'Por favor selecciona Piloto, Categoría y Pasada.', tipo: 'error' });
+      if (!pilotoId || !categoriaId || !pasada || !userId) {
+        setMensaje({ texto: 'Por favor selecciona Piloto, Categoría y Pasada verificando tu sesión.', tipo: 'error' });
         return;
       }
 
@@ -121,6 +130,7 @@ export default function Cronometrador() {
               track_time_ms: trackTimeMs,
               penalty_ms: penaltyMs,
               total_time_ms: totalTimeMs,
+              club_id: userId
             });
           }
         }
@@ -137,6 +147,7 @@ export default function Cronometrador() {
       const { data: existentes } = await supabase
         .from('lap_times')
         .select('tramo_num')
+        .eq('club_id', userId)
         .eq('pilot_id', pilotoId)
         .eq('pasada_num', pasada)
         .in('tramo_num', tramosAInsertar);
