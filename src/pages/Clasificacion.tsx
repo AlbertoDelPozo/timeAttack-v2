@@ -11,6 +11,7 @@ export default function Clasificacion() {
   const [pasadaSeleccionada, setPasadaSeleccionada] = useState(1);
   const [config, setConfig] = useState({ num_tramos: 1, num_pasadas: 1 });
   const [tiemposReales, setTiemposReales] = useState<any[]>([]);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     const fetchTiempos = async () => {
@@ -43,6 +44,10 @@ export default function Clasificacion() {
           // Volver a cargar los tiempos de la DB cuando detecte un cambio
           console.log('Cambio detectado en lap_times. Recargando...', payload);
           fetchTiempos();
+          
+          // Activar efecto visual de telemetría por 1.5s
+          setIsUpdating(true);
+          setTimeout(() => setIsUpdating(false), 1500);
         }
       )
       .subscribe();
@@ -165,7 +170,7 @@ export default function Clasificacion() {
       </div>
 
       {/* Contenedor de la Tabla */}
-      <div className="w-full overflow-x-auto rounded-2xl md:rounded-3xl shadow-2xl bg-[#1e1e1e] border border-[#333333]">
+      <div className={`w-full overflow-x-auto rounded-2xl md:rounded-3xl shadow-2xl bg-[#1e1e1e] ${isUpdating ? 'border-2 border-[#DA0037] shadow-[0_0_25px_rgba(218,0,55,0.6)] duration-300' : 'border border-[#333333] duration-1000'} transition-all`}>
         <table className="table table-sm w-full whitespace-nowrap text-xs md:text-sm">
           {/* Header */}
           <thead className="bg-[#1e1e1e] text-[#a1a1aa] text-xs md:text-sm border-b border-[#333333] tracking-tight">
