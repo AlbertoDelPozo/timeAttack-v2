@@ -20,15 +20,15 @@ function Navbar({ session }: { session: Session | null }) {
   };
   
   return (
-    <div className="navbar bg-[#171717]/80 backdrop-blur-md border-b border-[#333333] sticky top-0 z-50 px-4 md:px-8">
-      <div className="flex-1">
+    <div className="navbar bg-[#171717]/80 backdrop-blur-md border-b border-[#333333] sticky top-0 z-50 px-2 md:px-8 flex-col md:flex-row py-2 md:py-0 gap-2 md:gap-0">
+      <div className="flex-1 w-full md:w-auto flex justify-center md:justify-start">
         <Link to="/" className="text-xl font-bold flex items-center gap-2 text-[#ededed] hover:text-[#DA0037] transition-colors">
           <HomeIcon size={24} />
           <span>TimeAttack</span>
         </Link>
       </div>
-      <div className="flex-none gap-2">
-        <ul className="menu menu-horizontal px-1 items-center gap-2 text-[#a1a1aa] font-medium">
+      <div className="flex-none gap-2 w-full md:w-auto overflow-x-auto no-scrollbar">
+        <ul className="menu menu-horizontal px-1 items-center gap-1 md:gap-2 text-[#a1a1aa] font-medium flex-nowrap w-max mx-auto md:w-auto md:mx-0">
           {session && (
             <>
               <li>
@@ -135,7 +135,7 @@ function AppContent() {
       <Navbar session={session} />
 
       {/* Contenedor principal */}
-      <main className="p-4 md:p-8 flex-1 flex flex-col">
+      <main className="p-2 md:p-8 flex-1 flex flex-col">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={session ? <Navigate to="/cronometrador" replace /> : <Login />} />

@@ -127,10 +127,10 @@ export default function Clasificacion() {
   const datosFiltrados = procesarClasificacion();
 
   return (
-    <div className="bg-[#171717] min-h-screen p-4 md:p-8 w-full flex flex-col items-center">
+    <div className="bg-[#171717] min-h-screen p-2 md:p-8 w-full flex flex-col items-center">
       
       {/* Título Principal */}
-      <h1 className="text-5xl font-extrabold text-center text-base-content mb-4 tracking-tight drop-shadow-sm">
+      <h1 className="text-3xl md:text-5xl font-extrabold text-center text-base-content mb-4 tracking-tight drop-shadow-sm">
         Clasificación General
       </h1>
 
@@ -165,10 +165,10 @@ export default function Clasificacion() {
       </div>
 
       {/* Contenedor de la Tabla */}
-      <div className="w-full overflow-x-auto rounded-3xl shadow-2xl bg-[#1e1e1e] border border-[#333333]">
-        <table className="table table-sm w-full">
+      <div className="w-full overflow-x-auto rounded-2xl md:rounded-3xl shadow-2xl bg-[#1e1e1e] border border-[#333333]">
+        <table className="table table-sm w-full whitespace-nowrap text-xs md:text-sm">
           {/* Header */}
-          <thead className="bg-[#1e1e1e] text-[#a1a1aa] text-sm border-b border-[#333333] tracking-tight">
+          <thead className="bg-[#1e1e1e] text-[#a1a1aa] text-xs md:text-sm border-b border-[#333333] tracking-tight">
             <tr>
               <th className="text-center w-20">Posición</th>
               <th className="text-center w-16">Dorsal</th>
@@ -198,7 +198,7 @@ export default function Clasificacion() {
               <tr key={row.id} className="hover:bg-[#2a2a2a] transition-colors border-none even:bg-[#262626]/40 odd:bg-transparent">
                 
                 {/* 1. Posición */}
-                <td className="text-center font-bold px-2 py-2 h-full align-middle">
+                <td className="text-center font-bold px-2 py-1 md:px-4 md:py-2 h-full align-middle">
                   {row.posicion === 1 ? (
                     <div className="mx-auto w-10 h-10 bg-gradient-to-br from-yellow-300 to-yellow-600 rounded-full flex items-center justify-center shadow-lg shadow-yellow-500/20">
                       <span className="text-2xl drop-shadow-md" title="Oro">🥇</span>
@@ -217,25 +217,25 @@ export default function Clasificacion() {
                 </td>
 
                 {/* 2. Dorsal Premium */}
-                <td className="text-center px-2 py-2 align-middle">
+                <td className="text-center px-2 py-1 md:px-4 md:py-2 align-middle">
                   <div className="mx-auto w-8 h-8 bg-gradient-to-br from-[#DA0037] to-[#8b0022] rounded-full flex items-center justify-center shadow-md shadow-[#DA0037]/20 border border-[#DA0037]/50">
                     <span className="text-[#ededed] font-mono font-bold text-sm">{row.dorsal || '-'}</span>
                   </div>
                 </td>
 
                 {/* 3. Piloto */}
-                <td className={`font-bold px-2 py-2 align-middle ${row.posicion === 1 ? 'text-2xl text-[#DA0037] drop-shadow-sm tracking-tight' : 'text-lg text-[#ededed]'}`}>
+                <td className={`font-bold px-2 py-1 md:px-4 md:py-2 align-middle ${row.posicion === 1 ? 'text-2xl text-[#DA0037] drop-shadow-sm tracking-tight' : 'text-lg text-[#ededed]'}`}>
                   {row.piloto}
                 </td>
 
                 {/* 4. Categoría */}
-                <td className="px-2 py-2 align-middle">
+                <td className="px-2 py-1 md:px-4 md:py-2 align-middle">
                   <span className={`badge ${badgeClass} badge-sm font-bold border-none rounded-full px-2`}>{row.categoria}</span>
                 </td>
 
                 {/* 5. Acumulado Anterior (Condicional) */}
                 {pasadaSeleccionada > 1 && (
-                  <td className="text-right font-mono text-sm text-[#a1a1aa] px-2 py-2 align-middle opacity-80">
+                  <td className="text-right font-mono text-sm text-[#a1a1aa] px-2 py-1 md:px-4 md:py-2 align-middle opacity-80">
                     {row.acumuladoAnterior > 0 ? formatMs(row.acumuladoAnterior) : '-'}
                   </td>
                 )}
@@ -244,7 +244,7 @@ export default function Clasificacion() {
                 {Array.from({ length: config.num_tramos }, (_, i) => i + 1).map(num => {
                   const tramoData = row.tramosActuales[num];
                   return (
-                    <td key={`tramo-data-${num}`} className="text-right font-mono text-[#ededed] text-sm px-2 py-2 align-middle">
+                    <td key={`tramo-data-${num}`} className="text-right font-mono text-[#ededed] text-sm px-2 py-1 md:px-4 md:py-2 align-middle">
                       {tramoData ? (
                         <div className="flex flex-col items-end">
                           <span>{formatMs(tramoData.track_time_ms)}</span>
@@ -262,19 +262,19 @@ export default function Clasificacion() {
                 })}
 
                 {/* 7. Total Pasada Actual */}
-                <td className="text-right font-mono text-lg text-[#ededed] px-2 py-2 align-middle font-semibold">
+                <td className="text-right font-mono text-lg text-[#ededed] px-2 py-1 md:px-4 md:py-2 align-middle font-semibold">
                   {row.totalPasadaActual > 0 ? formatMs(row.totalPasadaActual) : '-'}
                 </td>
 
                 {/* 8. Total General (Estilo LED) */}
-                <td className="text-right px-2 py-2 align-middle">
+                <td className="text-right px-2 py-1 md:px-4 md:py-2 align-middle">
                   <span className={`inline-block px-3 py-1 bg-[#0a0a0a] rounded-lg border border-[#333333] font-mono font-black ${row.posicion === 1 ? 'text-2xl text-[#ededed] drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]' : 'text-xl text-[#DA0037] drop-shadow-[0_0_5px_rgba(218,0,55,0.4)]'}`}>
                     {formatMs(row.totalGeneral)}
                   </span>
                 </td>
 
                 {/* 9. Diferencia */}
-                <td className="text-right font-mono text-lg text-amber-500 px-2 py-2 font-bold align-middle">
+                <td className="text-right font-mono text-lg text-amber-500 px-2 py-1 md:px-4 md:py-2 font-bold align-middle">
                   {row.diferencia}
                 </td>
               </tr>

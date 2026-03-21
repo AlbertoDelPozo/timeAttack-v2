@@ -183,11 +183,11 @@ export default function Cronometrador() {
   };
 
   return (
-    <div className="bg-[#171717] min-h-screen p-8 w-full flex justify-center items-start">
+    <div className="bg-[#171717] min-h-screen p-2 md:p-8 w-full flex justify-center items-start">
       {/* Tarjeta principal del formulario */}
-      <div className="card bg-[#1e1e1e] shadow-2xl max-w-2xl mx-auto w-full p-8 border border-[#333333] rounded-2xl">
+      <div className="card bg-[#1e1e1e] shadow-2xl max-w-2xl mx-auto w-full p-4 md:p-8 mb-4 border border-[#333333] rounded-2xl md:rounded-3xl">
 
-        <h2 className="text-3xl font-bold mb-4 text-center text-[#ededed]">Control de Tiempos</h2>
+        <h2 className="text-2xl md:text-3xl font-bold mb-4 text-center text-[#ededed]">Control de Tiempos</h2>
 
         {mensaje && (
           <div className={`alert ${mensaje.tipo === 'success' ? 'alert-success' : 'alert-error'} mb-4 shadow-sm text-white font-bold`}>
@@ -248,10 +248,10 @@ export default function Cronometrador() {
             </div>
           </div>
 
-          <div className="divider my-4">TIEMPOS DE TRAMOS</div>
+          <div className="divider my-2 md:my-4">TIEMPOS DE TRAMOS</div>
 
           {/* Fila 3: Grid de Tramos (Multi-Input) */}
-          <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {Array.from({ length: config.num_tramos }, (_, i) => i + 1).map(num => (
               <div key={`tramo-input-${num}`} className="flex flex-col md:flex-row gap-4 items-center bg-[#121212] p-4 rounded-2xl border border-[#333333]">
                 <div className="w-full md:w-32 flex-shrink-0">
