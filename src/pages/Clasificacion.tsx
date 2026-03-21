@@ -14,21 +14,33 @@ export default function Clasificacion() {
   const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchTiempos = async () => {
-      // 1. Fetch config setup
-      const { data: configData } = await supabase.from('race_config').select('*').eq('id', 1).single();
-      if (configData) {
-        setConfig({ num_tramos: configData.num_tramos, num_pasadas: configData.num_pasadas });
-      }
+      try {
+        // 1. Fetch config setup
+        const { data: configData, error: configError } = await supabase.from('race_config').select('*').eq('id', 1).single();
+        if (configError) throw configError;
+        
+        if (isMounted && configData) {
+          setConfig({ num_tramos: configData.num_tramos, num_pasadas: configData.num_pasadas });
+        }
 
-      const { data, error } = await supabase
-        .from('lap_times')
-        .select('*, pilots(name, dorsal), categories(name)');
+        const { data, error } = await supabase
+          .from('lap_times')
+          .select('*, pilots(name, dorsal), categories(name)');
 
-      if (error) {
+        if (error) throw error;
+        
+        if (isMounted) {
+          setTiemposReales(data || []);
+        }
+      } catch (error: any) {
+        if (error.name === 'AbortError' || error?.message?.includes('Lock broken') || error?.message?.includes('Fetch is aborted')) {
+          console.warn("Petición de clasificación abortada por concurrencia (ignorando).");
+          return;
+        }
         console.error('Error fetching tiempos:', error);
-      } else {
-        setTiemposReales(data || []);
       }
     };
 
@@ -54,6 +66,7 @@ export default function Clasificacion() {
 
     // Cleanup function: quitar suscripción al desmontar/cambiar de página
     return () => {
+      isMounted = false;
       supabase.removeChannel(canal);
     };
   }, []);
