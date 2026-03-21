@@ -122,13 +122,13 @@ export default function Gestion() {
   };
 
   return (
-    <div className="bg-[#171717] min-h-screen p-4 md:p-8 flex flex-col items-center">
-      <h1 className="text-4xl font-extrabold text-[#ededed] mb-8 drop-shadow-sm">Panel de Gestión</h1>
+    <div className="bg-[#171717] min-h-screen p-2 md:p-8 flex flex-col items-center">
+      <h1 className="text-3xl md:text-4xl font-extrabold text-[#ededed] mb-4 md:mb-8 drop-shadow-sm text-center">Panel de Gestión</h1>
 
       {/* Configuración de Carrera (WRC Mode) */}
-      <div className="w-full max-w-7xl mb-8">
-        <div className="card bg-[#1e1e1e] shadow-2xl border border-[#333333] rounded-2xl w-full">
-          <div className="card-body">
+      <div className="w-full max-w-7xl mb-4 md:mb-8">
+        <div className="card bg-[#1e1e1e] shadow-2xl border border-[#333333] mb-4 md:mb-0 rounded-2xl md:rounded-3xl w-full">
+          <div className="card-body p-4 md:p-8">
             <h2 className="card-title text-2xl font-bold mb-4 text-[#ededed]">Configuración del Rally</h2>
             
             {mensajeConfig && (
@@ -176,14 +176,14 @@ export default function Gestion() {
         </div>
       </div>
 
-      <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+      <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8 items-start">
         
         {/* Columna Izquierda: Pilotos y Categorías */}
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-4 md:gap-8">
           
           {/* Panel Pilotos */}
-          <div className="card bg-[#1e1e1e] shadow-2xl border border-[#333333] rounded-2xl mb-8">
-            <div className="card-body">
+          <div className="card bg-[#1e1e1e] shadow-2xl border border-[#333333] rounded-2xl md:rounded-3xl mb-4 md:mb-8">
+            <div className="card-body p-4 md:p-8">
               <h2 className="card-title text-2xl font-bold mb-4">Gestión de Pilotos</h2>
               
               <form onSubmit={handleInsertPiloto} className="flex flex-col md:flex-row gap-2 mb-6 items-center">
@@ -220,9 +220,9 @@ export default function Gestion() {
                   <tbody>
                     {pilotos.map((p) => (
                       <tr key={p.id} className="hover:bg-[#2a2a2a] transition-colors border-b border-[#333333]">
-                        <td className="text-center font-mono font-bold text-[#a1a1aa] py-4 px-4">{p.dorsal || '-'}</td>
-                        <td className="font-semibold py-4 px-4 text-[#ededed]">{p.name}</td>
-                        <td className="text-center py-4 px-4">
+                        <td className="text-center font-mono font-bold text-[#a1a1aa] py-2 px-2 md:py-4 md:px-4">{p.dorsal || '-'}</td>
+                        <td className="font-semibold py-2 px-2 md:py-4 md:px-4 text-[#ededed]">{p.name}</td>
+                        <td className="text-center py-2 px-2 md:py-4 md:px-4">
                           <button 
                             className="btn btn-ghost btn-md text-[#ef4444] hover:bg-[#ef4444]/10 hover:text-[#ff0000] rounded-full transition-colors"
                             onClick={() => handleDeletePiloto(p.id)}
@@ -243,8 +243,8 @@ export default function Gestion() {
           </div>
 
           {/* Panel Categorías */}
-          <div className="card bg-[#1e1e1e] shadow-2xl border border-[#333333] rounded-2xl">
-            <div className="card-body">
+          <div className="card bg-[#1e1e1e] shadow-2xl border border-[#333333] rounded-2xl md:rounded-3xl">
+            <div className="card-body p-4 md:p-8">
               <h2 className="card-title text-2xl font-bold mb-4">Gestión de Categorías</h2>
               
               <form onSubmit={handleInsertCategoria} className="flex gap-2 mb-6 items-center">
@@ -273,8 +273,8 @@ export default function Gestion() {
                   <tbody>
                     {categorias.map((c) => (
                       <tr key={c.id} className="hover:bg-[#2a2a2a] transition-colors border-b border-[#333333]">
-                        <td className="font-semibold py-4 px-4">{c.name}</td>
-                        <td className="text-center py-4 px-4">
+                        <td className="font-semibold py-2 px-2 md:py-4 md:px-4">{c.name}</td>
+                        <td className="text-center py-2 px-2 md:py-4 md:px-4">
                           <button 
                             className="btn btn-ghost btn-md text-[#ef4444] hover:bg-[#ef4444]/10 hover:text-[#ff0000] rounded-full transition-colors"
                             onClick={() => handleDeleteCategoria(c.id)}
@@ -297,8 +297,8 @@ export default function Gestion() {
         </div>
 
         {/* Columna Derecha: Historial de Tiempos */}
-        <div className="card bg-[#1e1e1e] shadow-2xl border border-[#333333] rounded-2xl h-full">
-          <div className="card-body">
+        <div className="card bg-[#1e1e1e] shadow-2xl border border-[#333333] rounded-2xl md:rounded-3xl h-full">
+          <div className="card-body p-4 md:p-8">
             <h2 className="card-title text-2xl font-bold mb-4 text-[#ededed]">Últimos 10 Tiempos Registrados</h2>
             <p className="text-sm text-[#a1a1aa] mb-4">Usa el botón borrar en caso de cometer un error al introducir el tiempo de un coche.</p>
 
@@ -315,10 +315,10 @@ export default function Gestion() {
                 <tbody>
                   {tiempos.map((t) => (
                     <tr key={t.id} className="hover:bg-[#2a2a2a] transition-colors border-b border-[#333333]">
-                      <td className="font-semibold py-4 px-4">{t.pilots?.name}</td>
-                      <td className="py-4 px-4"><span className="badge badge-sm badge-neutral rounded-full px-2">{t.categories?.name}</span></td>
-                      <td className="text-right font-mono font-bold py-4 px-4">{formatMs(t.total_time_ms)}</td>
-                      <td className="text-center py-4 px-4">
+                      <td className="font-semibold py-2 px-2 md:py-4 md:px-4">{t.pilots?.name}</td>
+                      <td className="py-2 px-2 md:py-4 md:px-4"><span className="badge badge-sm badge-neutral rounded-full px-2">{t.categories?.name}</span></td>
+                      <td className="text-right font-mono font-bold py-2 px-2 md:py-4 md:px-4">{formatMs(t.total_time_ms)}</td>
+                      <td className="text-center py-2 px-2 md:py-4 md:px-4">
                         <button 
                           className="btn btn-ghost btn-md text-[#ef4444] hover:bg-[#ef4444]/10 hover:text-[#ff0000] rounded-full transition-colors"
                           onClick={() => handleDeleteTiempo(t.id)}
