@@ -111,34 +111,45 @@ function AppContent() {
 
     const inicializarAuth = async () => {
       try {
-        // 1. Obtener sesión inicial (solo una vez)
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError) throw sessionError;
-
-        if (session?.user) {
-          // 2. Si hay usuario, pedir su perfil
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .maybeSingle();
-
-          if (isMounted) {
-            // IMPORTANTE: Solo actualizamos el estado si el componente sigue montado
-            setSession(session);
-            setProfile(profileData || { notFound: true });
-          }
-        } else {
-          // No hay sesión
+        // 1. Usar getUser() para validar contra el servidor, no solo el local
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError || !user) {
+          // SESIÓN ZOMBI DETECTADA: Limpiamos automáticamente
+          await supabase.auth.signOut();
           if (isMounted) {
             setSession(null);
             setProfile(null);
           }
+          return; // Salimos de la función
         }
+
+        // Necesitamos la sesión real para el estado de la app
+        const { data: { session } } = await supabase.auth.getSession();
+
+        // 2. Si el usuario es válido y existe, buscamos su perfil
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (isMounted) {
+          // IMPORTANTE: Solo actualizamos el estado si el componente sigue montado
+          setSession(session);
+          setProfile(profile || { notFound: true });
+        }
+        
       } catch (error) {
-        console.error("Error inicializando auth:", error);
+        console.error("Error crítico inicializando auth:", error);
+        // Ante cualquier error fatal, limpiamos por seguridad
+        await supabase.auth.signOut();
+        if (isMounted) {
+          setSession(null);
+          setProfile(null);
+        }
       } finally {
-        // 3. APAGAR EL LOADING SIEMPRE
+        // 3. PASE LO QUE PASE, QUITAR PANTALLA DE CARGA
         if (isMounted) {
           setLoading(false);
         }
