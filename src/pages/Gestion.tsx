@@ -63,28 +63,64 @@ function CampeonatosManager({ userId }: { userId: string }) {
   const handleCreateCampeonato = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formCamp.name.trim()) return;
-    const ptsArray = formCamp.points.split(',').map(p => Number(p.trim())).filter(p => !isNaN(p));
     
-    await supabase.from('championships').insert({
-      club_id: userId,
-      name: formCamp.name,
-      default_tramos: formCamp.tramos,
-      default_pasadas: formCamp.pasadas,
-      multi_category: formCamp.multi,
-      points_system: ptsArray
-    });
-    setModalCamp(false);
-    setFormCamp({ name: '', tramos: 5, pasadas: 3, multi: false, points: '25, 18, 15, 12, 10, 8, 6, 4, 2, 1' });
-    cargarJerarquia();
+    try {
+      const ptsArray = formCamp.points.split(',').map(p => Number(p.trim())).filter(p => !isNaN(p));
+      
+      const dataToSubmit = {
+        name: formCamp.name,
+        club_id: userId,
+        default_stages: Number(formCamp.tramos),
+        default_passes: Number(formCamp.pasadas),
+        allow_multi_category: formCamp.multi,
+        points_system: ptsArray
+      };
+
+      // Agregamos .select() para recuperar el objeto recién creado de manera confiable
+      const { data: nuevoCampeonato, error } = await supabase.from('championships').insert(dataToSubmit).select().single();
+      if (error) throw error;
+
+      setModalCamp(false);
+      setFormCamp({ name: '', tramos: 5, pasadas: 3, multi: false, points: '25, 18, 15, 12, 10, 8, 6, 4, 2, 1' });
+      
+      // Actualizamos el estado manualmente para que React re-renderice instantáneamente
+      if (nuevoCampeonato) {
+        setCampeonatos(prev => [nuevoCampeonato, ...prev]);
+      }
+      
+      cargarJerarquia();
+    } catch (error: any) {
+      console.error("Error al crear campeonato:", error);
+      alert(`Error al crear campeonato: ${error.message}`);
+    }
   };
 
   const handleCreateRally = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formRallyName.trim() || !modalRally.campId) return;
-    await supabase.from('rallies').insert({ championship_id: modalRally.campId, name: formRallyName });
-    setModalRally({ open: false, campId: null });
-    setFormRallyName('');
-    cargarJerarquia();
+
+    try {
+      const { data: newRally, error } = await supabase.from('rallies').insert({ 
+        name: formRallyName, 
+        championship_id: modalRally.campId, 
+        status: 'draft' 
+      }).select().single();
+      
+      if (error) throw error;
+
+      setModalRally({ open: false, campId: null });
+      setFormRallyName('');
+      
+      if (newRally) {
+        setRallies(prev => [...prev, newRally]);
+        if (!expandedCamp) setExpandedCamp(newRally.championship_id);
+      }
+      cargarJerarquia();
+      alert("Prueba añadida correctamente.");
+    } catch (error: any) {
+      console.error("Error al añadir la prueba:", error);
+      alert(`Error al añadir la prueba: ${error.message}`);
+    }
   };
 
   const handleCreateSesion = async (e: React.FormEvent) => {
@@ -107,7 +143,7 @@ function CampeonatosManager({ userId }: { userId: string }) {
           </h2>
           <p className="text-[#a1a1aa] mt-1">Estructura tus pruebas, rallies y sesiones de cronometraje.</p>
         </div>
-        <button className="btn bg-[#DA0037] hover:bg-[#b9002f] text-white border-none rounded-xl font-bold shadow-lg shadow-[#DA0037]/20" onClick={() => setModalCamp(true)}>
+        <button className="flex items-center gap-2 bg-red-600 text-white font-medium rounded-lg shadow-md px-4 py-2 hover:bg-red-700 transition-colors border-none" onClick={() => setModalCamp(true)}>
           <Plus size={18} /> Nuevo Campeonato
         </button>
       </div>
@@ -168,9 +204,9 @@ function CampeonatosManager({ userId }: { userId: string }) {
                   ))
                 )}
                 
-                <div className="ml-8 mt-2">
-                  <button className="btn btn-sm bg-[#333333] hover:bg-[#444444] text-[#ededed] border-none rounded-lg shadow-sm" onClick={() => setModalRally({ open: true, campId: camp.id })}>
-                    <Plus size={16} /> Añadir Rally a este Campeonato
+                <div className="flex justify-end mt-4 pr-1">
+                  <button className="flex items-center gap-2 bg-red-600 text-white font-medium rounded-lg shadow-md px-4 py-2 hover:bg-red-700 transition-colors border-none" onClick={() => setModalRally({ open: true, campId: camp.id })}>
+                    <Plus size={16} /> Añadir prueba a este campeonato
                   </button>
                 </div>
               </div>
@@ -220,7 +256,7 @@ function CampeonatosManager({ userId }: { userId: string }) {
               </div>
               <div className="flex gap-4 mt-6">
                 <button type="button" className="btn flex-1 bg-[#333333] border-none text-white hover:bg-[#444] rounded-xl" onClick={() => setModalCamp(false)}>Cancelar</button>
-                <button type="submit" className="btn flex-1 bg-[#DA0037] border-none text-white hover:bg-[#b9002f] rounded-xl">Crear</button>
+                <button type="submit" className="flex-1 bg-red-600 text-white font-medium rounded-lg shadow-md px-4 py-2 hover:bg-red-700 transition-colors border-none">Crear</button>
               </div>
             </form>
           </div>
@@ -236,7 +272,7 @@ function CampeonatosManager({ userId }: { userId: string }) {
               <input type="text" placeholder="Ej: Rally de Sierra Morena" required className="input w-full bg-[#121212] border-[#333333] text-white focus:border-[#DA0037] outline-none" value={formRallyName} onChange={e => setFormRallyName(e.target.value)} />
               <div className="flex gap-2">
                 <button type="button" className="btn flex-1 btn-sm h-10 bg-[#333333] border-none text-white hover:bg-[#444] rounded-lg" onClick={() => setModalRally({ open: false, campId: null })}>Cancelar</button>
-                <button type="submit" className="btn flex-1 btn-sm h-10 bg-blue-600 border-none text-white hover:bg-blue-700 rounded-lg">Añadir</button>
+                <button type="submit" className="flex-1 h-10 bg-red-600 text-white font-medium rounded-lg shadow-md px-4 hover:bg-red-700 transition-colors border-none flex items-center justify-center">Aceptar</button>
               </div>
             </form>
           </div>
@@ -256,7 +292,7 @@ function CampeonatosManager({ userId }: { userId: string }) {
               </div>
               <div className="flex gap-2 mt-2">
                 <button type="button" className="btn flex-1 btn-sm h-10 bg-[#333333] border-none text-white hover:bg-[#444] rounded-lg" onClick={() => setModalSesion({ open: false, rallyId: null })}>Cancelar</button>
-                <button type="submit" className="btn flex-1 btn-sm h-10 bg-green-600 border-none text-white hover:bg-green-700 rounded-lg">Guardar</button>
+                <button type="submit" className="flex-1 h-10 bg-red-600 text-white font-medium rounded-lg shadow-md px-4 hover:bg-red-700 transition-colors border-none flex items-center justify-center">Aceptar</button>
               </div>
             </form>
           </div>
@@ -454,15 +490,11 @@ export default function Gestion({ userId }: { userId?: string }) {
 
     const totalMs = trackMs + penaltyMs;
 
-    console.log("Intentando guardar -> ID:", id, "| Pista (ms):", trackMs, "| Penalty (ms):", penaltyMs);
-
     const { data, error } = await supabase
       .from('lap_times')
       .update({ track_time_ms: trackMs, penalty_ms: penaltyMs, total_time_ms: totalMs })
       .eq('id', id)
       .select();
-
-    console.log("Respuesta BD:", data, "Error BD:", error);
 
     if (error) {
       console.error("Error al actualizar:", error);
