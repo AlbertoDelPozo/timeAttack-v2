@@ -46,23 +46,50 @@ export default function Cronometrador({ userId, sessionId, rallyId }: { userId?:
       if (!userId) return;
 
       try {
-        // 1. Fetch pilots
-        const { data: pilotsData, error: pilotsError } = await supabase
-          .from('pilots')
-          .select('id, name')
-          .eq('club_id', userId);
-        
-        if (pilotsError) throw pilotsError;
-        if (isMounted && pilotsData) setPilotos(pilotsData);
-
-        // 2. Fetch categories
-        const { data: categoriesData, error: categoriesError } = await supabase
-          .from('categories')
-          .select('id, name')
-          .eq('club_id', userId);
+        if (sessionId) {
+          // Filtered by specific session inscriptions
+          const { data: insData, error: insErr } = await supabase
+            .from('inscriptions')
+            .select(`
+              pilot_id,
+              category_id,
+              pilots ( name ),
+              categories ( name )
+            `)
+            .eq('session_id', sessionId);
           
-        if (categoriesError) throw categoriesError;
-        if (isMounted && categoriesData) setCategorias(categoriesData);
+          if (insErr) throw insErr;
+          
+          if (isMounted && insData) {
+            const pMap = new Map();
+            const cMap = new Map();
+            insData.forEach((i: any) => {
+              if (i.pilots && !pMap.has(i.pilot_id)) pMap.set(i.pilot_id, { id: i.pilot_id, name: i.pilots.name });
+              if (i.categories && !cMap.has(i.category_id)) cMap.set(i.category_id, { id: i.category_id, name: i.categories.name });
+            });
+            setPilotos(Array.from(pMap.values()));
+            setCategorias(Array.from(cMap.values()));
+          }
+        } else {
+          // Global club fallback
+          // 1. Fetch pilots
+          const { data: pilotsData, error: pilotsError } = await supabase
+            .from('pilots')
+            .select('id, name')
+            .eq('club_id', userId);
+          
+          if (pilotsError) throw pilotsError;
+          if (isMounted && pilotsData) setPilotos(pilotsData);
+
+          // 2. Fetch categories
+          const { data: categoriesData, error: categoriesError } = await supabase
+            .from('categories')
+            .select('id, name')
+            .eq('club_id', userId);
+            
+          if (categoriesError) throw categoriesError;
+          if (isMounted && categoriesData) setCategorias(categoriesData);
+        }
 
         // 3. Fetch race config OR specific rally config
         if (rallyId) {
