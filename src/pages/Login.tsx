@@ -193,7 +193,7 @@ export default function Login() {
             <div className="form-control mt-2">
               <button 
                 type="submit" 
-                className="btn btn-lg w-full h-[3.5rem] rounded-xl bg-gradient-to-r from-white to-gray-300 text-black hover:scale-[1.02] border-none font-black tracking-wide transition-all shadow-xl" 
+                className="w-full h-[3.5rem] bg-red-600 text-white font-medium rounded-lg shadow-md px-4 py-2 hover:bg-red-700 transition-colors border-none disabled:opacity-50 flex flex-row justify-center items-center" 
                 disabled={loading}
               >
                 {loading ? <span className="loading loading-spinner"></span> : (mode === 'login' ? 'Entrar al Paddock' : 'Registrar Cuenta')}

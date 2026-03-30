@@ -208,7 +208,7 @@ function CampeonatosManager({ userId }: { userId: string }) {
           </h2>
           <p className="text-[#a1a1aa] mt-1">Estructura tus pruebas, rallies y sesiones de cronometraje.</p>
         </div>
-        <button className="flex items-center gap-2 bg-red-600 w-auto text-white font-medium rounded-lg px-4 py-2 hover:bg-red-700 transition-colors border-none" onClick={() => setModalCamp(true)}>
+        <button className="flex items-center gap-2 bg-red-600 text-white font-medium rounded-lg shadow-md px-4 py-2 hover:bg-red-700 transition-colors border-none" onClick={() => setModalCamp(true)}>
           <Plus size={18} /> Nuevo Campeonato
         </button>
       </div>
@@ -270,7 +270,7 @@ function CampeonatosManager({ userId }: { userId: string }) {
                 )}
                 
                 <div className="flex justify-end mt-4 pr-1">
-                  <button className="inline-flex w-full sm:w-auto justify-center items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium tracking-wider rounded-lg shadow-md px-4 py-2 transition-colors border-none" onClick={() => setModalRally({ open: true, campId: camp.id })}>
+                  <button className="flex items-center gap-2 bg-red-600 text-white font-medium rounded-lg shadow-md px-4 py-2 hover:bg-red-700 transition-colors border-none" onClick={() => setModalRally({ open: true, campId: camp.id })}>
                     <Plus size={16} /> Añadir prueba a este campeonato
                   </button>
                 </div>
@@ -320,8 +320,8 @@ function CampeonatosManager({ userId }: { userId: string }) {
                 <input type="text" required className="input w-full bg-[#121212] border-[#333333] text-white focus:border-[#DA0037] font-mono outline-none" value={formCamp.points} onChange={e => setFormCamp({...formCamp, points: e.target.value})} />
               </div>
               <div className="flex gap-4 mt-6">
-                <button type="button" className="flex-1 bg-[#333333] border-none text-white hover:bg-[#444] rounded-lg px-4 py-2 transition-colors font-medium" onClick={() => setModalCamp(false)}>Cancelar</button>
-                <button type="submit" className="flex-1 bg-red-600 text-white font-medium rounded-lg px-4 py-2 hover:bg-red-700 transition-colors border-none">Crear</button>
+                <button type="button" className="btn flex-1 bg-[#333333] border-none text-white hover:bg-[#444] rounded-xl" onClick={() => setModalCamp(false)}>Cancelar</button>
+                <button type="submit" className="flex-1 bg-red-600 text-white font-medium rounded-lg shadow-md px-4 py-2 hover:bg-red-700 transition-colors border-none">Crear</button>
               </div>
             </form>
           </div>
@@ -335,9 +335,9 @@ function CampeonatosManager({ userId }: { userId: string }) {
             <h3 className="text-xl font-bold text-[#ededed] mb-4 flex items-center gap-2"><Flag className="text-blue-500" /> Nuevo Rally / Prueba</h3>
             <form onSubmit={handleCreateRally} className="flex flex-col gap-4">
               <input type="text" placeholder="Ej: Rally de Sierra Morena" required className="input w-full bg-[#121212] border-[#333333] text-white focus:border-[#DA0037] outline-none" value={formRallyName} onChange={e => setFormRallyName(e.target.value)} />
-              <div className="flex gap-4 mt-2">
-                <button type="button" className="flex-1 bg-[#333333] border-none text-white hover:bg-[#444] rounded-lg px-4 py-2 transition-colors font-medium" onClick={() => setModalRally({ open: false, campId: null })}>Cancelar</button>
-                <button type="submit" className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition-colors border-none">Añadir</button>
+              <div className="flex gap-2">
+                <button type="button" className="btn flex-1 btn-sm h-10 bg-[#333333] border-none text-white hover:bg-[#444] rounded-lg" onClick={() => setModalRally({ open: false, campId: null })}>Cancelar</button>
+                <button type="submit" className="flex-1 h-10 bg-red-600 text-white font-medium rounded-lg shadow-md px-4 hover:bg-red-700 transition-colors border-none flex items-center justify-center">Aceptar</button>
               </div>
             </form>
           </div>
@@ -609,15 +609,11 @@ export default function Gestion({ userId }: { userId?: string }) {
 
     const totalMs = trackMs + penaltyMs;
 
-    console.log("Intentando guardar -> ID:", id, "| Pista (ms):", trackMs, "| Penalty (ms):", penaltyMs);
-
     const { data, error } = await supabase
       .from('lap_times')
       .update({ track_time_ms: trackMs, penalty_ms: penaltyMs, total_time_ms: totalMs })
       .eq('id', id)
       .select();
-
-    console.log("Respuesta BD:", data, "Error BD:", error);
 
     if (error) {
       console.error("Error al actualizar:", error);
