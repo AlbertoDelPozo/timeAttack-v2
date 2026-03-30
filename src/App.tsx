@@ -7,7 +7,7 @@ import { Trophy, Timer, Settings, LogOut, LogIn, Home as HomeIcon } from 'lucide
 import Login from './pages/Login';
 import Cronometrador from './pages/Cronometrador';
 import Clasificacion from './pages/Clasificacion';
-import Gestion from './pages/Gestion';
+import Management from './pages/Management';
 import Onboarding from './pages/Onboarding';
 
 // Navbar is now wrapped with logic to know if a user is logged in
@@ -233,7 +233,7 @@ function AppContent() {
           />
           <Route 
             path="/gestion" 
-            element={<ProtectedRoute allowedRole="club"><Gestion userId={session?.user?.id} /></ProtectedRoute>} 
+            element={<ProtectedRoute allowedRole="club"><Management userId={session?.user?.id} /></ProtectedRoute>} 
           />
           
           {/* Ruta Pública compartida y para Pilotos */}

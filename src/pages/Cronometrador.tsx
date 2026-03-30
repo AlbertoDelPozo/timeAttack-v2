@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
-export default function Cronometrador({ userId }: { userId?: string }) {
+export default function Cronometrador({ userId, sessionId, rallyId }: { userId?: string, sessionId?: string, rallyId?: string }) {
   const [pilotos, setPilotos] = useState<any[]>([]);
   const [categorias, setCategorias] = useState<any[]>([]);
   const [config, setConfig] = useState({ num_tramos: 1, num_pasadas: 1 });
@@ -13,6 +13,30 @@ export default function Cronometrador({ userId }: { userId?: string }) {
   const [penalizacionPasada, setPenalizacionPasada] = useState('0');
 
   const [mensaje, setMensaje] = useState<{ texto: string, tipo: 'success' | 'error' } | null>(null);
+  const [sessionLapTimes, setSessionLapTimes] = useState<any[]>([]);
+
+  const fetchSessionTimes = async () => {
+    if (!userId) return;
+    let q = supabase
+      .from('lap_times')
+      .select('*, pilots(name), categories(name)')
+      .eq('club_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    if (sessionId) {
+      q = q.eq('session_id', sessionId);
+    } else {
+      q = q.is('session_id', null);
+    }
+    
+    const { data } = await q;
+    if (data) setSessionLapTimes(data);
+  };
+
+  useEffect(() => {
+    fetchSessionTimes();
+  }, [userId, sessionId]);
 
   // Fetch pilotos and categorias on mount
   useEffect(() => {
@@ -40,15 +64,30 @@ export default function Cronometrador({ userId }: { userId?: string }) {
         if (categoriesError) throw categoriesError;
         if (isMounted && categoriesData) setCategorias(categoriesData);
 
-        // 3. Fetch race config
-        const { data: configData, error: configError } = await supabase
-          .from('race_config')
-          .select('*')
-          .eq('club_id', userId)
-          .maybeSingle();
-          
-        if (configError) throw configError;
-        if (isMounted && configData) setConfig({ num_tramos: configData.num_tramos || 1, num_pasadas: configData.num_pasadas || 1 });
+        // 3. Fetch race config OR specific rally config
+        if (rallyId) {
+          const { data: rallyData, error: rallyError } = await supabase
+            .from('rallies')
+            .select('stages, passes')
+            .eq('id', rallyId)
+            .maybeSingle();
+            
+          if (rallyError) throw rallyError;
+          if (isMounted && rallyData) {
+            setConfig({ num_tramos: rallyData.stages || 1, num_pasadas: rallyData.passes || 1 });
+          }
+        } else {
+          const { data: configData, error: configError } = await supabase
+            .from('race_config')
+            .select('*')
+            .eq('club_id', userId)
+            .maybeSingle();
+            
+          if (configError) throw configError;
+          if (isMounted && configData) {
+            setConfig({ num_tramos: configData.num_tramos || 1, num_pasadas: configData.num_pasadas || 1 });
+          }
+        }
       } catch (error: any) {
         if (error.name === 'AbortError' || error?.message?.includes('Lock broken') || error?.message?.includes('Fetch is aborted')) {
           console.warn("Petición de cronómetro abortada por concurrencia (ignorando).");
@@ -63,7 +102,7 @@ export default function Cronometrador({ userId }: { userId?: string }) {
     }
 
     return () => { isMounted = false; };
-  }, [userId]);
+  }, [userId, rallyId]);
 
   // Set default values automatically if lists are populated but selection is empty
   useEffect(() => {
@@ -130,7 +169,8 @@ export default function Cronometrador({ userId }: { userId?: string }) {
               track_time_ms: trackTimeMs,
               penalty_ms: penaltyMs,
               total_time_ms: totalTimeMs,
-              club_id: userId
+              club_id: userId,
+              session_id: sessionId || null
             });
           }
         }
@@ -144,13 +184,21 @@ export default function Cronometrador({ userId }: { userId?: string }) {
       // Mitigate 23505 Error: Filter out preexisting lap_times for this pilot and iteration
       const tramosAInsertar = arrayDeTiempos.map(t => t.tramo_num);
       
-      const { data: existentes } = await supabase
+      let queryExistentes = supabase
         .from('lap_times')
         .select('tramo_num')
         .eq('club_id', userId)
         .eq('pilot_id', pilotoId)
         .eq('pasada_num', pasada)
         .in('tramo_num', tramosAInsertar);
+        
+      if (sessionId) {
+        queryExistentes = queryExistentes.eq('session_id', sessionId);
+      } else {
+        queryExistentes = queryExistentes.is('session_id', null);
+      }
+      
+      const { data: existentes } = await queryExistentes;
         
       const tramosExistentes = (existentes || []).map(e => e.tramo_num);
       
@@ -186,6 +234,9 @@ export default function Cronometrador({ userId }: { userId?: string }) {
 
       // Limpiar mensaje
       setTimeout(() => setMensaje(null), 4000);
+      
+      // Update session lap times locally
+      fetchSessionTimes();
 
     } catch (error: any) {
       console.error("Error al guardar:", error);
@@ -311,6 +362,26 @@ export default function Cronometrador({ userId }: { userId?: string }) {
             </button>
           </div>
         </form>
+
+        {/* Historial Aislado Exclusivo para este Corte/Sesión (O Genérico si se usa standalone) */}
+        {sessionLapTimes.length > 0 && (
+          <div className="mt-8 border-t border-[#333333] pt-6">
+            <h3 className="text-[#a1a1aa] font-bold text-sm mb-4 uppercase text-center tracking-widest">Registros de Sesión</h3>
+            <div className="overflow-x-auto rounded-xl border border-[#333333]">
+              <table className="table w-full text-sm">
+                <tbody>
+                  {sessionLapTimes.map(t => (
+                    <tr key={t.id} className="border-b border-[#333333] bg-[#121212] hover:bg-[#1a1a1a] transition-colors">
+                      <td className="text-white font-semibold pl-4">{t.pilots?.name}</td>
+                      <td className="text-[#a1a1aa] font-mono">T{t.tramo_num} / P{t.pasada_num}</td>
+                      <td className="text-right text-[#DA0037] font-mono font-bold pr-4">{(t.total_time_ms / 1000).toFixed(3)}s</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>
