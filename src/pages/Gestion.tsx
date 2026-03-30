@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Trash2, Plus, Pencil, Check, X, ChevronDown, ChevronRight, Trophy, Flag, Clock } from 'lucide-react';
+import { Trash2, Plus, Pencil, Check, X, ChevronDown, ChevronRight, Trophy, Flag, Clock, Users } from 'lucide-react';
+import Cronometrador from './Cronometrador';
 
 const formatMs = (ms: number) => (ms / 1000).toFixed(3);
 
@@ -22,36 +23,112 @@ function CampeonatosManager({ userId }: { userId: string }) {
   const [formRallyName, setFormRallyName] = useState('');
 
   const [modalSesion, setModalSesion] = useState<{ open: boolean, rallyId: string | null }>({ open: false, rallyId: null });
-  const [formSesion, setFormSesion] = useState({ name: '', datetime: '' });
+  const [formSesion, setFormSesion] = useState({ name: '' });
+
+  // States for Inscriptions
+  const [modalInscripciones, setModalInscripciones] = useState<{ open: boolean, sessionId: string | null, rallyId: string | null }>({ open: false, sessionId: null, rallyId: null });
+  const [inscritos, setInscritos] = useState<any[]>([]);
+  const [pilotosGlobal, setPilotosGlobal] = useState<any[]>([]);
+  const [categoriasGlobal, setCategoriasGlobal] = useState<any[]>([]);
+  const [pilotoSel, setPilotoSel] = useState('');
+  const [catSel, setCatSel] = useState('');
+
+  const cargarInscritosFormData = async (sessionId: string) => {
+    const { data: insData } = await supabase.from('inscriptions').select('*, pilots(name), categories(name)').eq('session_id', sessionId);
+    if (insData && isMounted.current) setInscritos(insData);
+    
+    if (pilotosGlobal.length === 0) {
+      const { data: pData } = await supabase.from('pilots').select('id, name').eq('club_id', userId);
+      if (pData && isMounted.current) setPilotosGlobal(pData);
+      
+      const { data: cData } = await supabase.from('categories').select('id, name').eq('club_id', userId);
+      if (cData && isMounted.current) setCategoriasGlobal(cData);
+    }
+  };
+
+  useEffect(() => {
+    if (modalInscripciones.open && modalInscripciones.sessionId) {
+      cargarInscritosFormData(modalInscripciones.sessionId);
+    } else {
+      setInscritos([]);
+    }
+  }, [modalInscripciones.open, modalInscripciones.sessionId]);
+
+  const handleCreateSesion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formSesion.name.trim() || !modalSesion.rallyId) {
+      alert("Faltan datos (ID o Nombre).");
+      return;
+    }
+
+    try {
+      const { data: newSession, error } = await supabase.from('rally_sessions').insert([{ 
+        rally_id: modalSesion.rallyId, 
+        name: formSesion.name 
+      }]).select().single();
+      
+      if (error) throw error;
+      
+      setFormSesion({ name: '' });
+      setModalSesion({ open: false, rallyId: null });
+      
+      if (newSession && isMounted.current) {
+        setSesiones(prev => [...prev, newSession]);
+      }
+      cargarJerarquia();
+    } catch (error: any) {
+      console.error("Error al crear corte:", error);
+      alert("Error al crear el corte. Revisa la consola.");
+    }
+  };
+
+  const handleInscribir = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pilotoSel || !catSel || !modalInscripciones.sessionId) return;
+    
+    const exists = inscritos.find(i => i.pilot_id === pilotoSel && i.category_id === Number(catSel));
+    if (exists) {
+      alert("Este piloto ya está inscrito con esa categoría en este corte.");
+      return;
+    }
+    
+    const { error } = await supabase.from('inscriptions').insert({
+      session_id: modalInscripciones.sessionId,
+      pilot_id: pilotoSel,
+      category_id: Number(catSel)
+    });
+    
+    if (error) {
+       alert("Error al inscribir: " + error.message);
+    } else {
+       setPilotoSel('');
+       setCatSel('');
+       cargarInscritosFormData(modalInscripciones.sessionId);
+    }
+  };
 
   const cargarJerarquia = async () => {
     try {
-      const { data: cData, error: cErr } = await supabase.from('championships').select('*').eq('club_id', userId).order('created_at', { ascending: false });
+      const { data: cData, error: cErr } = await supabase
+        .from('championships')
+        .select('*, rallies(*, rally_sessions(*))')
+        .eq('club_id', userId)
+        .order('created_at', { ascending: false });
+        
       if (cErr) throw cErr;
-      if (isMounted.current) setCampeonatos(cData || []);
-
-      if (cData && cData.length > 0) {
-        const campIds = cData.map((c: any) => c.id);
-        const { data: rData, error: rErr } = await supabase.from('rallies').select('*').in('championship_id', campIds).order('created_at', { ascending: true });
-        if (rErr) throw rErr;
-        if (isMounted.current) setRallies(rData || []);
-
-        if (rData && rData.length > 0) {
-          const rallyIds = rData.map((r: any) => r.id);
-          const { data: sData, error: sErr } = await supabase.from('rally_sessions').select('*').in('rally_id', rallyIds).order('created_at', { ascending: true });
-          if (sErr) throw sErr;
-          if (isMounted.current) setSesiones(sData || []);
-        } else {
-          if (isMounted.current) setSesiones([]);
-        }
-      } else {
-        if (isMounted.current) {
-          setRallies([]);
-          setSesiones([]);
-        }
+      
+      if (isMounted.current) {
+        const camps = cData || [];
+        // Flattening arrays instantly keeps the React Native mapping incredibly robust
+        const allRallies = camps.flatMap((c: any) => c.rallies || []);
+        const allSessions = allRallies.flatMap((r: any) => r.rally_sessions || []);
+        
+        setCampeonatos(camps);
+        setRallies(allRallies);
+        setSesiones(allSessions);
       }
     } catch (error: any) {
-      if (error.name !== 'AbortError') console.error("Error al cargar jerarquía de campeonatos:", error);
+      if (error.name !== 'AbortError') console.error("Error al cargar jerarquía:", error);
     }
   };
 
@@ -67,31 +144,27 @@ function CampeonatosManager({ userId }: { userId: string }) {
     try {
       const ptsArray = formCamp.points.split(',').map(p => Number(p.trim())).filter(p => !isNaN(p));
       
-      const dataToSubmit = {
+      const { data: nuevoCampeonato, error } = await supabase.from('championships').insert({
         name: formCamp.name,
         club_id: userId,
         default_stages: Number(formCamp.tramos),
         default_passes: Number(formCamp.pasadas),
         allow_multi_category: formCamp.multi,
         points_system: ptsArray
-      };
+      }).select().single();
 
-      // Agregamos .select() para recuperar el objeto recién creado de manera confiable
-      const { data: nuevoCampeonato, error } = await supabase.from('championships').insert(dataToSubmit).select().single();
       if (error) throw error;
 
       setModalCamp(false);
       setFormCamp({ name: '', tramos: 5, pasadas: 3, multi: false, points: '25, 18, 15, 12, 10, 8, 6, 4, 2, 1' });
       
-      // Actualizamos el estado manualmente para que React re-renderice instantáneamente
       if (nuevoCampeonato) {
         setCampeonatos(prev => [nuevoCampeonato, ...prev]);
       }
-      
       cargarJerarquia();
     } catch (error: any) {
       console.error("Error al crear campeonato:", error);
-      alert(`Error al crear campeonato: ${error.message}`);
+      alert(`Error al guardar: ${error.message}`);
     }
   };
 
@@ -116,22 +189,14 @@ function CampeonatosManager({ userId }: { userId: string }) {
         if (!expandedCamp) setExpandedCamp(newRally.championship_id);
       }
       cargarJerarquia();
-      alert("Prueba añadida correctamente.");
     } catch (error: any) {
-      console.error("Error al añadir la prueba:", error);
-      alert(`Error al añadir la prueba: ${error.message}`);
+      console.error("Error al crear rally:", error);
+      alert("Error al crear la prueba. Revisa la consola.");
     }
   };
 
-  const handleCreateSesion = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formSesion.name.trim() || !modalSesion.rallyId) return;
-    const payload: any = { rally_id: modalSesion.rallyId, name: formSesion.name };
-    if (formSesion.datetime) payload.datetime = new Date(formSesion.datetime).toISOString();
-    await supabase.from('rally_sessions').insert(payload);
-    setModalSesion({ open: false, rallyId: null });
-    setFormSesion({ name: '', datetime: '' });
-    cargarJerarquia();
+  const handleCreateSesionOriginal = async (e: React.FormEvent) => {
+    // legacy hook cleanup handle create session function which was removed by replace chunks to avoid conflict.
   };
 
   return (
@@ -187,15 +252,15 @@ function CampeonatosManager({ userId }: { userId: string }) {
                             <p className="text-[#a1a1aa] italic ml-8 text-sm">Sin sesiones (cortes) asignadas.</p>
                           ) : (
                             sesiones.filter(s => s.rally_id === rally.id).map(sesion => (
-                              <div key={sesion.id} className="ml-8 p-3 bg-[#1e1e1e] border border-[#333333] rounded-lg flex justify-between items-center text-sm shadow-sm">
+                              <div key={sesion.id} className="ml-8 p-3 bg-[#1e1e1e] border border-[#333333] rounded-lg flex justify-between items-center text-sm shadow-sm cursor-pointer hover:bg-[#262626] transition-colors" onClick={() => setModalInscripciones({ open: true, sessionId: sesion.id, rallyId: rally.id })}>
                                 <span className="font-semibold flex items-center gap-2"><Clock size={16} className="text-green-500"/> {sesion.name}</span>
-                                {sesion.datetime && <span className="text-[#a1a1aa] font-mono">{new Date(sesion.datetime).toLocaleString()}</span>}
+                                <span className="text-[#a1a1aa] text-xs flex items-center gap-1"><Users size={14}/> Inscripciones</span>
                               </div>
                             ))
                           )}
-                          <div className="ml-8 mt-2">
-                            <button className="btn btn-sm btn-ghost text-green-500 hover:bg-green-500/10 border border-green-500/20 rounded-lg text-xs" onClick={() => setModalSesion({ open: true, rallyId: rally.id })}>
-                              <Plus size={14} /> Añadir Corte / Sesión
+                          <div className="flex justify-end mt-4 px-8">
+                            <button className="inline-flex w-full sm:w-auto justify-center items-center gap-2 bg-green-600 text-white font-medium rounded-lg shadow-md px-4 py-2 hover:bg-green-700 transition-colors border-none" onClick={() => setModalSesion({ open: true, rallyId: rally.id })}>
+                              <Plus size={16} /> Añadir Corte / Sesión
                             </button>
                           </div>
                         </div>
@@ -285,16 +350,70 @@ function CampeonatosManager({ userId }: { userId: string }) {
           <div className="bg-[#1e1e1e] p-6 rounded-3xl max-w-sm w-full border border-[#333333] shadow-2xl">
             <h3 className="text-xl font-bold text-[#ededed] mb-4 flex items-center gap-2"><Clock className="text-green-500" /> Añadir Corte / Sesión</h3>
             <form onSubmit={handleCreateSesion} className="flex flex-col gap-4">
-              <input type="text" placeholder="Nombre (Ej: Domingo - Mañana)" required className="input w-full bg-[#121212] border-[#333333] text-white focus:border-green-500 outline-none" value={formSesion.name} onChange={e => setFormSesion({...formSesion, name: e.target.value})} />
-              <div className="flex flex-col gap-1">
-                <label className="text-xs text-[#a1a1aa] font-bold uppercase">Fecha y Hora (Opcional)</label>
-                <input type="datetime-local" className="input w-full bg-[#121212] border-[#333333] text-white focus:border-green-500 outline-none" value={formSesion.datetime} onChange={e => setFormSesion({...formSesion, datetime: e.target.value})} />
-              </div>
+              <input type="text" placeholder="Nombre (Ej: Domingo - Mañana)" required className="input w-full bg-[#121212] border-[#333333] text-white focus:border-green-500 outline-none" value={formSesion.name} onChange={e => setFormSesion({ name: e.target.value })} />
               <div className="flex gap-2 mt-2">
                 <button type="button" className="btn flex-1 btn-sm h-10 bg-[#333333] border-none text-white hover:bg-[#444] rounded-lg" onClick={() => setModalSesion({ open: false, rallyId: null })}>Cancelar</button>
-                <button type="submit" className="flex-1 h-10 bg-red-600 text-white font-medium rounded-lg shadow-md px-4 hover:bg-red-700 transition-colors border-none flex items-center justify-center">Aceptar</button>
+                <button type="submit" className="flex-1 h-10 bg-green-600 text-white font-medium rounded-lg shadow-md px-4 hover:bg-green-700 transition-colors border-none flex items-center justify-center">Aceptar</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Inscripciones y Cronometraje */}
+      {modalInscripciones.open && (
+        <div className="fixed inset-0 bg-black/90 flex flex-col items-center justify-start z-50 p-2 md:p-6 overflow-y-auto w-full h-full">
+          <div className="w-full max-w-4xl flex justify-end mb-2 mt-4">
+            <button className="btn btn-circle btn-sm bg-[#333333] border-none text-white hover:bg-error shadow-lg" onClick={() => setModalInscripciones({ open: false, sessionId: null, rallyId: null })}>
+              <X size={18} />
+            </button>
+          </div>
+          
+          <div className="bg-[#1e1e1e] p-4 md:p-8 rounded-3xl max-w-4xl w-full border border-[#333333] shadow-2xl mb-6">
+            <h3 className="text-2xl font-bold text-[#ededed] mb-6 flex items-center gap-2"><Users className="text-blue-500" /> Inscripciones del Corte</h3>
+            
+            {/* Lista Pilotos */}
+            <div className="bg-[#121212] rounded-2xl border border-[#333333] p-4 mb-6 shadow-inner">
+              <h4 className="text-[#a1a1aa] font-bold mb-3 text-sm uppercase">Pilotos Inscritos ({inscritos.length})</h4>
+              <div className="max-h-40 overflow-y-auto pr-2">
+                <table className="table w-full text-sm">
+                  <tbody>
+                    {inscritos.map(ins => (
+                      <tr key={ins.id} className="border-b border-[#333333] hover:bg-[#1a1a1a] transition-colors rounded-lg">
+                        <td className="text-white font-semibold pl-2">{ins.pilots?.name}</td>
+                        <td className="text-right pr-2"><span className="badge bg-[#333333] text-white border-none shadow-sm text-xs px-3">{ins.categories?.name}</span></td>
+                      </tr>
+                    ))}
+                    {inscritos.length === 0 && <tr><td colSpan={2} className="text-[#a1a1aa] italic text-center py-4">Sin inscripciones todavía en este corte.</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Bucle Inscripciones */}
+            <form onSubmit={handleInscribir} className="flex flex-col md:flex-row gap-4 items-end bg-[#171717]/80 p-5 rounded-2xl border border-[#333333] shadow-inner">
+              <div className="flex-1 w-full">
+                <label className="label py-1"><span className="label-text text-[#ededed] font-semibold text-sm">Piloto participando</span></label>
+                <select required className="select select-bordered w-full bg-[#121212] border-[#333333] text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none rounded-xl" value={pilotoSel} onChange={e => setPilotoSel(e.target.value)}>
+                  <option value="" disabled>Seleccionar piloto...</option>
+                  {pilotosGlobal.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              </div>
+              <div className="flex-1 w-full">
+                <label className="label py-1"><span className="label-text text-[#ededed] font-semibold text-sm">Coche / Categoría</span></label>
+                <select required className="select select-bordered w-full bg-[#121212] border-[#333333] text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none rounded-xl" value={catSel} onChange={e => setCatSel(e.target.value)}>
+                  <option value="" disabled>Seleccionar categoría...</option>
+                  {categoriasGlobal.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+              <button type="submit" className="flex items-center justify-center bg-blue-600 text-white font-medium hover:bg-blue-700 border-none rounded-xl shadow-md h-12 px-8 transition-colors w-full md:w-auto cursor-pointer">
+                Añadir Piloto
+              </button>
+            </form>
+          </div>
+
+          <div className="w-full max-w-4xl relative">
+             <Cronometrador userId={userId} sessionId={modalInscripciones.sessionId || undefined} />
           </div>
         </div>
       )}
