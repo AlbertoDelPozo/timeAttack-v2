@@ -1,410 +1,175 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { Trophy, Flag, Clock } from 'lucide-react';
 
-// Helper to format ms to sec.ms
-const formatMs = (ms: number) => {
-  return (ms / 1000).toFixed(3);
-};
+const formatMs = (ms: number) => (ms / 1000).toFixed(3);
 
 export default function Clasificacion() {
-  const [filtroCategoria, setFiltroCategoria] = useState('Todas las categorías');
-  const [pasadaSeleccionada, setPasadaSeleccionada] = useState(1);
-  const [config, setConfig] = useState({ num_tramos: 1, num_pasadas: 1 });
-  const [tiemposReales, setTiemposReales] = useState<any[]>([]);
-  const [categoriasLista, setCategoriasLista] = useState<any[]>([]);
+  const [championships, setChampionships] = useState<any[]>([]);
+  const [rallies, setRallies] = useState<any[]>([]);
+  
+  const [selectedCamp, setSelectedCamp] = useState<string>('');
+  const [selectedRally, setSelectedRally] = useState<string>('');
+  
+  const [lapTimes, setLapTimes] = useState<any[]>([]);
   const [isUpdating, setIsUpdating] = useState(false);
 
+  // 1. Fetch initial championships
   useEffect(() => {
     let isMounted = true;
-
-    const fetchTiempos = async () => {
-      try {
-        // 1. Fetch config setup
-        const { data: configData, error: configError } = await supabase.from('race_config').select('*').eq('id', 1).single();
-        if (configError) throw configError;
-        
-        if (isMounted && configData) {
-          setConfig({ num_tramos: configData.num_tramos, num_pasadas: configData.num_pasadas });
-        }
-
-        const { data, error } = await supabase
-          .from('lap_times')
-          .select('*, pilots(name, dorsal), categories(name)');
-
-        if (error) throw error;
-        
-        if (isMounted) {
-          setTiemposReales(data || []);
-        }
-      } catch (error: any) {
-        if (error.name === 'AbortError' || error?.message?.includes('Lock broken') || error?.message?.includes('Fetch is aborted')) {
-          console.warn("Petición de clasificación abortada por concurrencia (ignorando).");
-          return;
-        }
-        console.error('Error fetching tiempos:', error);
-      }
+    const loadCamps = async () => {
+      const { data } = await supabase.from('championships').select('*').order('created_at', { ascending: false });
+      if (isMounted && data) setChampionships(data);
     };
+    loadCamps();
+    return () => { isMounted = false; };
+  }, []);
 
-    fetchTiempos();
+  // 2. Fetch rallies when championship changes
+  useEffect(() => {
+    let isMounted = true;
+    if (!selectedCamp) {
+       setRallies([]);
+       setSelectedRally('');
+       return;
+    }
+    const loadRallies = async () => {
+      const { data } = await supabase.from('rallies').select('*').eq('championship_id', selectedCamp).order('created_at', { ascending: false });
+      if (isMounted && data) setRallies(data);
+    };
+    loadRallies();
+    return () => { isMounted = false; };
+  }, [selectedCamp]);
 
-    // 2. Suscribirse a cambios en tiempo real
-    const canal = supabase
+  // 3. Fetch lap times when rally changes
+  const fetchTiempos = async () => {
+      if (!selectedRally) {
+          setLapTimes([]);
+          return;
+      }
+      try {
+        const { data: sesiones } = await supabase.from('rally_sessions').select('id').eq('rally_id', selectedRally);
+        const sessionIds = sesiones?.map(s => s.id) || [];
+        
+        if (sessionIds.length > 0) {
+            const { data: tiempos } = await supabase.from('lap_times')
+               .select('*, pilots(name), categories(name), rally_sessions(name)')
+               .in('session_id', sessionIds);
+               
+            // Sort perfectly by total_time_ms client side to ensure penalties are calculated in position
+            const sorted = tiempos ? tiempos.sort((a,b) => a.total_time_ms - b.total_time_ms) : [];
+            setLapTimes(sorted);
+        } else {
+            setLapTimes([]);
+        }
+      } catch (err) {
+         console.error(err);
+      }
+  };
+
+  useEffect(() => {
+     let isMounted = true;
+     fetchTiempos();
+
+     const canal = supabase
       .channel('tiempos-en-directo')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'lap_times' },
         (payload) => {
-          // Volver a cargar los tiempos de la DB cuando detecte un cambio
-          console.log('Cambio detectado en lap_times. Recargando...', payload);
           fetchTiempos();
-          
-          // Activar efecto visual de telemetría por 1.5s
           setIsUpdating(true);
-          setTimeout(() => setIsUpdating(false), 1500);
+          setTimeout(() => { if (isMounted) setIsUpdating(false); }, 1500);
         }
       )
       .subscribe();
 
-    // Cleanup function: quitar suscripción al desmontar/cambiar de página
-    return () => {
-      isMounted = false;
-      supabase.removeChannel(canal);
-    };
-  }, []);
-
-  // Generador de Map de Estilos Dinámicos (El Ángulo Dorado)
-  const estilosCategorias = useMemo(() => {
-    const map: Record<number | string, React.CSSProperties> = {};
-    categoriasLista.forEach((cat, index) => {
-      // El ángulo dorado (137.5 grados) asegura máxima distancia cromática visual entre categorías adyacentes
-      let hue = Math.floor((index * 137.5) % 360);
-      
-      // Proteger el territorio Morado (Récord Absoluto)
-      if (hue > 250 && hue < 310) {
-        hue = (hue + 70) % 360; 
-      }
-
-      map[cat.id] = {
-        color: `hsl(${hue}, 100%, 65%)`,
-        textShadow: `0 0 8px hsla(${hue}, 100%, 65%, 0.6)`,
-        fontWeight: 'bold'
-      };
-    });
-    return map;
-  }, [categoriasLista]);
-
-  // Filtrar y mapear los datos listos para renderizar
-  const procesarClasificacion = () => {
-    // 1. Agrupar por piloto
-    const agrupados = new Map();
-
-    tiemposReales.forEach((row) => {
-      const pilotId = row.pilot_id;
-      if (!agrupados.has(pilotId)) {
-        agrupados.set(pilotId, {
-          id: pilotId,
-          piloto: row.pilots?.name || 'Desconocido',
-          dorsal: row.pilots?.dorsal || null, // from updated select
-          categoria: row.categories?.name || 'Desconocida',
-          categoria_id: row.category_id,
-          tiempos: []
-        });
-      }
-      agrupados.get(pilotId).tiempos.push(row);
-    });
-
-    // 2. Calcular acumulados y totales
-    const clasificacion = Array.from(agrupados.values()).map((p) => {
-      // Acumulado de pasadas anteriores
-      const acumuladoAnterior = p.tiempos
-        .filter((t: any) => t.pasada_num < pasadaSeleccionada)
-        .reduce((sum: number, t: any) => sum + t.total_time_ms, 0);
-
-      // Tiempos de la pasada actual
-      const tiemposPasadaActual = p.tiempos.filter((t: any) => t.pasada_num === pasadaSeleccionada);
-      
-      let totalPasadaActual = 0;
-      const tramosActuales: Record<number, any> = {};
-
-      tiemposPasadaActual.forEach((t: any) => {
-        tramosActuales[t.tramo_num] = t;
-        totalPasadaActual += t.total_time_ms;
-      });
-
-      const totalGeneral = acumuladoAnterior + totalPasadaActual;
-      const tieneTiempos = tiemposPasadaActual.length > 0;
-
-      return {
-        ...p,
-        acumuladoAnterior,
-        totalPasadaActual,
-        totalGeneral,
-        tramosActuales,
-        tieneTiempos
-      };
-    });
-
-    // 2.5 Calcular Récords (absolutos y por categoría) de la Pasada
-    const recordsAbsolutos = { tramos: {} as Record<number, number>, totalPasada: Infinity };
-    const recordsCategorias: Record<number, { tramos: Record<number, number>, totalPasada: number }> = {};
-
-    clasificacion.forEach(p => {
-      if (!p.tieneTiempos) return;
-      
-      const catId = p.categoria_id;
-      if (!recordsCategorias[catId]) {
-        recordsCategorias[catId] = { tramos: {}, totalPasada: Infinity };
-      }
-
-      // Record Total Pasada
-      if (p.totalPasadaActual > 0) {
-        if (p.totalPasadaActual < recordsAbsolutos.totalPasada) recordsAbsolutos.totalPasada = p.totalPasadaActual;
-        if (p.totalPasadaActual < recordsCategorias[catId].totalPasada) recordsCategorias[catId].totalPasada = p.totalPasadaActual;
-      }
-
-      // Record Tramos
-      Object.entries(p.tramosActuales).forEach(([tramoStr, tData]: [string, any]) => {
-        const tramoNum = Number(tramoStr);
-        const timeMs = tData.total_time_ms;
-        if (timeMs > 0) {
-          if (!recordsAbsolutos.tramos[tramoNum] || timeMs < recordsAbsolutos.tramos[tramoNum]) {
-            recordsAbsolutos.tramos[tramoNum] = timeMs;
-          }
-          if (!recordsCategorias[catId].tramos[tramoNum] || timeMs < recordsCategorias[catId].tramos[tramoNum]) {
-            recordsCategorias[catId].tramos[tramoNum] = timeMs;
-          }
-        }
-      });
-    });
-
-    // 3. Filtrar por categoría y si tienen tiempos, luego ordenar
-    const filtradosYOrdenados = clasificacion
-      .filter((p) => {
-        if (filtroCategoria !== 'Todas las categorías' && p.categoria !== filtroCategoria) return false;
-        return p.tieneTiempos;
-      })
-      .sort((a, b) => a.totalGeneral - b.totalGeneral);
-
-    // 4. Calcular diferencias y posiciones
-    const finalData = filtradosYOrdenados.map((row, index, arr) => {
-      const bestTimeMs = arr[0].totalGeneral;
-      const diffMs = row.totalGeneral - bestTimeMs;
-
-      return {
-        ...row,
-        posicion: index + 1,
-        diferencia: diffMs === 0 ? '-' : `+${formatMs(diffMs)}`,
-      };
-    });
-
-    return { datosFiltrados: finalData, recordsAbsolutos, recordsCategorias };
-  };
-
-  const { datosFiltrados, recordsAbsolutos, recordsCategorias } = procesarClasificacion();
+     return () => {
+         isMounted = false;
+         supabase.removeChannel(canal);
+     };
+  }, [selectedRally]);
 
   return (
-    <div className="bg-[#171717] min-h-screen p-2 md:p-8 w-full flex flex-col items-center">
-      
-      {/* Título Principal */}
-      <h1 className="text-3xl md:text-5xl font-extrabold text-center text-base-content mb-4 tracking-tight drop-shadow-sm">
-        Clasificación General
-      </h1>
+    <div className="bg-zinc-950 min-h-screen w-full flex flex-col p-4 md:p-8 items-center">
+      <div className="w-full max-w-7xl flex flex-col items-center">
+        <h1 className="text-3xl md:text-5xl font-extrabold text-zinc-100 tracking-tight mb-8">
+          Monitor de <span className="text-red-600">Clasificación</span>
+        </h1>
 
-      {/* Selectores de Filtros */}
-      <div className="w-full max-w-2xl mb-8 flex flex-col md:flex-row items-center gap-6 justify-center bg-[#1e1e1e] p-4 rounded-2xl border border-[#333333] shadow-lg">
-        <div className="flex items-center gap-4 w-full md:w-auto">
-          <label className="text-lg font-semibold whitespace-nowrap text-[#a1a1aa]">Pasada:</label>
-          <select 
-            className="select select-bordered select-md flex-1 text-base shadow-sm rounded-xl focus:border-[#DA0037] focus:ring-1 focus:ring-[#DA0037] focus:outline-none bg-[#121212] border-[#333333] text-[#ededed]"
-            value={pasadaSeleccionada}
-            onChange={(e) => setPasadaSeleccionada(Number(e.target.value))}
-          >
-            {Array.from({ length: config.num_pasadas }, (_, i) => i + 1).map(num => (
-              <option key={`opt-p-${num}`} value={num}>Pasada {num}</option>
-            ))}
-          </select>
+        {/* Top Bar / Filters */}
+        <div className="flex flex-col md:flex-row gap-6 mb-8 p-6 bg-zinc-900 border border-zinc-800 rounded-xl shadow-lg w-full max-w-4xl">
+           <div className="flex-1 flex flex-col gap-2">
+              <label className="text-sm font-semibold text-zinc-400 flex items-center gap-2"><Trophy size={16}/> Campeonato</label>
+              <select 
+                className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 p-3 rounded-lg focus:ring-2 focus:ring-red-500/50 outline-none transition-all shadow-inner"
+                value={selectedCamp}
+                onChange={(e) => setSelectedCamp(e.target.value)}
+              >
+                <option value="">Seleccionar Campeonato...</option>
+                {championships.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+           </div>
+
+           <div className="flex-1 flex flex-col gap-2">
+              <label className="text-sm font-semibold text-zinc-400 flex items-center gap-2"><Flag size={16}/> Prueba / Rally</label>
+              <select 
+                className="w-full bg-zinc-950 border border-zinc-800 text-zinc-100 p-3 rounded-lg focus:ring-2 focus:ring-red-500/50 outline-none transition-all shadow-inner disabled:opacity-50"
+                value={selectedRally}
+                onChange={(e) => setSelectedRally(e.target.value)}
+                disabled={!selectedCamp}
+              >
+                <option value="">Seleccionar Prueba...</option>
+                {rallies.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+              </select>
+           </div>
         </div>
 
-        <div className="flex items-center gap-4 w-full md:w-auto">
-          <label className="text-lg font-semibold whitespace-nowrap text-[#a1a1aa]">Categoría:</label>
-          <select 
-            className="select select-bordered select-md flex-1 text-base shadow-sm rounded-xl focus:border-[#DA0037] focus:ring-1 focus:ring-[#DA0037] focus:outline-none bg-[#121212] border-[#333333] text-[#ededed]"
-            value={filtroCategoria}
-            onChange={(e) => setFiltroCategoria(e.target.value)}
-          >
-            <option value="Todas las categorías">Todas las categorías</option>
-            <option value="WRC">WRC</option>
-            <option value="Super N">Super N</option>
-            <option value="Clásicos">Clásicos</option>
-          </select>
+        {/* Data Table */}
+        <div className={`overflow-x-auto rounded-xl shadow-2xl bg-zinc-900 border ${isUpdating ? 'border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.2)]' : 'border-zinc-800/80'} transition-all duration-300 w-full`}>
+           <table className="w-full text-left text-sm whitespace-nowrap">
+              <thead className="bg-zinc-950/50 border-b border-zinc-800 text-zinc-400 text-xs font-semibold uppercase tracking-wider">
+                 <tr>
+                    <th className="px-6 py-4 text-center">Posición</th>
+                    <th className="px-6 py-4">Piloto</th>
+                    <th className="px-6 py-4">Categoría</th>
+                    <th className="px-6 py-4">Corte (Sesión)</th>
+                    <th className="px-6 py-4 text-right">Penalización</th>
+                    <th className="px-6 py-4 text-right">Tiempo Total</th>
+                 </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-800/50">
+                 {lapTimes.map((lap, index) => (
+                    <tr key={lap.id} className="hover:bg-zinc-800/20 transition-colors text-zinc-100">
+                       <td className="px-6 py-4 text-center">
+                          <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold ${index === 0 ? 'bg-red-500/20 text-red-500 border border-red-500/50 shadow-sm shadow-red-900/20' : 'bg-zinc-800 text-zinc-400'}`}>
+                             {index + 1}
+                          </span>
+                       </td>
+                       <td className="px-6 py-4 font-bold text-base">{lap.pilots?.name || '-'}</td>
+                       <td className="px-6 py-4"><span className="px-3 py-1 bg-zinc-800 rounded-full text-xs font-medium border border-zinc-700 text-zinc-300">{lap.categories?.name || '-'}</span></td>
+                       <td className="px-6 py-4 text-zinc-400"><Clock size={14} className="inline mr-2 text-zinc-500"/>{lap.rally_sessions?.name || '-'}</td>
+                       <td className="px-6 py-4 text-right font-mono text-amber-500 font-medium">
+                         {lap.penalty_ms > 0 ? `+${formatMs(lap.penalty_ms)}s` : '-'}
+                       </td>
+                       <td className="px-6 py-4 text-right">
+                         <span className={`font-mono text-lg tracking-tight font-bold ${index === 0 ? 'text-red-400 drop-shadow-sm' : 'text-zinc-200'}`}>
+                           {formatMs(lap.total_time_ms)}
+                         </span>
+                       </td>
+                    </tr>
+                 ))}
+                 {lapTimes.length === 0 && (
+                    <tr>
+                       <td colSpan={6} className="px-6 py-12 text-center text-zinc-500 italic">
+                          {selectedRally ? "Aún no hay tiempos registrados en esta prueba." : "Selecciona un Campeonato y una Prueba para filtrar los tiempos en directo."}
+                       </td>
+                    </tr>
+                 )}
+              </tbody>
+           </table>
         </div>
       </div>
-
-      {/* Contenedor de la Tabla */}
-      <div className={`w-full overflow-x-auto rounded-2xl md:rounded-3xl shadow-2xl bg-[#1e1e1e] ${isUpdating ? 'border-2 border-[#DA0037] shadow-[0_0_25px_rgba(218,0,55,0.6)] duration-300' : 'border border-[#333333] duration-1000'} transition-all`}>
-        <table className="table table-sm w-full whitespace-nowrap text-xs md:text-sm">
-          {/* Header */}
-          <thead className="bg-[#1e1e1e] text-[#a1a1aa] text-xs md:text-sm border-b border-[#333333] tracking-tight">
-            <tr>
-              <th className="text-center w-20">Posición</th>
-              <th className="text-center w-16">Dorsal</th>
-              <th>Piloto</th>
-              <th>Categoría</th>
-              {pasadaSeleccionada > 1 && <th className="text-right">Acum. Ant.</th>}
-              {Array.from({ length: config.num_tramos }, (_, i) => i + 1).map(num => (
-                <th key={`th-tramo-${num}`} className="text-right text-[#a1a1aa]">T{num}</th>
-              ))}
-              <th className="text-right">Total Pasada</th>
-              <th className="text-right text-[#ededed]">Total General</th>
-              <th className="text-right">Diferencia</th>
-            </tr>
-          </thead>
-          
-          {/* Body */}
-          <tbody className="text-sm">
-            {datosFiltrados.map((row) => {
-              const categoryColorStyle = estilosCategorias[row.categoria_id] || {};
-
-              return (
-              <tr key={row.id} className="hover:bg-[#2a2a2a] transition-colors border-none even:bg-[#262626]/40 odd:bg-transparent">
-                
-                {/* 1. Posición */}
-                <td className="text-center font-bold px-2 py-1 md:px-4 md:py-2 h-full align-middle">
-                  {row.posicion === 1 ? (
-                    <div className="mx-auto w-10 h-10 bg-gradient-to-br from-yellow-300 to-yellow-600 rounded-full flex items-center justify-center shadow-lg shadow-yellow-500/20">
-                      <span className="text-2xl drop-shadow-md" title="Oro">🥇</span>
-                    </div>
-                  ) : row.posicion === 2 ? (
-                    <div className="mx-auto w-8 h-8 bg-gradient-to-br from-gray-300 to-gray-500 rounded-full flex items-center justify-center shadow-lg shadow-gray-400/20">
-                      <span className="text-xl drop-shadow-md" title="Plata">🥈</span>
-                    </div>
-                  ) : row.posicion === 3 ? (
-                    <div className="mx-auto w-8 h-8 bg-gradient-to-br from-amber-600 to-amber-800 rounded-full flex items-center justify-center shadow-lg shadow-amber-700/20">
-                      <span className="text-xl drop-shadow-md" title="Bronce">🥉</span>
-                    </div>
-                  ) : (
-                    <span className="text-lg text-[#a1a1aa]">{row.posicion}</span>
-                  )}
-                </td>
-
-                {/* 2. Dorsal Premium */}
-                <td className="text-center px-2 py-1 md:px-4 md:py-2 align-middle">
-                  <div className="mx-auto w-8 h-8 bg-gradient-to-br from-[#DA0037] to-[#8b0022] rounded-full flex items-center justify-center shadow-md shadow-[#DA0037]/20 border border-[#DA0037]/50">
-                    <span className="text-[#ededed] font-mono font-bold text-sm">{row.dorsal || '-'}</span>
-                  </div>
-                </td>
-
-                {/* 3. Piloto */}
-                <td className={`font-bold px-2 py-1 md:px-4 md:py-2 align-middle ${row.posicion === 1 ? 'text-2xl text-[#DA0037] drop-shadow-sm tracking-tight' : 'text-lg text-[#ededed]'}`}>
-                  {row.piloto}
-                </td>
-
-                {/* 4. Categoría */}
-                <td className="px-2 py-1 md:px-4 md:py-2 align-middle">
-                  <span 
-                    className="px-3 py-1 text-xs font-bold rounded-full bg-[#121212] border border-[#333333] tracking-wide inline-block"
-                    style={categoryColorStyle}
-                  >
-                    {row.categoria}
-                  </span>
-                </td>
-
-                {/* 5. Acumulado Anterior (Condicional) */}
-                {pasadaSeleccionada > 1 && (
-                  <td className="text-right font-mono text-sm text-[#a1a1aa] px-2 py-1 md:px-4 md:py-2 align-middle opacity-80">
-                    {row.acumuladoAnterior > 0 ? formatMs(row.acumuladoAnterior) : '-'}
-                  </td>
-                )}
-
-                {/* 6. Tramos Dinámicos */}
-                {Array.from({ length: config.num_tramos }, (_, i) => i + 1).map(num => {
-                  const tramoData = row.tramosActuales[num];
-                  if (tramoData) {
-                    const timeMs = tramoData.total_time_ms;
-                    const esRecordAbsoluto = timeMs === recordsAbsolutos.tramos[num] && timeMs > 0;
-                    const esRecordCategoria = timeMs === recordsCategorias[row.categoria_id]?.tramos[num] && timeMs > 0;
-
-                    let formatClass = "text-[#ededed]";
-                    let formatStyle: React.CSSProperties = {};
-                    
-                    if (esRecordAbsoluto) {
-                      formatClass = "text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.8)]";
-                    } else if (esRecordCategoria) {
-                      formatClass = "";
-                      formatStyle = estilosCategorias[row.categoria_id] || {};
-                    }
-
-                    return (
-                      <td key={`tramo-data-${num}`} className={`text-right font-mono text-sm px-2 py-1 md:px-4 md:py-2 align-middle ${formatClass}`} style={formatStyle}>
-                        <div className="flex flex-col items-end">
-                          <span>{formatMs(tramoData.track_time_ms)}</span>
-                          {tramoData.penalty_ms > 0 && (
-                            <span className="text-error text-xs font-bold leading-none mt-1">
-                              (+{(tramoData.penalty_ms / 1000).toFixed(1)}s)
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                    );
-                  } else {
-                    return (
-                      <td key={`tramo-data-${num}`} className="text-right font-mono text-[#444444] text-sm px-2 py-1 md:px-4 md:py-2 align-middle">
-                        -
-                      </td>
-                    );
-                  }
-                })}
-
-                {/* 7. Total Pasada Actual */}
-                {(() => {
-                  const timeMs = row.totalPasadaActual;
-                  const esRecAbs = timeMs === recordsAbsolutos.totalPasada && timeMs > 0;
-                  const esRecCat = timeMs === recordsCategorias[row.categoria_id]?.totalPasada && timeMs > 0;
-                  
-                  let formatClass = "text-[#ededed]";
-                  let formatStyle: React.CSSProperties = {};
-                  
-                  if (esRecAbs) {
-                    formatClass = "text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.8)]";
-                  } else if (esRecCat) {
-                    formatClass = "";
-                    formatStyle = estilosCategorias[row.categoria_id] || {};
-                  }
-
-                  return (
-                    <td className={`text-right font-mono text-lg px-2 py-1 md:px-4 md:py-2 align-middle font-semibold ${formatClass}`} style={formatStyle}>
-                      {timeMs > 0 ? formatMs(timeMs) : '-'}
-                    </td>
-                  );
-                })()}
-
-                {/* 8. Total General (Estilo LED) */}
-                <td className="text-right px-2 py-1 md:px-4 md:py-2 align-middle">
-                  <span className={`inline-block px-3 py-1 bg-[#0a0a0a] rounded-lg border border-[#333333] font-mono font-black ${row.posicion === 1 ? 'text-2xl text-[#ededed] drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]' : 'text-xl text-[#DA0037] drop-shadow-[0_0_5px_rgba(218,0,55,0.4)]'}`}>
-                    {formatMs(row.totalGeneral)}
-                  </span>
-                </td>
-
-                {/* 9. Diferencia */}
-                <td className="text-right font-mono text-lg text-amber-500 px-2 py-1 md:px-4 md:py-2 font-bold align-middle">
-                  {row.diferencia}
-                </td>
-              </tr>
-              );
-            })}
-            
-            {/* Mensaje si no hay resultados */}
-            {datosFiltrados.length === 0 && (
-              <tr>
-                <td colSpan={config.num_tramos + (pasadaSeleccionada > 1 ? 1 : 0) + 7} className="text-center py-8 text-base-content/50 italic">
-                  No hay resultados para esta categoría y pasada.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
     </div>
   );
 }

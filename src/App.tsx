@@ -10,78 +10,97 @@ import Clasificacion from './pages/Clasificacion';
 import Management from './pages/Management';
 import Onboarding from './pages/Onboarding';
 
-// Navbar is now wrapped with logic to know if a user is logged in
-function Navbar({ session, profile }: { session: Session | null, profile: any }) {
+// Sidebar incorporates SaaS Dashboard layout
+function Sidebar({ session, profile, handleLogout }: { session: Session | null, profile: any, handleLogout: () => void }) {
   const location = useLocation();
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/login');
-  };
   
   return (
-    <div className="navbar bg-[#171717]/80 backdrop-blur-md border-b border-[#333333] sticky top-0 z-50 px-2 md:px-8 flex-col md:flex-row py-2 md:py-0 gap-2 md:gap-0">
-      <div className="flex-1 w-full md:w-auto flex justify-center md:justify-start">
-        <Link to="/" className="text-xl font-bold flex items-center gap-2 text-[#ededed] hover:text-[#DA0037] transition-colors">
-          <HomeIcon size={24} />
+    <aside className="w-64 flex-shrink-0 border-r border-zinc-800/60 bg-zinc-950 flex flex-col h-full hidden lg:flex relative z-50">
+      <div className="p-6 border-b border-zinc-800/60">
+        <Link to="/" className="text-xl font-bold tracking-tight text-white flex items-center gap-2 hover:text-zinc-300 transition-colors">
+          <Settings size={22} className="text-zinc-400" />
           <span>TimeAttack</span>
         </Link>
       </div>
-      <div className="flex-none gap-2 w-full md:w-auto overflow-x-auto no-scrollbar">
-        <ul className="menu menu-horizontal px-1 items-center gap-1 md:gap-2 text-[#a1a1aa] font-medium flex-nowrap w-max mx-auto md:w-auto md:mx-0">
-          {session && profile?.role === 'club' && (
-            <>
-              <li>
-                <Link 
-                  to="/cronometrador" 
-                  className={`flex items-center gap-2 rounded-xl transition-colors hover:text-[#ededed] ${location.pathname === '/cronometrador' ? 'text-[#ededed] bg-[#333333]/50' : ''}`}
-                >
-                  <Timer size={18} />
-                  <span className="hidden sm:inline">Cronometrador</span>
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  to="/gestion" 
-                  className={`flex items-center gap-2 rounded-xl transition-colors hover:text-[#ededed] ${location.pathname === '/gestion' ? 'text-[#ededed] bg-[#333333]/50' : ''}`}
-                >
-                  <Settings size={18} />
-                  <span className="hidden sm:inline">Gestión</span>
-                </Link>
-              </li>
-            </>
-          )}
-          <li>
-            <Link 
-              to="/clasificacion" 
-              className={`flex items-center gap-2 rounded-xl transition-colors hover:text-[#ededed] ${location.pathname === '/clasificacion' ? 'text-[#ededed] bg-[#333333]/50' : ''}`}
-            >
-              <Trophy size={18} />
-              <span className="hidden sm:inline">Clasificación</span>
-            </Link>
-          </li>
-          
-          <div className="divider opacity-30 divider-horizontal mx-0"></div>
 
-          {session ? (
-            <li>
-              <button onClick={handleLogout} className="btn btn-ghost btn-sm text-[#DA0037] hover:bg-[#DA0037]/10 hover:text-[#DA0037] rounded-xl flex items-center gap-2">
-                <LogOut size={16} />
-                <span className="hidden sm:inline">Salir</span>
-              </button>
-            </li>
-          ) : (
-            location.pathname !== '/login' && (
-              <li>
-                <Link to="/login" className="btn btn-primary btn-sm rounded-xl text-white flex items-center gap-2 border-none">
-                  <LogIn size={16} />
-                  <span>Acceso</span>
-                </Link>
-              </li>
-            )
-          )}
-        </ul>
+      <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto no-scrollbar">
+        {session && profile?.role === 'club' && (
+          <>
+            <Link 
+              to="/cronometrador" 
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === '/cronometrador' ? 'bg-red-950/60 text-red-100 border-l-2 border-red-500 shadow-sm' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white border-l-2 border-transparent'}`}
+            >
+              <Timer size={18} />
+              <span>Cronometrador</span>
+            </Link>
+            <Link 
+              to="/gestion" 
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === '/gestion' ? 'bg-red-950/60 text-red-100 border-l-2 border-red-500 shadow-sm' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white border-l-2 border-transparent'}`}
+            >
+              <Settings size={18} />
+              <span>Gestión</span>
+            </Link>
+          </>
+        )}
+        <Link 
+          to="/clasificacion" 
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === '/clasificacion' ? 'bg-red-950/60 text-red-100 border-l-2 border-red-500 shadow-sm' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white border-l-2 border-transparent'}`}
+        >
+          <Trophy size={18} />
+          <span>Clasificación</span>
+        </Link>
+      </nav>
+
+      {session ? (
+        <div className="p-4 mt-auto border-t border-zinc-800/60">
+          <button 
+            onClick={handleLogout} 
+            className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+          >
+            <LogOut size={18} />
+            <span>Salir</span>
+          </button>
+        </div>
+      ) : (
+        location.pathname !== '/login' && (
+          <div className="p-4 mt-auto border-t border-zinc-800/60">
+            <Link 
+              to="/login" 
+              className="w-full flex justify-center items-center gap-2 px-3 py-2.5 text-sm font-medium bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors shadow-md shadow-red-900/20"
+            >
+              <LogIn size={18} />
+              <span>Acceso</span>
+            </Link>
+          </div>
+        )
+      )}
+    </aside>
+  );
+}
+
+// Mobile Navbar (For small screens)
+function MobileNavbar({ session, profile, handleLogout }: { session: Session | null, profile: any, handleLogout: () => void }) {
+  const location = useLocation();
+  
+  return (
+    <div className="lg:hidden bg-zinc-950 border-b border-zinc-800/60 flex items-center justify-between p-4 sticky top-0 z-50">
+      <Link to="/" className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+         <span>TimeAttack</span>
+      </Link>
+      <div className="flex items-center gap-2">
+         {session && profile?.role === 'club' && (
+           <Link to="/gestion" className={`p-2 rounded-lg border-b-2 ${location.pathname === '/gestion' ? 'bg-red-950/60 text-red-100 border-red-500' : 'text-zinc-400 border-transparent'}`}>
+             <Settings size={20} />
+           </Link>
+         )}
+         <Link to="/clasificacion" className={`p-2 rounded-lg border-b-2 ${location.pathname === '/clasificacion' ? 'bg-red-950/60 text-red-100 border-red-500' : 'text-zinc-400 border-transparent'}`}>
+           <Trophy size={20} />
+         </Link>
+         {session ? (
+           <button onClick={handleLogout} className="p-2 rounded-lg text-zinc-400 hover:text-red-400"><LogOut size={20} /></button>
+         ) : (
+           <Link to="/login" className="p-2 rounded-lg text-red-500"><LogIn size={20} /></Link>
+         )}
       </div>
     </div>
   );
@@ -213,32 +232,38 @@ function AppContent() {
     return <>{children}</>;
   };
 
-  return (
-    <div className="min-h-screen bg-[#121212] font-sans text-base-content flex flex-col">
-      {/* Navbar superior */}
-      <Navbar session={session} profile={profile} />
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    window.location.href = '/login';
+  };
 
-      {/* Contenedor principal */}
-      <main className="p-2 md:p-8 flex-1 flex flex-col">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          
-          <Route path="/login" element={isAuth ? redirectAfterLogin() : <Login />} />
-          <Route path="/onboarding" element={isAuth && needsOnboarding ? <Onboarding /> : <Navigate to="/" replace />} />
-          
-          {/* Rutas Protegidas para Clubes/Organizadores usando el Guard y Pasando Contexto */}
-          <Route 
-            path="/cronometrador" 
-            element={<ProtectedRoute allowedRole="club"><Cronometrador userId={session?.user?.id} /></ProtectedRoute>} 
-          />
-          <Route 
-            path="/gestion" 
-            element={<ProtectedRoute allowedRole="club"><Management userId={session?.user?.id} /></ProtectedRoute>} 
-          />
-          
-          {/* Ruta Pública compartida y para Pilotos */}
-          <Route path="/clasificacion" element={<Clasificacion />} />
-        </Routes>
+  return (
+    <div className="flex h-screen bg-zinc-950 text-zinc-100 overflow-hidden font-sans">
+      <Sidebar session={session} profile={profile} handleLogout={handleLogout} />
+      <MobileNavbar session={session} profile={profile} handleLogout={handleLogout} />
+
+      <main className="flex-1 overflow-y-auto bg-[#09090b] p-4 lg:p-8">
+        <div className="max-w-6xl mx-auto h-full flex flex-col">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            
+            <Route path="/login" element={isAuth ? redirectAfterLogin() : <Login />} />
+            <Route path="/onboarding" element={isAuth && needsOnboarding ? <Onboarding /> : <Navigate to="/" replace />} />
+            
+            {/* Rutas Protegidas para Clubes/Organizadores usando el Guard y Pasando Contexto */}
+            <Route 
+              path="/cronometrador" 
+              element={<ProtectedRoute allowedRole="club"><Cronometrador userId={session?.user?.id} /></ProtectedRoute>} 
+            />
+            <Route 
+              path="/gestion" 
+              element={<ProtectedRoute allowedRole="club"><Management userId={session?.user?.id} /></ProtectedRoute>} 
+            />
+            
+            {/* Ruta Pública compartida y para Pilotos */}
+            <Route path="/clasificacion" element={<Clasificacion />} />
+          </Routes>
+        </div>
       </main>
     </div>
   );

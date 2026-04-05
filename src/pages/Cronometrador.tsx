@@ -62,13 +62,14 @@ export default function Cronometrador({ userId, sessionId, rallyId }: { userId?:
           
           if (isMounted && insData) {
             const pMap = new Map();
-            const cMap = new Map();
             insData.forEach((i: any) => {
-              if (i.pilots && !pMap.has(i.pilot_id)) pMap.set(i.pilot_id, { id: i.pilot_id, name: i.pilots.name });
-              if (i.categories && !cMap.has(i.category_id)) cMap.set(i.category_id, { id: i.category_id, name: i.categories.name });
+              if (i.pilots && !pMap.has(i.pilot_id)) pMap.set(i.pilot_id, { id: i.pilot_id, name: i.pilots.name, assigned_category_id: i.category_id });
             });
             setPilotos(Array.from(pMap.values()));
-            setCategorias(Array.from(cMap.values()));
+            
+            // Fetch all global categories as requested
+            const { data: catData } = await supabase.from('categories').select('id, name').eq('club_id', userId);
+            if (catData) setCategorias(catData);
           }
         } else {
           // Global club fallback
@@ -134,9 +135,13 @@ export default function Cronometrador({ userId, sessionId, rallyId }: { userId?:
   // Set default values automatically if lists are populated but selection is empty
   useEffect(() => {
     if (pilotos.length > 0 && !pilotoId) {
-      setPilotoId(pilotos[0].id);
+      const firstPilot = pilotos[0];
+      setPilotoId(firstPilot.id);
+      if (sessionId && firstPilot.assigned_category_id) {
+        setCategoriaId(firstPilot.assigned_category_id.toString());
+      }
     }
-  }, [pilotos, pilotoId]);
+  }, [pilotos, pilotoId, sessionId]);
 
   useEffect(() => {
     if (categorias.length > 0 && !categoriaId) {
@@ -294,7 +299,17 @@ export default function Cronometrador({ userId, sessionId, rallyId }: { userId?:
             <select
               className="select select-bordered w-full text-lg rounded-2xl focus:border-[#DA0037] focus:ring-1 focus:ring-[#DA0037] focus:outline-none bg-[#171717] text-[#ededed]"
               value={pilotoId}
-              onChange={(e) => setPilotoId(e.target.value)}
+              onChange={(e) => {
+                const selectedPilotId = e.target.value;
+                setPilotoId(selectedPilotId);
+                
+                if (sessionId) {
+                  const pilotoSeleccionado = pilotos.find(p => p.id === selectedPilotId);
+                  if (pilotoSeleccionado && pilotoSeleccionado.assigned_category_id) {
+                    setCategoriaId(pilotoSeleccionado.assigned_category_id.toString());
+                  }
+                }
+              }}
             >
               <option value="" disabled>Selecciona un piloto...</option>
               {pilotos.map(p => (
@@ -337,14 +352,14 @@ export default function Cronometrador({ userId, sessionId, rallyId }: { userId?:
             </div>
           </div>
 
-          <div className="divider my-2 md:my-4">TIEMPOS DE TRAMOS</div>
+          <div className="divider my-4 before:bg-zinc-800 after:bg-zinc-800 text-zinc-500 font-medium text-xs tracking-wider">TIEMPOS DE TRAMOS</div>
 
           {/* Fila 3: Grid de Tramos (Multi-Input) */}
           <div className="flex flex-col gap-2 md:gap-4">
             {Array.from({ length: config.num_tramos }, (_, i) => i + 1).map(num => (
-              <div key={`tramo-input-${num}`} className="flex flex-col md:flex-row gap-4 items-center bg-[#121212] p-4 rounded-2xl border border-[#333333]">
+              <div key={`tramo-input-${num}`} className="flex flex-col md:flex-row gap-4 items-center bg-zinc-900 p-4 rounded-2xl border border-zinc-800/80">
                 <div className="w-full md:w-32 flex-shrink-0">
-                  <span className="text-xl font-bold text-[#DA0037]">Tramo {num}</span>
+                  <span className="text-xl text-zinc-400 font-medium">Tramo {num}</span>
                 </div>
                 
                 <div className="form-control w-full flex-1">
@@ -352,7 +367,7 @@ export default function Cronometrador({ userId, sessionId, rallyId }: { userId?:
                     type="number"
                     step="0.001"
                     placeholder="Tiempo (00.000)"
-                    className="input input-bordered w-full text-center text-xl font-mono font-bold spin-button-none focus:border-[#DA0037] focus:ring-1 focus:ring-[#DA0037] focus:outline-none transition-colors rounded-xl bg-[#171717] text-[#ededed]"
+                    className="input w-full text-center text-xl font-mono font-bold spin-button-none bg-zinc-900 border border-zinc-800 focus:border-red-500 focus:ring-1 focus:ring-red-500 text-zinc-100 transition-colors rounded-xl"
                     value={tiemposTramos[num] || ''}
                     onChange={(e) => handleTiempoChange(num, e.target.value)}
                   />
@@ -361,18 +376,18 @@ export default function Cronometrador({ userId, sessionId, rallyId }: { userId?:
             ))}
           </div>
 
-          <div className="divider my-2">PENALIZACIÓN (PASADA COMPLETA)</div>
+          <div className="divider my-4 before:bg-zinc-800 after:bg-zinc-800 text-zinc-500 font-medium text-xs tracking-wider">PENALIZACIÓN (PASADA COMPLETA)</div>
 
           {/* Fila 4: Penalización Global */}
           <div className="flex justify-center">
-            <div className="form-control w-full max-w-sm bg-[#121212] p-4 rounded-3xl border border-error/30 shadow-[0_0_15px_rgba(255,0,0,0.05)]">
-              <label className="label justify-center">
-                <span className="label-text text-lg font-bold text-error uppercase tracking-wider">Penalización Total (seg)</span>
+            <div className="form-control w-full max-w-sm bg-amber-500/10 p-6 rounded-2xl border border-amber-500/30">
+              <label className="label justify-center p-0 mb-4">
+                <span className="block text-sm font-bold text-amber-500 uppercase tracking-wider">Penalización Total (seg)</span>
               </label>
               <input
                 type="number"
                 step="0.1"
-                className="input input-bordered input-lg w-full text-center text-4xl font-mono font-black spin-button-none text-error h-20 rounded-2xl focus:border-error focus:ring-2 focus:ring-error focus:outline-none bg-[#0a0a0a]"
+                className="w-full text-center text-4xl font-mono font-black border border-amber-500/30 bg-transparent text-amber-500 h-20 rounded-xl block outline-none transition-all focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 shadow-sm spin-button-none"
                 value={penalizacionPasada}
                 onChange={(e) => setPenalizacionPasada(e.target.value)}
               />
@@ -380,10 +395,10 @@ export default function Cronometrador({ userId, sessionId, rallyId }: { userId?:
           </div>
 
           {/* Botón de Guardar */}
-          <div className="form-control mt-6">
+          <div className="form-control mt-8">
             <button
               type="submit"
-              className="btn btn-lg w-full mt-6 text-2xl h-20 bg-gradient-to-r from-[#DA0037] to-[#b9002f] text-white hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(218,0,55,0.4)] transition-all rounded-3xl border-none"
+              className="w-full bg-red-600 hover:bg-red-500 text-white font-semibold py-3 rounded-xl transition-all shadow-md shadow-red-900/20 active:scale-[0.98] text-xl tracking-wide border-none"
             >
               GUARDAR TIEMPO
             </button>
@@ -392,16 +407,16 @@ export default function Cronometrador({ userId, sessionId, rallyId }: { userId?:
 
         {/* Historial Aislado Exclusivo para este Corte/Sesión (O Genérico si se usa standalone) */}
         {sessionLapTimes.length > 0 && (
-          <div className="mt-8 border-t border-[#333333] pt-6">
-            <h3 className="text-[#a1a1aa] font-bold text-sm mb-4 uppercase text-center tracking-widest">Registros de Sesión</h3>
-            <div className="overflow-x-auto rounded-xl border border-[#333333]">
-              <table className="table w-full text-sm">
+          <div className="mt-8 border-t border-zinc-800/80 pt-8">
+            <h3 className="text-zinc-500 font-bold text-xs mb-4 uppercase text-center tracking-widest block">Registros de Sesión</h3>
+            <div className="overflow-x-auto rounded-xl border border-zinc-800/80 shadow-sm">
+              <table className="w-full text-sm text-left">
                 <tbody>
                   {sessionLapTimes.map(t => (
-                    <tr key={t.id} className="border-b border-[#333333] bg-[#121212] hover:bg-[#1a1a1a] transition-colors">
-                      <td className="text-white font-semibold pl-4">{t.pilots?.name}</td>
-                      <td className="text-[#a1a1aa] font-mono">T{t.tramo_num} / P{t.pasada_num}</td>
-                      <td className="text-right text-[#DA0037] font-mono font-bold pr-4">{(t.total_time_ms / 1000).toFixed(3)}s</td>
+                    <tr key={t.id} className="border-b last:border-0 border-zinc-800/40 bg-zinc-900/50 hover:bg-zinc-800/50 transition-colors">
+                      <td className="text-zinc-200 font-medium py-3 pl-4 rounded-l-lg">{t.pilots?.name}</td>
+                      <td className="text-zinc-500 font-mono py-3">T{t.tramo_num} / P{t.pasada_num}</td>
+                      <td className="text-right text-red-400 font-mono font-bold py-3 pr-4 rounded-r-lg">{(t.total_time_ms / 1000).toFixed(3)}s</td>
                     </tr>
                   ))}
                 </tbody>
