@@ -5,19 +5,11 @@
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
 }
 
-:root {
-  /* High-Performance Palette Overrides */
-  --b1: 0 0% 9%;      /* #171717 base-100 (Negro profundo) */
-  --b2: 0 0% 12%;     /* un pelín más claro para contrastes menores */
-  --b3: 0 0% 27%;     /* #444444 base-300 (Gris oscuro) */
-  --bc: 0 0% 93%;     /* #ededed (Blanco roto) */
-  --p: 345 100% 43%;  /* #DA0037 primary (Rojo competición) */
-  --pc: 0 0% 100%;    /* texto blanco sobre primario */
-}
+
 
 body {
-  background-color: #171717;
-  color: #EDEDED;
+  background-color: #020617; /* Tailwind bg-slate-950 */
+  color: #f1f5f9;           /* Tailwind text-slate-100 */
 }
 
 .spin-button-none::-webkit-outer-spin-button,
@@ -28,4 +20,15 @@ body {
 
 .spin-button-none {
   -moz-appearance: textfield; /* Para Firefox */
+}
+
+/* Hack infalible para el Autofill en Dark Mode */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+    transition: background-color 5000s ease-in-out 0s, color 5000s ease-in-out 0s !important;
+    transition-delay: background-color 5000s, color 5000s !important;
+    -webkit-text-fill-color: #f4f4f5 !important; /* Texto claro */
+    font-family: inherit !important;
 }

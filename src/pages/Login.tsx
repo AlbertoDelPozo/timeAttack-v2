@@ -116,11 +116,11 @@ export default function Login() {
                   <label className="label">
                     <span className="label-text font-bold text-[#ededed]">Nombre / Equipo</span>
                   </label>
-                  <label className="input bg-[#121212] border border-[#333333] text-[#ededed] focus-within:border-[#DA0037] focus-within:ring-1 focus-within:ring-[#DA0037] rounded-xl flex items-center gap-3 w-full py-6">
-                    <User size={18} className="text-[#a1a1aa]" />
+                  <label className="input bg-zinc-900 border border-zinc-700 text-zinc-100 focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500 focus-within:outline-none rounded-lg flex items-center gap-3 w-full py-6">
+                    <User size={18} className="text-zinc-400" />
                     <input 
                       type="text" 
-                      className="grow" 
+                      className="grow bg-transparent" 
                       placeholder="Ej: Escudería Sur"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
@@ -160,11 +160,11 @@ export default function Login() {
               <label className="label">
                 <span className="label-text font-bold text-[#ededed]">Correo Electrónico</span>
               </label>
-              <label className="input bg-[#121212] border border-[#333333] text-[#ededed] focus-within:border-[#DA0037] focus-within:ring-1 focus-within:ring-[#DA0037] rounded-xl flex items-center gap-3 w-full py-6">
-                <Mail size={18} className="text-[#a1a1aa]" />
+              <label className="input bg-zinc-900 border border-zinc-700 text-zinc-100 focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500 focus-within:outline-none rounded-lg flex items-center gap-3 w-full py-6">
+                <Mail size={18} className="text-zinc-400" />
                 <input 
                   type="email" 
-                  className="grow" 
+                  className="grow bg-transparent" 
                   placeholder="piloto@rally.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -177,11 +177,11 @@ export default function Login() {
               <label className="label">
                 <span className="label-text font-bold text-[#ededed]">Contraseña</span>
               </label>
-              <label className="input bg-[#121212] border border-[#333333] text-[#ededed] focus-within:border-[#DA0037] focus-within:ring-1 focus-within:ring-[#DA0037] rounded-xl flex items-center gap-3 w-full py-6">
-                <Lock size={18} className="text-[#a1a1aa]" />
+              <label className="input bg-zinc-900 border border-zinc-700 text-zinc-100 focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500 focus-within:outline-none rounded-lg flex items-center gap-3 w-full py-6">
+                <Lock size={18} className="text-zinc-400" />
                 <input 
                   type="password" 
-                  className="grow" 
+                  className="grow bg-transparent" 
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -193,10 +193,10 @@ export default function Login() {
             <div className="form-control mt-2">
               <button 
                 type="submit" 
-                className="w-full h-[3.5rem] bg-red-600 text-white font-medium rounded-lg shadow-md px-4 py-2 hover:bg-red-700 transition-colors border-none disabled:opacity-50 flex flex-row justify-center items-center" 
+                className="w-full h-[3.5rem] bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-900/20 active:scale-[0.98] font-semibold rounded-xl transition-all duration-200 border-none disabled:opacity-70 flex flex-row justify-center items-center" 
                 disabled={loading}
               >
-                {loading ? <span className="loading loading-spinner"></span> : (mode === 'login' ? 'Entrar al Paddock' : 'Registrar Cuenta')}
+                {loading ? "Cargando..." : (mode === 'login' ? 'Entrar al Paddock' : 'Registrar Cuenta')}
               </button>
             </div>
           </form>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-import { Trash2, Plus, Pencil, Check, X, Users, Trophy } from 'lucide-react';
+import { Trash2, Plus, Pencil, Check, X, Users, Trophy, Clock } from 'lucide-react';
 import Cronometrador from './Cronometrador';
 import { useChampionshipData } from '../hooks/useChampionshipData';
 import { ChampionshipAccordion } from '../components/management/ChampionshipAccordion';
@@ -16,8 +16,12 @@ function ChampionshipManager({ userId }: { userId: string }) {
   const [inscritos, setInscritos] = useState<any[]>([]);
   const [pilotosGlobal, setPilotosGlobal] = useState<any[]>([]);
   const [categoriasGlobal, setCategoriasGlobal] = useState<any[]>([]);
-  const [pilotoSel, setPilotoSel] = useState('');
+  const [nombrePiloto, setNombrePiloto] = useState('');
+  const [apellidosPiloto, setApellidosPiloto] = useState('');
   const [catSel, setCatSel] = useState('');
+  const [sesionInscripcion, setSesionInscripcion] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [modalCronometro, setModalCronometro] = useState<{ open: boolean, sessionId: string | null, rallyId: string | null }>({ open: false, sessionId: null, rallyId: null });
   const isMounted = useRef(true);
 
   useEffect(() => {
@@ -25,73 +29,115 @@ function ChampionshipManager({ userId }: { userId: string }) {
     return () => { isMounted.current = false; };
   }, []);
 
-  const cargarInscritosFormData = async (sessionId: string) => {
-    const { data: insData } = await supabase.from('inscriptions').select('*, pilots(name), categories(name)').eq('session_id', sessionId);
+  const cargarInscritosFormData = async (rallyId: string) => {
+    const { data: insData } = await supabase.from('inscriptions').select('*, pilots(name), categories(name), rally_sessions(name)').eq('rally_id', rallyId);
     if (insData && isMounted.current) setInscritos(insData);
     
-    if (pilotosGlobal.length === 0) {
-      const { data: pData } = await supabase.from('pilots').select('id, name').eq('club_id', userId);
-      if (pData && isMounted.current) setPilotosGlobal(pData);
-      
-      const { data: cData } = await supabase.from('categories').select('id, name').eq('club_id', userId);
-      if (cData && isMounted.current) setCategoriasGlobal(cData);
+    const rallyActual = cd.rallies.find(r => r.id === rallyId);
+    if (rallyActual) {
+      const { data: catData } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('championship_id', rallyActual.championship_id);
+        
+      if (catData && isMounted.current) setCategoriasGlobal(catData);
     }
   };
 
   useEffect(() => {
-    if (modalInscripciones.open && modalInscripciones.sessionId) {
-      cargarInscritosFormData(modalInscripciones.sessionId);
+    if (modalInscripciones.open && modalInscripciones.rallyId) {
+      cargarInscritosFormData(modalInscripciones.rallyId);
     } else {
       setInscritos([]);
     }
-  }, [modalInscripciones.open, modalInscripciones.sessionId]);
+  }, [modalInscripciones.open, modalInscripciones.rallyId]);
+
+  const handleDeleteInscription = async (id: string, rallyId: string) => {
+    if (!window.confirm("¿Estás seguro de eliminar a este piloto de la prueba?")) return;
+    const { error } = await supabase.from('inscriptions').delete().eq('id', id);
+    if (!error) cargarInscritosFormData(rallyId);
+  };
 
   const handleInscribir = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!pilotoSel || !catSel || !modalInscripciones.sessionId) return;
-    
-    // 1. Obtener todos los IDs de los cortes (sesiones) de este Rally
-    const { data: rallySessions, error: sessionErr } = await supabase
-      .from('rally_sessions')
-      .select('id')
-      .eq('rally_id', modalInscripciones.rallyId);
+    if (!nombrePiloto || !apellidosPiloto || !catSel || !sesionInscripcion || !modalInscripciones.rallyId) return;
 
-    if (sessionErr) {
-      alert("Error al verificar sesiones del rally.");
+    if (editingId) {
+      const { error } = await supabase.from('inscriptions').update({
+        category_id: Number(catSel),
+        session_id: sesionInscripcion
+      }).eq('id', editingId);
+
+      if (error) {
+         alert("Error al actualizar inscripción: " + error.message);
+      } else {
+         setEditingId(null);
+         setNombrePiloto('');
+         setApellidosPiloto('');
+         setCatSel('');
+         setSesionInscripcion('');
+         cargarInscritosFormData(modalInscripciones.rallyId);
+      }
       return;
     }
 
-    const sessionIds = rallySessions.map((s: any) => s.id);
-
-    // 2. Comprobar si el piloto ya está en alguna de esas sesiones
-    const { data: existingInscriptions, error: insErr } = await supabase
+    const nombreCompleto = `${nombrePiloto.trim()} ${apellidosPiloto.trim()}`;
+    
+    // 1. UPSERT Lógico: Buscar si ya existe el piloto exacto para evitar duplicar el piloto en la tabla global
+    let finalPilotId = '';
+    const { data: existPilot } = await supabase.from('pilots').select('id').eq('name', nombreCompleto).eq('club_id', userId).maybeSingle();
+    
+    if (existPilot) {
+        finalPilotId = existPilot.id;
+    } else {
+        const { data: newPilot, error: errPilot } = await supabase
+          .from('pilots')
+          .insert([{ name: nombreCompleto, club_id: userId }])
+          .select('id').single();
+          
+        if (errPilot) {
+            alert("Error creando piloto: " + errPilot.message);
+            return;
+        }
+        finalPilotId = newPilot.id;
+    }
+    
+    // 2. Verificar si el piloto ya está inscrito en ESTE rally
+    const { data: existe, error: errCheck } = await supabase
       .from('inscriptions')
-      .select('id')
-      .in('session_id', sessionIds)
-      .eq('pilot_id', pilotoSel);
+      .select('id, rally_sessions(name)')
+      .eq('rally_id', modalInscripciones.rallyId)
+      .eq('pilot_id', finalPilotId)
+      .maybeSingle();
 
-    if (insErr) {
-      alert("Error al verificar inscripciones previas.");
+    if (errCheck) {
+      alert("Error al verificar la base de datos.");
       return;
     }
 
-    if (existingInscriptions && existingInscriptions.length > 0) {
-      alert("⚠️ Operación bloqueada: Este piloto ya está inscrito en otro corte de esta misma prueba.");
+    // 3. Bloquear inscripción duplicada
+    if (existe) {
+      const nombreCorte = (existe.rally_sessions as any)?.name || "otro corte";
+      alert(`⚠️ Bloqueado: Este piloto ya está inscrito en esta prueba (asignado a: ${nombreCorte}). Solo puede participar una vez por Rally.`);
       return;
     }
     
+    // 4. Insertar inscripción definitiva
     const { error } = await supabase.from('inscriptions').insert({
-      session_id: modalInscripciones.sessionId,
-      pilot_id: pilotoSel,
+      rally_id: modalInscripciones.rallyId,
+      session_id: sesionInscripcion,
+      pilot_id: finalPilotId,
       category_id: Number(catSel)
     });
     
     if (error) {
        alert("Error al inscribir: " + error.message);
     } else {
-       setPilotoSel('');
+       setNombrePiloto('');
+       setApellidosPiloto('');
        setCatSel('');
-       cargarInscritosFormData(modalInscripciones.sessionId);
+       setSesionInscripcion('');
+       cargarInscritosFormData(modalInscripciones.rallyId);
     }
   };
 
@@ -102,8 +148,10 @@ function ChampionshipManager({ userId }: { userId: string }) {
         expandedCamp={cd.expandedCamp} setExpandedCamp={cd.setExpandedCamp}
         expandedRally={cd.expandedRally} setExpandedRally={cd.setExpandedRally}
         setModalCamp={cd.setModalCamp} setModalRally={cd.setModalRally} setModalSession={cd.setModalSession}
-        setModalInscripciones={setModalInscripciones}
+        setModalInscripciones={setModalInscripciones} setModalCronometro={setModalCronometro}
         deleteChampionship={cd.deleteChampionship}
+        deleteRally={cd.deleteRally}
+        deleteSession={cd.deleteSession}
       />
       <ManagementModals 
         modalCamp={cd.modalCamp} setModalCamp={cd.setModalCamp} formCamp={cd.formCamp} setFormCamp={cd.setFormCamp} handleCreateChampionship={cd.handleCreateChampionship}
@@ -112,59 +160,120 @@ function ChampionshipManager({ userId }: { userId: string }) {
       />
       
       {modalInscripciones.open && (
-        <div className="fixed inset-0 bg-black/90 flex flex-col items-center justify-start z-50 p-2 md:p-6 overflow-y-auto w-full h-full">
+        <div className="fixed inset-0 bg-zinc-950/80 backdrop-blur-sm flex flex-col items-center justify-start z-50 p-2 md:p-6 overflow-y-auto w-full h-full">
           <div className="w-full max-w-4xl flex justify-end mb-2 mt-4">
-            <button className="btn btn-circle btn-sm bg-[#333333] border-none text-white hover:bg-error shadow-lg" onClick={() => setModalInscripciones({ open: false, sessionId: null, rallyId: null })}>
-              <X size={18} />
+            <button className="text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-full p-2 transition-colors" onClick={() => setModalInscripciones({ open: false, sessionId: null, rallyId: null })}>
+              <X size={24} />
             </button>
           </div>
           
-          <div className="bg-[#1e1e1e] p-4 md:p-8 rounded-3xl max-w-4xl w-full border border-[#333333] shadow-2xl mb-6">
-            <h3 className="text-2xl font-bold text-[#ededed] mb-6 flex items-center gap-2"><Users className="text-blue-500" /> Inscripciones del Corte</h3>
+          <div className="bg-zinc-900 border border-zinc-800/80 rounded-2xl shadow-xl shadow-black/40 overflow-hidden max-w-4xl w-full p-6 md:p-8 mb-6">
+            <h3 className="text-2xl font-semibold tracking-tight text-white mb-6 flex items-center gap-2 border-b border-zinc-800/40 pb-4"><Users className="text-red-500" /> Inscripciones de la Prueba: {cd.rallies.find(r => r.id === modalInscripciones.rallyId)?.name || ''}</h3>
             
-            <div className="bg-[#121212] rounded-2xl border border-[#333333] p-4 mb-6 shadow-inner">
-              <h4 className="text-[#a1a1aa] font-bold mb-3 text-sm uppercase">Pilotos Inscritos ({inscritos.length})</h4>
+            <div className="bg-zinc-950/50 rounded-xl border border-zinc-800/60 p-4 mb-6 shadow-inner">
+              <h4 className="text-zinc-400 font-bold mb-3 text-xs uppercase tracking-wider block">Pilotos Inscritos ({inscritos.length})</h4>
               <div className="max-h-40 overflow-y-auto pr-2">
-                <table className="table w-full text-sm">
+                <table className="w-full text-sm text-left">
+                  <thead className="text-xs text-zinc-500 uppercase tracking-wider border-b border-zinc-800/50 bg-zinc-950/30">
+                    <tr>
+                      <th className="py-2 pl-2 font-medium">Piloto</th>
+                      <th className="py-2 text-center font-medium">Sesión</th>
+                      <th className="py-2 text-center font-medium">Categoría</th>
+                      <th className="py-2 pr-2 text-right font-medium">Acciones</th>
+                    </tr>
+                  </thead>
                   <tbody>
                     {inscritos.map(ins => (
-                      <tr key={ins.id} className="border-b border-[#333333] hover:bg-[#1a1a1a] transition-colors rounded-lg">
-                        <td className="text-white font-semibold pl-2">{ins.pilots?.name}</td>
-                        <td className="text-right pr-2"><span className="badge bg-[#333333] text-white border-none shadow-sm text-xs px-3">{ins.categories?.name}</span></td>
+                      <tr key={ins.id} className="border-b border-zinc-800/40 hover:bg-zinc-800/50 transition-colors">
+                        <td className="text-zinc-200 font-medium py-2 pl-2">{ins.pilots?.name}</td>
+                        <td className="text-center py-2"><span className="badge bg-zinc-800 text-zinc-300 border border-zinc-700 shadow-sm text-xs px-3 truncate max-w-[120px]">{ins.rally_sessions?.name || '-'}</span></td>
+                        <td className="text-center py-2"><span className="badge bg-zinc-800 text-zinc-100 border border-zinc-700 shadow-sm text-xs px-3">{ins.categories?.name}</span></td>
+                        <td className="text-right py-2 pr-2">
+                          <div className="flex items-center justify-end gap-2">
+                            <button 
+                              type="button"
+                              className="text-zinc-400 hover:text-red-500 hover:bg-red-500/10 p-1.5 rounded-md transition-colors"
+                              title="Editar"
+                              onClick={() => {
+                                setEditingId(ins.id);
+                                const parts = ins.pilots?.name?.split(' ') || [];
+                                setNombrePiloto(parts[0] || '');
+                                setApellidosPiloto(parts.slice(1).join(' ') || '');
+                                setCatSel(ins.category_id?.toString() || '');
+                                setSesionInscripcion(ins.session_id?.toString() || '');
+                              }}
+                            >
+                              <Pencil size={14} />
+                            </button>
+                            <button 
+                              type="button"
+                              className="text-zinc-400 hover:text-red-500 hover:bg-red-500/10 p-1.5 rounded-md transition-colors"
+                              title="Eliminar"
+                              onClick={() => modalInscripciones.rallyId && handleDeleteInscription(ins.id, modalInscripciones.rallyId)}
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     ))}
-                    {inscritos.length === 0 && <tr><td colSpan={2} className="text-[#a1a1aa] italic text-center py-4">Sin inscripciones todavía en este corte.</td></tr>}
+                    {inscritos.length === 0 && <tr><td colSpan={4} className="text-zinc-500 italic text-center py-4">Sin inscripciones todavía en esta prueba.</td></tr>}
                   </tbody>
                 </table>
               </div>
             </div>
 
-            <form onSubmit={handleInscribir} className="flex flex-col md:flex-row gap-4 items-end bg-[#171717]/80 p-5 rounded-2xl border border-[#333333] shadow-inner">
-              <div className="flex-1 w-full">
-                <label className="label py-1"><span className="label-text text-[#ededed] font-semibold text-sm">Piloto participando</span></label>
-                <select required className="select select-bordered w-full bg-[#121212] border-[#333333] text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none rounded-xl" value={pilotoSel} onChange={e => setPilotoSel(e.target.value)}>
-                  <option value="" disabled>Seleccionar piloto...</option>
-                  {pilotosGlobal.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
+            <form onSubmit={handleInscribir} className="flex flex-col md:flex-row gap-4 items-end bg-zinc-950/40 p-6 rounded-xl border border-zinc-800/60 shadow-inner mb-8">
+              <div className="flex-[1.5] w-full grid grid-cols-2 gap-3">
+                <div>
+                  <label className="label py-1"><span className="block mb-2 text-xs font-semibold text-zinc-400 uppercase tracking-wider">Nombre</span></label>
+                  <input required disabled={!!editingId} type="text" placeholder="Ej. Carlos" className={`w-full ${editingId ? 'bg-zinc-900 border-zinc-800/50 text-zinc-500 cursor-not-allowed' : 'bg-zinc-950/80 border-zinc-800 text-zinc-100 focus:ring-2 focus:ring-red-500/50 focus:border-red-500'} text-sm rounded-lg block p-2.5 outline-none transition-all border`} value={nombrePiloto} onChange={e => setNombrePiloto(e.target.value)} />
+                </div>
+                <div>
+                  <label className="label py-1"><span className="block mb-2 text-xs font-semibold text-zinc-400 uppercase tracking-wider">Apellidos</span></label>
+                  <input required disabled={!!editingId} type="text" placeholder="Ej. Sainz" className={`w-full ${editingId ? 'bg-zinc-900 border-zinc-800/50 text-zinc-500 cursor-not-allowed' : 'bg-zinc-950/80 border-zinc-800 text-zinc-100 focus:ring-2 focus:ring-red-500/50 focus:border-red-500'} text-sm rounded-lg block p-2.5 outline-none transition-all border`} value={apellidosPiloto} onChange={e => setApellidosPiloto(e.target.value)} />
+                </div>
               </div>
               <div className="flex-1 w-full">
-                <label className="label py-1"><span className="label-text text-[#ededed] font-semibold text-sm">Coche / Categoría</span></label>
-                <select required className="select select-bordered w-full bg-[#121212] border-[#333333] text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none rounded-xl" value={catSel} onChange={e => setCatSel(e.target.value)}>
+                <label className="label py-1"><span className="block mb-2 text-xs font-semibold text-zinc-400 uppercase tracking-wider">Coche / Categoría</span></label>
+                <select required className="w-full bg-zinc-950/80 border border-zinc-800 text-zinc-100 text-sm rounded-lg block p-2.5 outline-none transition-all focus:ring-2 focus:ring-red-500/50 focus:border-red-500 appearance-none" value={catSel} onChange={e => setCatSel(e.target.value)}>
                   <option value="" disabled>Seleccionar categoría...</option>
                   {categoriasGlobal.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
-              <button type="submit" className="flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-medium border-none rounded-xl shadow-md h-12 px-8 transition-colors w-full md:w-auto cursor-pointer">
-                Añadir Piloto
+              <div className="flex-1 w-full">
+                <label className="label py-1"><span className="block mb-2 text-xs font-semibold text-zinc-400 uppercase tracking-wider">Corte / Sesión de Salida</span></label>
+                <select required className="w-full bg-zinc-950/80 border border-zinc-800 text-zinc-100 text-sm rounded-lg block p-2.5 outline-none transition-all focus:ring-2 focus:ring-red-500/50 focus:border-red-500 appearance-none" value={sesionInscripcion} onChange={e => setSesionInscripcion(e.target.value)}>
+                  <option value="" disabled>Seleccionar corte...</option>
+                  {cd.sessions.filter(s => s.rally_id === modalInscripciones.rallyId).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </div>
+              {editingId ? (
+                <button type="button" onClick={() => { setEditingId(null); setNombrePiloto(''); setApellidosPiloto(''); setCatSel(''); setSesionInscripcion(''); }} className="flex justify-center items-center px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 active:scale-95 text-sm font-medium rounded-lg transition-all border-none w-full md:w-auto h-[42px]">
+                  Cancelar
+                </button>
+              ) : null}
+              <button type="submit" className={`flex justify-center items-center px-4 py-2 text-white shadow-md shadow-red-900/20 active:scale-95 text-sm ${editingId ? 'bg-red-700 hover:bg-red-600 font-bold border border-red-500' : 'bg-red-600 hover:bg-red-500 font-medium border-none'} rounded-lg transition-all w-full md:w-auto whitespace-nowrap h-[42px]`}>
+                {editingId ? 'Actualizar Inscripción' : 'Añadir Piloto'}
               </button>
             </form>
           </div>
+        </div>
+      )}
 
+      {modalCronometro.open && (
+        <div className="fixed inset-0 bg-zinc-950/95 backdrop-blur-md flex flex-col items-center justify-start z-[60] p-0 md:p-6 overflow-y-auto w-full h-full">
+          <div className="w-full max-w-4xl flex justify-end mb-2 mt-4 px-4 md:px-0">
+            <button className="text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-full p-2 transition-colors shadow-lg" onClick={() => setModalCronometro({ open: false, sessionId: null, rallyId: null })}>
+              <X size={24} />
+            </button>
+          </div>
           <div className="w-full max-w-4xl relative">
-             <Cronometrador userId={userId} sessionId={modalInscripciones.sessionId || undefined} rallyId={modalInscripciones.rallyId || undefined} />
+             <Cronometrador userId={userId} sessionId={modalCronometro.sessionId || undefined} rallyId={modalCronometro.rallyId || undefined} />
           </div>
         </div>
       )}
+
     </div>
   );
 }
