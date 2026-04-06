@@ -94,7 +94,7 @@ export default function Login() {
             </button>
             <button 
               type="button"
-              className={`flex-1 py-2 rounded-xl font-bold transition-all text-sm ${mode === 'register' ? 'bg-[#DA0037] text-white shadow-md shadow-[#DA0037]/20' : 'text-[#a1a1aa] hover:text-white'}`}
+              className={`flex-1 py-2 rounded-xl font-bold transition-all text-sm ${mode === 'register' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-[#a1a1aa] hover:text-white'}`}
               onClick={() => { setMode('register'); setErrorMsg(null); }}
             >
               Crear Cuenta
@@ -116,7 +116,7 @@ export default function Login() {
                   <label className="label">
                     <span className="label-text font-bold text-[#ededed]">Nombre / Equipo</span>
                   </label>
-                  <label className="input bg-zinc-900 border border-zinc-700 text-zinc-100 focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500 focus-within:outline-none rounded-lg flex items-center gap-3 w-full py-6">
+                  <label className="input bg-zinc-900 border border-zinc-700 text-zinc-100 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/50 focus-within:outline-none rounded-lg flex items-center gap-3 w-full py-6">
                     <User size={18} className="text-zinc-400" />
                     <input 
                       type="text" 
@@ -145,7 +145,7 @@ export default function Login() {
                     <button 
                       type="button"
                       onClick={() => setRole('club')}
-                      className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${role === 'club' ? 'bg-[#DA0037]/20 border-[#DA0037] text-[#DA0037] shadow-sm shadow-[#DA0037]/10' : 'bg-[#121212] border-[#333333] text-[#a1a1aa] hover:border-[#444444]'}`}
+                      className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${role === 'club' ? 'bg-primary/20 border-primary text-primary shadow-sm shadow-primary/10' : 'bg-[#121212] border-[#333333] text-[#a1a1aa] hover:border-[#444444]'}`}
                     >
                       <ShieldCheck size={20} className="mb-1" />
                       <span className="font-bold text-sm">Organizador</span>
@@ -160,7 +160,7 @@ export default function Login() {
               <label className="label">
                 <span className="label-text font-bold text-[#ededed]">Correo Electrónico</span>
               </label>
-              <label className="input bg-zinc-900 border border-zinc-700 text-zinc-100 focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500 focus-within:outline-none rounded-lg flex items-center gap-3 w-full py-6">
+              <label className="input bg-zinc-900 border border-zinc-700 text-zinc-100 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/50 focus-within:outline-none rounded-lg flex items-center gap-3 w-full py-6">
                 <Mail size={18} className="text-zinc-400" />
                 <input 
                   type="email" 
@@ -177,7 +177,7 @@ export default function Login() {
               <label className="label">
                 <span className="label-text font-bold text-[#ededed]">Contraseña</span>
               </label>
-              <label className="input bg-zinc-900 border border-zinc-700 text-zinc-100 focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500 focus-within:outline-none rounded-lg flex items-center gap-3 w-full py-6">
+              <label className="input bg-zinc-900 border border-zinc-700 text-zinc-100 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/50 focus-within:outline-none rounded-lg flex items-center gap-3 w-full py-6">
                 <Lock size={18} className="text-zinc-400" />
                 <input 
                   type="password" 
@@ -193,7 +193,7 @@ export default function Login() {
             <div className="form-control mt-2">
               <button 
                 type="submit" 
-                className="w-full h-[3.5rem] bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-900/20 active:scale-[0.98] font-semibold rounded-xl transition-all duration-200 border-none disabled:opacity-70 flex flex-row justify-center items-center" 
+                className="w-full h-[3.5rem] bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 active:scale-[0.98] font-semibold rounded-xl transition-all duration-200 border-none disabled:opacity-70 flex flex-row justify-center items-center" 
                 disabled={loading}
               >
                 {loading ? "Cargando..." : (mode === 'login' ? 'Entrar al Paddock' : 'Registrar Cuenta')}
