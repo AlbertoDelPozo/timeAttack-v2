@@ -7,9 +7,9 @@ import './index.css'
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <NextUIProvider>
-      <div className="dark text-foreground bg-background">
+      <main className="dark text-foreground bg-background min-h-screen">
         <App />
-      </div>
+      </main>
     </NextUIProvider>
   </StrictMode>,
 )

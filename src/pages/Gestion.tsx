@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Trash2, Plus, Pencil, Check, X, ChevronDown, ChevronRight, Trophy, Flag, Clock, Users } from 'lucide-react';
 import Cronometrador from './Cronometrador';
+import { Button, Card, CardBody, Tabs, Tab } from '@nextui-org/react';
 
 const formatMs = (ms: number) => (ms / 1000).toFixed(3);
 
@@ -631,27 +632,30 @@ export default function Gestion({ userId }: { userId?: string }) {
       <h1 className="text-3xl md:text-4xl font-extrabold text-[#ededed] mb-4 md:mb-8 drop-shadow-sm text-center">Panel de Gestión</h1>
 
       {/* Tabs Menu */}
-      <div className="tabs tabs-boxed bg-[#1e1e1e] p-2 rounded-2xl border border-[#333333] mb-8 w-full max-w-md mx-auto grid grid-cols-2 shadow-2xl">
-        <button 
-          className={`tab h-12 text-base font-bold rounded-xl transition-all ${activeTab === 'evento' ? 'bg-[#DA0037] text-white shadow-lg' : 'text-[#a1a1aa] hover:text-[#ededed]'}`}
-          onClick={() => setActiveTab('evento')}
+      <div className="w-full max-w-md mx-auto mb-8">
+        <Tabs
+          selectedKey={activeTab}
+          onSelectionChange={(key) => setActiveTab(key as 'evento' | 'campeonatos')}
+          color="primary"
+          variant="solid"
+          fullWidth
+          classNames={{
+            tabList: "bg-zinc-900/40 border border-zinc-800 rounded-2xl p-1 shadow-2xl",
+            tab: "h-12 text-sm font-bold rounded-xl tracking-wide",
+            cursor: "bg-primary shadow-lg shadow-primary/20",
+          }}
         >
-          🏁 Prueba Actual
-        </button>
-        <button 
-          className={`tab h-12 text-base font-bold rounded-xl transition-all ${activeTab === 'campeonatos' ? 'bg-[#DA0037] text-white shadow-lg' : 'text-[#a1a1aa] hover:text-[#ededed]'}`}
-          onClick={() => setActiveTab('campeonatos')}
-        >
-          🏆 Campeonatos
-        </button>
+          <Tab key="evento" title="🏁 Prueba Actual" />
+          <Tab key="campeonatos" title="🏆 Campeonatos" />
+        </Tabs>
       </div>
 
       {activeTab === 'evento' && (
         <>
       {/* Configuración de Carrera (WRC Mode) */}
       <div className="w-full max-w-7xl mb-4 md:mb-8">
-        <div className="card bg-[#1e1e1e] shadow-2xl border border-[#333333] mb-4 md:mb-0 rounded-2xl md:rounded-3xl w-full">
-          <div className="card-body p-4 md:p-8">
+        <Card isBlurred className="bg-zinc-900/40 border border-zinc-800 shadow-2xl mb-4 md:mb-0 rounded-2xl md:rounded-3xl w-full">
+          <CardBody className="p-4 md:p-8">
             <h2 className="card-title text-2xl font-bold mb-4 text-[#ededed]">Configuración del Rally</h2>
             
             {mensajeConfig && (
@@ -690,13 +694,13 @@ export default function Gestion({ userId }: { userId?: string }) {
               </div>
 
               <div className="form-control w-full">
-                <button type="submit" className="btn btn-lg w-full h-[3.8rem] rounded-xl bg-gradient-to-r from-[#DA0037] to-[#b9002f] hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(218,0,55,0.4)] border-none text-[#ededed] transition-all">
+                <Button type="submit" color="primary" variant="shadow" size="lg" className="w-full h-[3.8rem] rounded-xl font-bold uppercase tracking-wider">
                   Guardar Configuración
-                </button>
+                </Button>
               </div>
             </form>
-          </div>
-        </div>
+          </CardBody>
+        </Card>
       </div>
 
       <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8 items-start">
@@ -705,8 +709,8 @@ export default function Gestion({ userId }: { userId?: string }) {
         <div className="flex flex-col gap-4 md:gap-8">
           
           {/* Panel Pilotos */}
-          <div className="card bg-[#1e1e1e] shadow-2xl border border-[#333333] rounded-2xl md:rounded-3xl mb-4 md:mb-8">
-            <div className="card-body p-4 md:p-8">
+          <Card isBlurred className="bg-zinc-900/40 border border-zinc-800 shadow-2xl rounded-2xl md:rounded-3xl mb-4 md:mb-8">
+            <CardBody className="p-4 md:p-8">
               <h2 className="card-title text-2xl font-bold mb-4">Gestión de Pilotos</h2>
               
               <form onSubmit={handleInsertPiloto} className="flex flex-col md:flex-row gap-2 mb-6 items-center">
@@ -725,10 +729,10 @@ export default function Gestion({ userId }: { userId?: string }) {
                   onChange={(e) => setNuevoPiloto(e.target.value)}
                   required
                 />
-                <button type="submit" className="btn rounded-full bg-[#DA0037] hover:bg-[#b9002f] border-none text-[#ededed] shadow-lg shadow-[#DA0037]/20 h-[3rem] px-6 flex items-center gap-2 w-full md:w-auto mt-2 md:mt-0">
+                <Button type="submit" color="primary" variant="shadow" className="rounded-full shadow-lg h-[3rem] px-6 flex items-center gap-2 w-full md:w-auto mt-2 md:mt-0 font-bold tracking-wider">
                   <Plus size={20} />
-                  <span>Añadir</span>
-                </button>
+                  Añadir
+                </Button>
               </form>
 
               <div className="overflow-x-auto max-h-64 border border-[#333333] rounded-2xl">
@@ -762,12 +766,12 @@ export default function Gestion({ userId }: { userId?: string }) {
                   </tbody>
                 </table>
               </div>
-            </div>
-          </div>
+            </CardBody>
+          </Card>
 
           {/* Panel Categorías */}
-          <div className="card bg-[#1e1e1e] shadow-2xl border border-[#333333] rounded-2xl md:rounded-3xl">
-            <div className="card-body p-4 md:p-8">
+          <Card isBlurred className="bg-zinc-900/40 border border-zinc-800 shadow-2xl rounded-2xl md:rounded-3xl">
+            <CardBody className="p-4 md:p-8">
               <h2 className="card-title text-2xl font-bold mb-4">Gestión de Categorías</h2>
               
               <form onSubmit={handleInsertCategoria} className="flex gap-2 mb-6 items-center">
@@ -779,10 +783,10 @@ export default function Gestion({ userId }: { userId?: string }) {
                   onChange={(e) => setNuevaCategoria(e.target.value)}
                   required
                 />
-                <button type="submit" className="btn rounded-full bg-[#DA0037] hover:bg-[#b9002f] border-none text-[#ededed] shadow-lg shadow-[#DA0037]/20 h-full min-h-[3rem] px-6 flex items-center gap-2">
+                <Button type="submit" color="primary" variant="shadow" className="rounded-full shadow-lg h-[3rem] px-6 flex items-center gap-2 font-bold tracking-wider">
                   <Plus size={20} />
-                  <span>Añadir</span>
-                </button>
+                  Añadir
+                </Button>
               </form>
 
               <div className="overflow-x-auto max-h-48 border border-[#333333] rounded-2xl">
@@ -814,14 +818,14 @@ export default function Gestion({ userId }: { userId?: string }) {
                   </tbody>
                 </table>
               </div>
-            </div>
-          </div>
+            </CardBody>
+          </Card>
 
         </div>
 
         {/* Columna Derecha: Historial de Tiempos */}
-        <div className="card bg-[#1e1e1e] shadow-2xl border border-[#333333] rounded-2xl md:rounded-3xl h-full">
-          <div className="card-body p-4 md:p-8">
+        <Card isBlurred className="bg-zinc-900/40 border border-zinc-800 shadow-2xl rounded-2xl md:rounded-3xl h-full">
+          <CardBody className="p-4 md:p-8">
             <h2 className="card-title text-2xl font-bold mb-4 text-[#ededed]">Últimos 10 Tiempos Registrados</h2>
             <p className="text-sm text-[#a1a1aa] mb-4">Puedes editar ✏️ o borrar 🗑️ los registros en caso de error.</p>
 
@@ -928,8 +932,8 @@ export default function Gestion({ userId }: { userId?: string }) {
               </table>
             </div>
             
-          </div>
-        </div>
+          </CardBody>
+        </Card>
 
       </div>
 
