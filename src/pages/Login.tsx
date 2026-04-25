@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, ShieldCheck, Flag } from 'lucide-react';
+import { Mail, Lock, User, ShieldCheck, Flag, Timer } from 'lucide-react';
 
 export default function Login() {
   const [mode, setMode] = useState<'login' | 'register'>('login');
-  
+
   // States compartidos
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
+
   // States de Registro
   const [displayName, setDisplayName] = useState('');
   const [role, setRole] = useState<'piloto' | 'club'>('piloto');
-  
+
   // Feedback
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -41,11 +41,11 @@ export default function Login() {
             role: role,
             display_name: displayName
           });
-          
+
           if (profileError) {
-             console.error("No se pudo crear el perfil automáticamente. Caerá al Onboarding si hace login.", profileError);
+            console.error("No se pudo crear el perfil automáticamente. Caerá al Onboarding si hace login.", profileError);
           } else if (role === 'club') {
-             await supabase.from('clubs').insert({ id: data.user.id, name: displayName });
+            await supabase.from('clubs').insert({ id: data.user.id, name: displayName });
           }
         }
       }
@@ -71,56 +71,84 @@ export default function Login() {
   };
 
   return (
-    <div className="flex justify-center items-center py-6 w-full">
-      <div className="card w-full max-w-lg bg-[#1e1e1e]/90 backdrop-blur-xl shadow-[0_0_40px_rgba(0,0,0,0.8)] border border-[#333333] rounded-3xl overflow-hidden relative">
-        
-        {/* Decoración Neón Superior */}
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#DA0037] to-transparent opacity-70"></div>
+    <div className="min-h-screen w-full bg-[#09090b] flex flex-col lg:flex-row relative overflow-hidden font-sans">
 
-        <div className="card-body p-6 md:p-10">
-          <div className="text-center mb-6">
-            <h2 className="text-3xl font-black text-[#ededed] drop-shadow-sm tracking-tight">TimeAttack</h2>
-            <p className="text-[#a1a1aa] font-medium mt-1">Control de Tiempos Profesional</p>
+      {/* Columna Izquierda - Branding (Oculta en móvil) */}
+      <div className="hidden lg:flex relative flex-1 flex-col justify-center items-center bg-zinc-950 border-r border-zinc-800 p-12">
+        {/* Glow de fondo */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-red-600/10 blur-[130px] rounded-full pointer-events-none"></div>
+
+        <div className="relative z-10 flex flex-col items-start justify-center max-w-md w-full">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-14 h-14 bg-red-600 rounded-2xl flex items-center justify-center shadow-lg shadow-red-900/20">
+              <Timer size={28} className="text-white" />
+            </div>
+            <h1 className="text-4xl xl:text-5xl font-black text-zinc-100 tracking-tight">TimeAttack</h1>
+          </div>
+          <p className="text-zinc-400 text-lg md:text-xl leading-relaxed font-medium mb-12">
+            Control de tiempos profesional y gestión de campeonatos. La telemetría definitiva para pilotos y organizadores de motorsport.
+          </p>
+
+          <div className="flex items-center gap-4 text-zinc-500 font-medium text-sm border-t border-zinc-800/80 pt-6 w-full">
+            <ShieldCheck size={18} /> Seguridad integral y precisión milimétrica
+          </div>
+        </div>
+
+        <div className="absolute bottom-8 left-8 text-zinc-600 text-sm font-medium">
+          © 2026 Motorsport Devs
+        </div>
+      </div>
+
+      {/* Columna Derecha - Auth */}
+      <div className="flex-1 flex justify-center items-center p-6 md:p-12 relative">
+        <div className="w-full max-w-md mx-auto flex flex-col">
+
+          {/* Header en móvil */}
+          <div className="lg:hidden flex items-center gap-3 mb-10 pt-8">
+            <div className="w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center shadow-lg shadow-red-900/20">
+              <Timer size={22} className="text-white" />
+            </div>
+            <h2 className="text-3xl font-black text-zinc-100 tracking-tight">TimeAttack</h2>
           </div>
 
           {/* Selector Login / Register */}
-          <div className="flex bg-[#121212] p-1 rounded-2xl border border-[#333333] mb-6">
-            <button 
+          <div className="flex bg-[#09090b] p-1 rounded-lg border border-zinc-800 mb-8 w-full max-w-[280px]">
+            <button
               type="button"
-              className={`flex-1 py-2 rounded-xl font-bold transition-all text-sm ${mode === 'login' ? 'bg-[#333333] text-white shadow-md' : 'text-[#a1a1aa] hover:text-white'}`}
+              className={`flex-1 py-1.5 rounded-md font-bold transition-all text-sm ${mode === 'login' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
               onClick={() => { setMode('login'); setErrorMsg(null); }}
             >
               Iniciar Sesión
             </button>
-            <button 
+            <button
               type="button"
-              className={`flex-1 py-2 rounded-xl font-bold transition-all text-sm ${mode === 'register' ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-[#a1a1aa] hover:text-white'}`}
+              className={`flex-1 py-1.5 rounded-md font-bold transition-all text-sm ${mode === 'register' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
               onClick={() => { setMode('register'); setErrorMsg(null); }}
             >
-              Crear Cuenta
+              Registro
             </button>
           </div>
-          
+
           {errorMsg && (
-            <div className="alert alert-error text-white text-sm mb-4 rounded-xl border-none shadow-sm font-bold">
-              <span>{errorMsg}</span>
+            <div className="bg-red-500/10 border border-red-500/30 text-red-500 text-sm mb-6 p-3 rounded-md font-semibold">
+              {errorMsg}
             </div>
           )}
 
           <form onSubmit={handleAuth} className="flex flex-col gap-4">
-            
+
             {/* Campos exclusivos de Registro */}
             {mode === 'register' && (
               <>
                 <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-bold text-[#ededed]">Nombre / Equipo</span>
+                  <label className="label mb-1.5 px-0">
+                    <span className="text-zinc-400 font-semibold text-sm">Nombre / Equipo</span>
                   </label>
-                  <label className="input bg-zinc-900 border border-zinc-700 text-zinc-100 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/50 focus-within:outline-none rounded-lg flex items-center gap-3 w-full py-6">
+                  <label className="input bg-transparent border border-zinc-800 text-zinc-100 focus-within:border-red-500/50 rounded-md flex items-center gap-3 w-full h-11 px-3">
                     <User size={18} className="text-zinc-400" />
-                    <input 
-                      type="text" 
-                      className="grow bg-transparent" 
+                    <input
+                      type="text"
+                      className="grow bg-transparent outline-none focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:outline-none focus:border-red-500 focus-visible:border-red-500 w-full"
                       placeholder="Ej: Escudería Sur"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
@@ -130,25 +158,25 @@ export default function Login() {
                 </div>
 
                 <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-bold text-[#ededed]">Tipo de Cuenta</span>
+                  <label className="label mb-1.5 px-0 mt-2">
+                    <span className="text-zinc-400 font-semibold text-sm">Tipo de Cuenta</span>
                   </label>
                   <div className="grid grid-cols-2 gap-3">
-                    <button 
+                    <button
                       type="button"
                       onClick={() => setRole('piloto')}
-                      className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${role === 'piloto' ? 'bg-[#333333] border-[#a1a1aa] text-white shadow-sm' : 'bg-[#121212] border-[#333333] text-[#a1a1aa] hover:border-[#444444]'}`}
+                      className={`flex flex-col items-center justify-center p-4 rounded-md border transition-all ${role === 'piloto' ? 'bg-zinc-800 border-zinc-700 text-zinc-100' : 'bg-transparent border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}
                     >
-                      <Flag size={20} className="mb-1" />
-                      <span className="font-bold text-sm">Piloto</span>
+                      <Flag size={20} className="mb-2" />
+                      <span className="font-semibold text-sm">Piloto</span>
                     </button>
-                    <button 
+                    <button
                       type="button"
                       onClick={() => setRole('club')}
-                      className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${role === 'club' ? 'bg-primary/20 border-primary text-primary shadow-sm shadow-primary/10' : 'bg-[#121212] border-[#333333] text-[#a1a1aa] hover:border-[#444444]'}`}
+                      className={`flex flex-col items-center justify-center p-4 rounded-md border transition-all ${role === 'club' ? 'bg-zinc-800 border-zinc-700 text-zinc-100' : 'bg-transparent border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}
                     >
-                      <ShieldCheck size={20} className="mb-1" />
-                      <span className="font-bold text-sm">Organizador</span>
+                      <ShieldCheck size={20} className="mb-2" />
+                      <span className="font-semibold text-sm">Organizador</span>
                     </button>
                   </div>
                 </div>
@@ -157,15 +185,15 @@ export default function Login() {
 
             {/* Campos Comunes */}
             <div className="form-control w-full">
-              <label className="label">
-                <span className="label-text font-bold text-[#ededed]">Correo Electrónico</span>
+              <label className="label mb-1.5 px-0 mt-2">
+                <span className="text-zinc-400 font-semibold text-sm">Correo Electrónico</span>
               </label>
-              <label className="input bg-zinc-900 border border-zinc-700 text-zinc-100 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/50 focus-within:outline-none rounded-lg flex items-center gap-3 w-full py-6">
+              <label className="input bg-transparent border border-zinc-800 text-zinc-100 focus-within:border-red-500/50 rounded-md flex items-center gap-3 w-full h-11 px-3">
                 <Mail size={18} className="text-zinc-400" />
-                <input 
-                  type="email" 
-                  className="grow bg-transparent" 
-                  placeholder="piloto@rally.com"
+                <input
+                  type="email"
+                  className="grow bg-transparent outline-none focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:outline-none focus:border-red-500 focus-visible:border-red-500 w-full"
+                  placeholder="Escribe tu correo"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -174,15 +202,15 @@ export default function Login() {
             </div>
 
             <div className="form-control w-full mb-2">
-              <label className="label">
-                <span className="label-text font-bold text-[#ededed]">Contraseña</span>
+              <label className="label mb-1.5 px-0 mt-2">
+                <span className="text-zinc-400 font-semibold text-sm">Contraseña</span>
               </label>
-              <label className="input bg-zinc-900 border border-zinc-700 text-zinc-100 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/50 focus-within:outline-none rounded-lg flex items-center gap-3 w-full py-6">
+              <label className="input bg-transparent border border-zinc-800 text-zinc-100 focus-within:border-red-500/50 rounded-md flex items-center gap-3 w-full h-11 px-3">
                 <Lock size={18} className="text-zinc-400" />
-                <input 
-                  type="password" 
-                  className="grow bg-transparent" 
-                  placeholder="••••••••"
+                <input
+                  type="password"
+                  className="grow bg-transparent outline-none focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:outline-none focus:border-red-500 focus-visible:border-red-500 w-full"
+                  placeholder="Escribe tu contraseña"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -191,9 +219,9 @@ export default function Login() {
             </div>
 
             <div className="form-control mt-2">
-              <button 
-                type="submit" 
-                className="w-full h-[3.5rem] bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 active:scale-[0.98] font-semibold rounded-xl transition-all duration-200 border-none disabled:opacity-70 flex flex-row justify-center items-center" 
+              <button
+                type="submit"
+                className="w-full h-11 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-md transition-all duration-200 border-none disabled:opacity-70 flex justify-center items-center shadow-sm text-sm"
                 disabled={loading}
               >
                 {loading ? "Cargando..." : (mode === 'login' ? 'Entrar al Paddock' : 'Registrar Cuenta')}
@@ -201,14 +229,18 @@ export default function Login() {
             </div>
           </form>
 
-          <div className="divider text-[#a1a1aa] text-xs font-bold my-6">O ENTRA CON</div>
+          <div className="flex items-center gap-4 my-8">
+            <div className="h-px bg-zinc-800 flex-1"></div>
+            <span className="text-zinc-600 text-xs font-semibold uppercase tracking-wider">o continuar con</span>
+            <div className="h-px bg-zinc-800 flex-1"></div>
+          </div>
 
           {/* OAuth Buttons */}
-          <button 
+          <button
             type="button"
             onClick={() => handleOAuthLogin('google')}
             disabled={loading}
-            className="btn btn-outline w-full h-[3.5rem] rounded-xl border-[#333333] hover:bg-[#333333] hover:border-[#444444] text-[#ededed] flex items-center justify-center gap-3"
+            className="w-full h-11 bg-[#09090b] border border-zinc-800 hover:bg-zinc-800/50 text-zinc-300 font-semibold rounded-md flex items-center justify-center gap-3 text-sm transition-colors"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />

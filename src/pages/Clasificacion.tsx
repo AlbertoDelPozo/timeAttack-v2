@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Trophy, Flag, Clock } from 'lucide-react';
+import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from "@nextui-org/react";
 
 const formatMs = (ms: number) => (ms / 1000).toFixed(3);
 
@@ -126,48 +127,49 @@ export default function Clasificacion() {
         </div>
 
         {/* Data Table */}
-        <div className={`overflow-x-auto rounded-xl shadow-2xl bg-zinc-900 border ${isUpdating ? 'border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.2)]' : 'border-zinc-800/80'} transition-all duration-300 w-full`}>
-           <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-zinc-950/50 border-b border-zinc-800 text-zinc-400 text-xs font-semibold uppercase tracking-wider">
-                 <tr>
-                    <th className="px-6 py-4 text-center">Posición</th>
-                    <th className="px-6 py-4">Piloto</th>
-                    <th className="px-6 py-4">Categoría</th>
-                    <th className="px-6 py-4">Corte (Sesión)</th>
-                    <th className="px-6 py-4 text-right">Penalización</th>
-                    <th className="px-6 py-4 text-right">Tiempo Total</th>
-                 </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-800/50">
+        <div className={`rounded-xl shadow-2xl transition-all duration-300 w-full ${isUpdating ? 'shadow-[0_0_20px_rgba(220,38,38,0.2)]' : ''}`}>
+           <Table 
+             aria-label="Tabla de clasificación" 
+             selectionMode="single" 
+             color="primary" 
+             classNames={{ 
+               wrapper: "bg-zinc-900/50 border border-zinc-800 p-0 overflow-hidden", 
+               th: "bg-zinc-900 text-red-500 font-bold uppercase tracking-wider py-4", 
+               td: "text-zinc-300 font-mono py-4",
+               emptyWrapper: "text-zinc-500 italic py-12 h-[200px]"
+             }}
+           >
+              <TableHeader>
+                 <TableColumn className="text-center">POSICIÓN</TableColumn>
+                 <TableColumn>PILOTO</TableColumn>
+                 <TableColumn>CATEGORÍA</TableColumn>
+                 <TableColumn>CORTE (SESIÓN)</TableColumn>
+                 <TableColumn className="text-right">PENALIZACIÓN</TableColumn>
+                 <TableColumn className="text-right">TIEMPO TOTAL</TableColumn>
+              </TableHeader>
+              <TableBody emptyContent={selectedRally ? "Aún no hay tiempos registrados en esta prueba." : "Selecciona un Campeonato y una Prueba para filtrar los tiempos en directo."}>
                  {lapTimes.map((lap, index) => (
-                    <tr key={lap.id} className="hover:bg-zinc-800/20 transition-colors text-zinc-100">
-                       <td className="px-6 py-4 text-center">
+                    <TableRow key={lap.id} className="hover:bg-zinc-800/30 transition-colors border-b border-zinc-800/50 last:border-none">
+                       <TableCell className="text-center">
                           <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold ${index === 0 ? 'bg-red-500/20 text-red-500 border border-red-500/50 shadow-sm shadow-red-900/20' : 'bg-zinc-800 text-zinc-400'}`}>
                              {index + 1}
                           </span>
-                       </td>
-                       <td className="px-6 py-4 font-bold text-base">{lap.pilots?.name || '-'}</td>
-                       <td className="px-6 py-4"><span className="px-3 py-1 bg-zinc-800 rounded-full text-xs font-medium border border-zinc-700 text-zinc-300">{lap.categories?.name || '-'}</span></td>
-                       <td className="px-6 py-4 text-zinc-400"><Clock size={14} className="inline mr-2 text-zinc-500"/>{lap.rally_sessions?.name || '-'}</td>
-                       <td className="px-6 py-4 text-right font-mono text-amber-500 font-medium">
+                       </TableCell>
+                       <TableCell className="font-bold text-base font-sans">{lap.pilots?.name || '-'}</TableCell>
+                       <TableCell><span className="px-3 py-1 bg-zinc-800 rounded-full text-xs font-medium border border-zinc-700 text-zinc-300 font-sans">{lap.categories?.name || '-'}</span></TableCell>
+                       <TableCell className="text-zinc-400 font-sans"><Clock size={14} className="inline mr-2 text-zinc-500"/>{lap.rally_sessions?.name || '-'}</TableCell>
+                       <TableCell className="text-right text-amber-500 font-medium">
                          {lap.penalty_ms > 0 ? `+${formatMs(lap.penalty_ms)}s` : '-'}
-                       </td>
-                       <td className="px-6 py-4 text-right">
-                         <span className={`font-mono text-lg tracking-tight font-bold ${index === 0 ? 'text-red-400 drop-shadow-sm' : 'text-zinc-200'}`}>
+                       </TableCell>
+                       <TableCell className="text-right">
+                         <span className={`text-lg tracking-tight font-bold ${index === 0 ? 'text-red-400 drop-shadow-sm' : 'text-zinc-200'}`}>
                            {formatMs(lap.total_time_ms)}
                          </span>
-                       </td>
-                    </tr>
+                       </TableCell>
+                    </TableRow>
                  ))}
-                 {lapTimes.length === 0 && (
-                    <tr>
-                       <td colSpan={6} className="px-6 py-12 text-center text-zinc-500 italic">
-                          {selectedRally ? "Aún no hay tiempos registrados en esta prueba." : "Selecciona un Campeonato y una Prueba para filtrar los tiempos en directo."}
-                       </td>
-                    </tr>
-                 )}
-              </tbody>
-           </table>
+              </TableBody>
+           </Table>
         </div>
       </div>
     </div>
