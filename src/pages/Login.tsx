@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, ShieldCheck, Flag } from 'lucide-react';
+import { Mail, Lock, User, ShieldCheck, Flag, Trophy, Timer } from 'lucide-react';
 
 export default function Login() {
   const [mode, setMode] = useState<'login' | 'register'>('login');
@@ -71,30 +71,61 @@ export default function Login() {
   };
 
   return (
-    <div className="flex justify-center items-center py-6 w-full">
-      <div className="card w-full max-w-lg bg-[#1e1e1e]/90 backdrop-blur-xl shadow-[0_0_40px_rgba(0,0,0,0.8)] border border-[#333333] rounded-3xl overflow-hidden relative">
+    <div className="flex min-h-screen w-full bg-[#09090b]">
+      {/* Lado Gráfico (Dark/Rally) */}
+      <div className="hidden lg:flex w-1/2 relative bg-[#050505] overflow-hidden flex-col justify-between items-start pt-[5vh] pb-[5vh]">
+        {/* Abstract Dark Pattern / Noise */}
+        <div className="absolute inset-0 z-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#dc2626 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-black via-transparent to-[#1a0505] opacity-90 z-0 pointer-events-none"></div>
+        <div className="absolute top-0 right-0 w-full h-[50%] bg-gradient-to-b from-[#dc2626]/5 to-transparent blur-3xl z-0 pointer-events-none"></div>
         
-        {/* Decoración Neón Superior */}
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#DA0037] to-transparent opacity-70"></div>
+        <div className="z-10 pl-16 pt-10">
+          <div className="w-16 h-1 w-full bg-[#dc2626] mb-8"></div>
+          <h1 className="text-5xl lg:text-7xl font-black text-white tracking-widest uppercase italic opacity-95">TIME<br/><span className="text-[#dc2626]">ATTACK</span></h1>
+          <p className="text-zinc-400 mt-6 text-xl max-w-sm tracking-wide">Sistema avanzado de telemetría y live timing para el motorsport real.</p>
+        </div>
 
-        <div className="card-body p-6 md:p-10">
-          <div className="text-center mb-6">
-            <h2 className="text-3xl font-black text-[#ededed] drop-shadow-sm tracking-tight">TimeAttack</h2>
-            <p className="text-[#a1a1aa] font-medium mt-1">Control de Tiempos Profesional</p>
+        <div className="z-10 pl-16 pb-10 flex gap-6">
+          <div className="flex gap-3 items-center backdrop-blur-md bg-white/5 border border-white/10 px-4 py-3 rounded-2xl">
+             <Trophy className="text-[#dc2626]" size={24} />
+             <div>
+                <p className="text-white font-bold text-sm">Clasificación</p>
+                <p className="text-zinc-500 text-xs">Transmisión 0-delay</p>
+             </div>
+          </div>
+          <div className="flex gap-3 items-center backdrop-blur-md bg-white/5 border border-white/10 px-4 py-3 rounded-2xl">
+             <Timer className="text-[#dc2626]" size={24} />
+             <div>
+                <p className="text-white font-bold text-sm">Telemetría Pro</p>
+                <p className="text-zinc-500 text-xs">Multi-Tramo Asíncrono</p>
+             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Lado Formulario */}
+      <div className="w-full lg:w-1/2 flex justify-center items-center p-4 sm:p-8 bg-[#09090b] relative z-10 shadow-[-20px_0_40px_rgba(0,0,0,0.5)]">
+        
+        <div className="w-full max-w-md bg-[#09090b] relative">
+          
+          <div className="text-center lg:text-left mb-8">
+            <h2 className="text-3xl font-black text-[#ededed] drop-shadow-sm tracking-tight lg:hidden mb-2 italic">TIME<span className="text-[#dc2626]">ATTACK</span></h2>
+            <h3 className="text-2xl font-bold text-white mb-2">{mode === 'login' ? 'Bienvenido al Paddock' : 'Únete a la Competición'}</h3>
+            <p className="text-zinc-500 text-sm">Ingresa tus credenciales para acceder a la herramienta de cronometraje.</p>
           </div>
 
           {/* Selector Login / Register */}
-          <div className="flex bg-[#121212] p-1 rounded-2xl border border-[#333333] mb-6">
+          <div className="flex bg-[#121212] p-1.5 rounded-2xl border border-zinc-800 mb-8 mx-auto">
             <button 
               type="button"
-              className={`flex-1 py-2 rounded-xl font-bold transition-all text-sm ${mode === 'login' ? 'bg-[#333333] text-white shadow-md' : 'text-[#a1a1aa] hover:text-white'}`}
+              className={`flex-1 py-2.5 rounded-xl font-bold transition-all text-sm ${mode === 'login' ? 'bg-zinc-800 text-white shadow-md' : 'text-zinc-500 hover:text-white'}`}
               onClick={() => { setMode('login'); setErrorMsg(null); }}
             >
               Iniciar Sesión
             </button>
             <button 
               type="button"
-              className={`flex-1 py-2 rounded-xl font-bold transition-all text-sm ${mode === 'register' ? 'bg-[#DA0037] text-white shadow-md shadow-[#DA0037]/20' : 'text-[#a1a1aa] hover:text-white'}`}
+              className={`flex-1 py-2.5 rounded-xl font-bold transition-all text-sm ${mode === 'register' ? 'bg-[#dc2626] text-white shadow-md shadow-[#dc2626]/20' : 'text-zinc-500 hover:text-white'}`}
               onClick={() => { setMode('register'); setErrorMsg(null); }}
             >
               Crear Cuenta
@@ -102,25 +133,25 @@ export default function Login() {
           </div>
           
           {errorMsg && (
-            <div className="alert alert-error text-white text-sm mb-4 rounded-xl border-none shadow-sm font-bold">
+            <div className="alert alert-error bg-red-500/10 text-red-500 border border-red-500/50 text-sm mb-6 rounded-xl font-bold p-4">
               <span>{errorMsg}</span>
             </div>
           )}
 
-          <form onSubmit={handleAuth} className="flex flex-col gap-4">
+          <form onSubmit={handleAuth} className="flex flex-col gap-5">
             
             {/* Campos exclusivos de Registro */}
             {mode === 'register' && (
               <>
                 <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-bold text-[#ededed]">Nombre / Equipo</span>
+                  <label className="label pb-2">
+                    <span className="label-text text-xs font-bold uppercase tracking-wider text-zinc-500">Nombre / Equipo</span>
                   </label>
-                  <label className="input bg-zinc-900 border border-zinc-700 text-zinc-100 focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500 focus-within:outline-none rounded-lg flex items-center gap-3 w-full py-6">
-                    <User size={18} className="text-zinc-400" />
+                  <label className="input bg-zinc-900 border border-zinc-800 focus-within:border-[#dc2626] focus-within:ring-1 focus-within:ring-[#dc2626] focus-within:outline-none rounded-xl flex items-center gap-3 w-full py-6 transition-colors shadow-none">
+                    <User size={18} className="text-zinc-500" />
                     <input 
                       type="text" 
-                      className="grow bg-transparent" 
+                      className="grow bg-transparent text-white outline-none focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:outline-none font-medium placeholder-zinc-600" 
                       placeholder="Ej: Escudería Sur"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
@@ -130,24 +161,24 @@ export default function Login() {
                 </div>
 
                 <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-bold text-[#ededed]">Tipo de Cuenta</span>
+                  <label className="label pb-2">
+                    <span className="label-text text-xs font-bold uppercase tracking-wider text-zinc-500">Tipo de Cuenta</span>
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     <button 
                       type="button"
                       onClick={() => setRole('piloto')}
-                      className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${role === 'piloto' ? 'bg-[#333333] border-[#a1a1aa] text-white shadow-sm' : 'bg-[#121212] border-[#333333] text-[#a1a1aa] hover:border-[#444444]'}`}
+                      className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all ${role === 'piloto' ? 'bg-zinc-800 border-zinc-500 text-white shadow-md' : 'bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:border-zinc-600'}`}
                     >
-                      <Flag size={20} className="mb-1" />
+                      <Flag size={22} className="mb-2" />
                       <span className="font-bold text-sm">Piloto</span>
                     </button>
                     <button 
                       type="button"
                       onClick={() => setRole('club')}
-                      className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${role === 'club' ? 'bg-[#DA0037]/20 border-[#DA0037] text-[#DA0037] shadow-sm shadow-[#DA0037]/10' : 'bg-[#121212] border-[#333333] text-[#a1a1aa] hover:border-[#444444]'}`}
+                      className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all ${role === 'club' ? 'bg-[#dc2626]/10 border-[#dc2626] text-[#dc2626] shadow-sm' : 'bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:border-zinc-600'}`}
                     >
-                      <ShieldCheck size={20} className="mb-1" />
+                      <ShieldCheck size={22} className="mb-2" />
                       <span className="font-bold text-sm">Organizador</span>
                     </button>
                   </div>
@@ -157,14 +188,14 @@ export default function Login() {
 
             {/* Campos Comunes */}
             <div className="form-control w-full">
-              <label className="label">
-                <span className="label-text font-bold text-[#ededed]">Correo Electrónico</span>
+              <label className="label pb-2">
+                <span className="label-text text-xs font-bold uppercase tracking-wider text-zinc-500">Correo Electrónico</span>
               </label>
-              <label className="input bg-zinc-900 border border-zinc-700 text-zinc-100 focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500 focus-within:outline-none rounded-lg flex items-center gap-3 w-full py-6">
-                <Mail size={18} className="text-zinc-400" />
+              <label className="input bg-zinc-900 border border-zinc-800 focus-within:border-[#dc2626] focus-within:ring-1 focus-within:ring-[#dc2626] focus-within:outline-none rounded-xl flex items-center gap-3 w-full py-6 transition-colors shadow-none">
+                <Mail size={18} className="text-zinc-500" />
                 <input 
                   type="email" 
-                  className="grow bg-transparent" 
+                  className="grow bg-transparent text-white outline-none focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:outline-none font-medium placeholder-zinc-600" 
                   placeholder="piloto@rally.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -174,14 +205,14 @@ export default function Login() {
             </div>
 
             <div className="form-control w-full mb-2">
-              <label className="label">
-                <span className="label-text font-bold text-[#ededed]">Contraseña</span>
+              <label className="label pb-2">
+                <span className="label-text text-xs font-bold uppercase tracking-wider text-zinc-500">Contraseña</span>
               </label>
-              <label className="input bg-zinc-900 border border-zinc-700 text-zinc-100 focus-within:border-red-500 focus-within:ring-2 focus-within:ring-red-500 focus-within:outline-none rounded-lg flex items-center gap-3 w-full py-6">
-                <Lock size={18} className="text-zinc-400" />
+              <label className="input bg-zinc-900 border border-zinc-800 focus-within:border-[#dc2626] focus-within:ring-1 focus-within:ring-[#dc2626] focus-within:outline-none rounded-xl flex items-center gap-3 w-full py-6 transition-colors shadow-none">
+                <Lock size={18} className="text-zinc-500" />
                 <input 
                   type="password" 
-                  className="grow bg-transparent" 
+                  className="grow bg-transparent text-white outline-none focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:outline-none font-medium placeholder-zinc-600" 
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -190,10 +221,10 @@ export default function Login() {
               </label>
             </div>
 
-            <div className="form-control mt-2">
+            <div className="form-control mt-4">
               <button 
                 type="submit" 
-                className="w-full h-[3.5rem] bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-900/20 active:scale-[0.98] font-semibold rounded-xl transition-all duration-200 border-none disabled:opacity-70 flex flex-row justify-center items-center" 
+                className="w-full h-14 bg-[#dc2626] hover:bg-red-500 text-white shadow-lg shadow-red-900/20 active:scale-[0.98] font-bold rounded-xl transition-all duration-200 border-none disabled:opacity-70 flex flex-row justify-center items-center text-lg" 
                 disabled={loading}
               >
                 {loading ? "Cargando..." : (mode === 'login' ? 'Entrar al Paddock' : 'Registrar Cuenta')}
@@ -201,14 +232,18 @@ export default function Login() {
             </div>
           </form>
 
-          <div className="divider text-[#a1a1aa] text-xs font-bold my-6">O ENTRA CON</div>
+          <div className="flex items-center gap-4 my-8">
+             <div className="h-px bg-zinc-800 flex-1"></div>
+             <span className="text-zinc-600 text-xs font-bold uppercase">O ENTRA CON</span>
+             <div className="h-px bg-zinc-800 flex-1"></div>
+          </div>
 
           {/* OAuth Buttons */}
           <button 
             type="button"
             onClick={() => handleOAuthLogin('google')}
             disabled={loading}
-            className="btn btn-outline w-full h-[3.5rem] rounded-xl border-[#333333] hover:bg-[#333333] hover:border-[#444444] text-[#ededed] flex items-center justify-center gap-3"
+            className="w-full h-14 rounded-xl border border-zinc-800 bg-transparent hover:bg-zinc-900 text-zinc-300 font-semibold flex items-center justify-center gap-3 transition-colors disabled:opacity-50"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
