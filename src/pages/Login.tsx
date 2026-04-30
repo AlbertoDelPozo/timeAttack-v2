@@ -12,7 +12,7 @@ export default function Login() {
 
   // States de Registro
   const [displayName, setDisplayName] = useState('');
-  const [role, setRole] = useState<'piloto' | 'club'>('piloto');
+  const [role, setRole] = useState<'pilot' | 'club'>('pilot');
 
   // Feedback
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -208,8 +208,8 @@ export default function Login() {
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
-                      onClick={() => setRole('piloto')}
-                      className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all ${role === 'piloto' ? 'bg-zinc-800 border-zinc-500 text-white shadow-md' : 'bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:border-zinc-600'}`}
+                      onClick={() => setRole('pilot')}
+                      className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all ${role === 'pilot' ? 'bg-zinc-800 border-zinc-500 text-white shadow-md' : 'bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:border-zinc-600'}`}
                     >
                       <Flag size={22} className="mb-2" />
                       <span className="font-bold text-sm">Piloto</span>
