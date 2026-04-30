@@ -232,7 +232,6 @@ function AppContent() {
 
   // ── Nuclear Logout ─────────────────────────────────────────
   const handleLogout = async () => {
-const handleLogout = async () => {
     try {
       // 1. Petición oficial a Supabase
       await supabase.auth.signOut();
@@ -294,7 +293,6 @@ const handleLogout = async () => {
         </main>
       </div>
     </div>
-  );
   );
 }
 

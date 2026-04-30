@@ -317,7 +317,7 @@ export function ChampionshipAccordion({
                 className="text-zinc-400 hover:text-red-400 flex items-center gap-2 font-medium transition-colors text-sm bg-zinc-800/30 px-3 py-1.5 rounded-lg border border-zinc-800/50 hover:bg-zinc-800/80 w-fit"
               >
                 ← Volver a Campeonatos
-              </Button>
+              </button>
             </div>
 <div className="bg-zinc-900 border border-zinc-800/80 rounded-xl overflow-hidden shadow-sm p-4 md:p-6 mb-4">
               <div className="flex items-center justify-between mb-6 pb-4 border-b border-zinc-800/60">
@@ -408,12 +408,12 @@ export function ChampionshipAccordion({
                             </button>
                           </div>
                         </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </CardBody>
-            </Card>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
         ))
       )}

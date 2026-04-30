@@ -456,8 +456,6 @@ return (
               {mensaje.texto}
             </div>
           )}
-            </div>
-          )}
 
 {/* MODE SELECTOR */}
             <div className="flex items-center bg-zinc-950 border border-zinc-800 p-1 rounded-lg w-full sm:w-auto">
@@ -474,7 +472,6 @@ return (
                 📝 Edición
               </button>
             </div>
-          </div>
 
           {(!selectedRally) ? (
             <div className="w-full h-40 flex flex-col items-center justify-center text-zinc-500 text-sm border-2 border-dashed border-zinc-800 rounded-xl bg-zinc-900/30">
@@ -585,7 +582,6 @@ return (
                  {uiMode === 'edicion' ? 'Actualizar Registro' : 'Registrar Pasada'}
                </button>
              </div>
-          </form>
           </form>
         </div>
       </div>
