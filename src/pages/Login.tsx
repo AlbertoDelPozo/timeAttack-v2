@@ -16,6 +16,7 @@ export default function Login() {
 
   // Feedback
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -23,6 +24,7 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     setErrorMsg(null);
+    setSuccessMsg(null);
 
     try {
       if (mode === 'login') {
@@ -31,11 +33,21 @@ export default function Login() {
         // La redirección ocurrirá automáticamente por App.tsx monitorizando OnAuthStateChange
       } else {
         // Modo Registro
-        const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
+        const { data, error: signUpError } = await supabase.auth.signUp({ 
+          email, 
+          password,
+          options: {
+            data: {
+              display_name: displayName,
+              role: role
+            }
+          }
+        });
+        
         if (signUpError) throw signUpError;
 
         if (data.user) {
-          // Intentar inyectar el perfil manualmente (Asume Email Confirmation = OFF o RLS permisivo momentáneo)
+          // Intentar inyectar el perfil manualmente (Por si no hay Triggers automáticos)
           const { error: profileError } = await supabase.from('profiles').insert({
             id: data.user.id,
             role: role,
@@ -43,14 +55,18 @@ export default function Login() {
           });
 
           if (profileError) {
-            console.error("No se pudo crear el perfil automáticamente. Caerá al Onboarding si hace login.", profileError);
+            console.warn("Aviso: El perfil podría no haberse inyectado por reglas de seguridad. El Onboarding lo resolverá.", profileError);
           } else if (role === 'club') {
             await supabase.from('clubs').insert({ id: data.user.id, name: displayName });
+          }
+
+          if (!data.session) {
+            setSuccessMsg("Registro completado. Por favor, revisa tu correo para confirmar la cuenta.");
           }
         }
       }
     } catch (err: any) {
-      setErrorMsg(err.message);
+      setErrorMsg(err.message === 'User already registered' ? 'Este correo ya está registrado.' : err.message);
     } finally {
       setLoading(false);
     }
@@ -138,14 +154,14 @@ export default function Login() {
             <button
               type="button"
               className={`flex-1 py-2.5 rounded-xl font-bold transition-all text-sm ${mode === 'login' ? 'bg-zinc-800 text-white shadow-lg' : 'text-zinc-500 hover:text-white'}`}
-              onClick={() => { setMode('login'); setErrorMsg(null); }}
+              onClick={() => { setMode('login'); setErrorMsg(null); setSuccessMsg(null); }}
             >
               Iniciar Sesión
             </button>
             <button
               type="button"
               className={`flex-1 py-2.5 rounded-xl font-bold transition-all text-sm ${mode === 'register' ? 'bg-[#dc2626] text-white shadow-md shadow-[#dc2626]/20' : 'text-zinc-500 hover:text-white'}`}
-              onClick={() => { setMode('register'); setErrorMsg(null); }}
+              onClick={() => { setMode('register'); setErrorMsg(null); setSuccessMsg(null); }}
             >
               Registro
             </button>
@@ -154,6 +170,12 @@ export default function Login() {
           {errorMsg && (
             <div className="alert alert-error bg-red-500/10 text-red-500 border border-red-500/50 text-sm mb-6 rounded-xl font-bold p-4">
               <span>{errorMsg}</span>
+            </div>
+          )}
+
+          {successMsg && (
+            <div className="alert alert-success bg-emerald-500/10 text-emerald-500 border border-emerald-500/50 text-sm mb-6 rounded-xl font-bold p-4">
+              <span>{successMsg}</span>
             </div>
           )}
 
