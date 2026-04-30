@@ -3,7 +3,6 @@
 @tailwind utilities;
 
 
-
 body {
   background-color: #020617; /* Tailwind bg-slate-950 */
   color: #f1f5f9;           /* Tailwind text-slate-100 */

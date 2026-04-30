@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, ShieldCheck, Flag, Timer } from 'lucide-react';
+import { Mail, Lock, User, ShieldCheck, Flag, Trophy, Timer } from 'lucide-react';
 
 export default function Login() {
   const [mode, setMode] = useState<'login' | 'register'>('login');
@@ -71,58 +71,80 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#09090b] flex flex-col lg:flex-row relative overflow-hidden font-sans">
+<div className="min-h-screen w-full bg-[#09090b] flex flex-col lg:flex-row relative overflow-hidden font-sans">
 
-      {/* Columna Izquierda - Branding (Oculta en móvil) */}
-      <div className="hidden lg:flex relative flex-1 flex-col justify-center items-center bg-zinc-950 border-r border-zinc-800 p-12">
-        {/* Glow de fondo */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-red-600/10 blur-[130px] rounded-full pointer-events-none"></div>
+      {/* Columna Izquierda - Branding Motorsport (Versión Híbrida) */}
+      <div className="hidden lg:flex relative flex-1 flex-col justify-center items-start bg-[#050505] border-r border-zinc-800 p-20 overflow-hidden">
+        {/* Patrón de puntos y efectos de la versión functionality-fix */}
+        <div className="absolute inset-0 z-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#dc2626 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-black via-transparent to-[#1a0505] opacity-90 z-0 pointer-events-none"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-600/5 blur-[120px] rounded-full pointer-events-none"></div>
 
-        <div className="relative z-10 flex flex-col items-start justify-center max-w-md w-full">
-          <div className="flex items-center gap-4 mb-8">
-            <div className="w-14 h-14 bg-red-600 rounded-2xl flex items-center justify-center shadow-lg shadow-red-900/20">
-              <Timer size={28} className="text-white" />
-            </div>
-            <h1 className="text-4xl xl:text-5xl font-black text-zinc-100 tracking-tight">TimeAttack</h1>
-          </div>
-          <p className="text-zinc-400 text-lg md:text-xl leading-relaxed font-medium mb-12">
-            Control de tiempos profesional y gestión de campeonatos. La telemetría definitiva para pilotos y organizadores de motorsport.
+        <div className="relative z-10 flex flex-col items-start justify-center max-w-lg w-full">
+          <div className="w-16 h-1.5 bg-[#dc2626] mb-8"></div>
+          <h1 className="text-6xl xl:text-7xl font-black text-white tracking-widest uppercase italic leading-none mb-6">
+            TIME<br/><span className="text-[#dc2626]">ATTACK</span>
+          </h1>
+          <p className="text-zinc-400 text-xl md:text-2xl leading-relaxed font-medium mb-12 max-w-md">
+            Sistema avanzado de telemetría y live timing para el motorsport real.
           </p>
 
-          <div className="flex items-center gap-4 text-zinc-500 font-medium text-sm border-t border-zinc-800/80 pt-6 w-full">
-            <ShieldCheck size={18} /> Seguridad integral y precisión milimétrica
+          <div className="grid grid-cols-2 gap-4 w-full">
+            <div className="flex gap-3 items-center backdrop-blur-md bg-white/5 border border-white/10 px-4 py-3 rounded-2xl">
+               <Trophy className="text-[#dc2626]" size={24} />
+               <div>
+                  <p className="text-white font-bold text-sm">Clasificación</p>
+                  <p className="text-zinc-500 text-[10px] uppercase tracking-tighter">Live Timing 0-delay</p>
+               </div>
+            </div>
+            <div className="flex gap-3 items-center backdrop-blur-md bg-white/5 border border-white/10 px-4 py-3 rounded-2xl">
+               <Timer className="text-[#dc2626]" size={24} />
+               <div>
+                  <p className="text-white font-bold text-sm">Telemetría</p>
+                  <p className="text-zinc-500 text-[10px] uppercase tracking-tighter">Multi-Tramo Pro</p>
+               </div>
+            </div>
           </div>
         </div>
 
-        <div className="absolute bottom-8 left-8 text-zinc-600 text-sm font-medium">
+        <div className="absolute bottom-8 left-20 text-zinc-600 text-sm font-bold tracking-widest uppercase italic">
           © 2026 Motorsport Devs
         </div>
       </div>
 
-      {/* Columna Derecha - Auth */}
-      <div className="flex-1 flex justify-center items-center p-6 md:p-12 relative">
+      {/* Columna Derecha - Formulario de Autenticación */}
+      <div className="flex-1 flex justify-center items-center p-6 md:p-12 relative bg-[#09090b] shadow-[-20px_0_60px_rgba(0,0,0,0.8)]">
         <div className="w-full max-w-md mx-auto flex flex-col">
 
-          {/* Header en móvil */}
-          <div className="lg:hidden flex items-center gap-3 mb-10 pt-8">
-            <div className="w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center shadow-lg shadow-red-900/20">
-              <Timer size={22} className="text-white" />
-            </div>
-            <h2 className="text-3xl font-black text-zinc-100 tracking-tight">TimeAttack</h2>
+          {/* Header en móvil (Logo compacto) */}
+          <div className="lg:hidden flex flex-col items-center gap-2 mb-10 pt-8">
+            <h2 className="text-4xl font-black text-zinc-100 tracking-tight italic uppercase leading-none">
+              TIME<span className="text-[#dc2626]">ATTACK</span>
+            </h2>
+            <div className="w-12 h-1 bg-[#dc2626]"></div>
           </div>
 
-          {/* Selector Login / Register */}
-          <div className="flex bg-[#09090b] p-1 rounded-lg border border-zinc-800 mb-8 w-full max-w-[280px]">
+          <div className="text-center lg:text-left mb-8">
+            <h3 className="text-3xl font-bold text-white mb-2">
+              {mode === 'login' ? 'Bienvenido al Paddock' : 'Únete a la Competición'}
+            </h3>
+            <p className="text-zinc-500 text-sm">
+              Accede a la plataforma profesional de gestión de tiempos.
+            </p>
+          </div>
+
+          {/* Selector Login / Register (Estilo modernizado) */}
+          <div className="flex bg-[#121212] p-1.5 rounded-2xl border border-zinc-800 mb-10 w-full">
             <button
               type="button"
-              className={`flex-1 py-1.5 rounded-md font-bold transition-all text-sm ${mode === 'login' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+              className={`flex-1 py-2.5 rounded-xl font-bold transition-all text-sm ${mode === 'login' ? 'bg-zinc-800 text-white shadow-lg' : 'text-zinc-500 hover:text-white'}`}
               onClick={() => { setMode('login'); setErrorMsg(null); }}
             >
               Iniciar Sesión
             </button>
             <button
               type="button"
-              className={`flex-1 py-1.5 rounded-md font-bold transition-all text-sm ${mode === 'register' ? 'bg-zinc-800 text-zinc-100 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+              className={`flex-1 py-2.5 rounded-xl font-bold transition-all text-sm ${mode === 'register' ? 'bg-[#dc2626] text-white shadow-md shadow-[#dc2626]/20' : 'text-zinc-500 hover:text-white'}`}
               onClick={() => { setMode('register'); setErrorMsg(null); }}
             >
               Registro
@@ -130,25 +152,25 @@ export default function Login() {
           </div>
 
           {errorMsg && (
-            <div className="bg-red-500/10 border border-red-500/30 text-red-500 text-sm mb-6 p-3 rounded-md font-semibold">
-              {errorMsg}
+            <div className="alert alert-error bg-red-500/10 text-red-500 border border-red-500/50 text-sm mb-6 rounded-xl font-bold p-4">
+              <span>{errorMsg}</span>
             </div>
           )}
 
-          <form onSubmit={handleAuth} className="flex flex-col gap-4">
-
+          <form onSubmit={handleAuth} className="flex flex-col gap-5">
+            
             {/* Campos exclusivos de Registro */}
             {mode === 'register' && (
               <>
                 <div className="form-control w-full">
-                  <label className="label mb-1.5 px-0">
-                    <span className="text-zinc-400 font-semibold text-sm">Nombre / Equipo</span>
+                  <label className="label pb-2">
+                    <span className="label-text text-xs font-bold uppercase tracking-wider text-zinc-500">Nombre / Equipo</span>
                   </label>
-                  <label className="input bg-transparent border border-zinc-800 text-zinc-100 focus-within:border-red-500/50 rounded-md flex items-center gap-3 w-full h-11 px-3">
-                    <User size={18} className="text-zinc-400" />
-                    <input
-                      type="text"
-                      className="grow bg-transparent outline-none focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:outline-none focus:border-red-500 focus-visible:border-red-500 w-full"
+                  <label className="input bg-zinc-900 border border-zinc-800 focus-within:border-[#dc2626] focus-within:ring-1 focus-within:ring-[#dc2626] focus-within:outline-none rounded-xl flex items-center gap-3 w-full py-6 transition-colors shadow-none">
+                    <User size={18} className="text-zinc-500" />
+                    <input 
+                      type="text" 
+                      className="grow bg-transparent text-white outline-none focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:outline-none font-medium placeholder-zinc-600" 
                       placeholder="Ej: Escudería Sur"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
@@ -158,25 +180,25 @@ export default function Login() {
                 </div>
 
                 <div className="form-control w-full">
-                  <label className="label mb-1.5 px-0 mt-2">
-                    <span className="text-zinc-400 font-semibold text-sm">Tipo de Cuenta</span>
+                  <label className="label pb-2">
+                    <span className="label-text text-xs font-bold uppercase tracking-wider text-zinc-500">Tipo de Cuenta</span>
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
                       onClick={() => setRole('piloto')}
-                      className={`flex flex-col items-center justify-center p-4 rounded-md border transition-all ${role === 'piloto' ? 'bg-zinc-800 border-zinc-700 text-zinc-100' : 'bg-transparent border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}
+                      className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all ${role === 'piloto' ? 'bg-zinc-800 border-zinc-500 text-white shadow-md' : 'bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:border-zinc-600'}`}
                     >
-                      <Flag size={20} className="mb-2" />
-                      <span className="font-semibold text-sm">Piloto</span>
+                      <Flag size={22} className="mb-2" />
+                      <span className="font-bold text-sm">Piloto</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setRole('club')}
-                      className={`flex flex-col items-center justify-center p-4 rounded-md border transition-all ${role === 'club' ? 'bg-zinc-800 border-zinc-700 text-zinc-100' : 'bg-transparent border-zinc-800 text-zinc-500 hover:border-zinc-700'}`}
+                      className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all ${role === 'club' ? 'bg-[#dc2626]/10 border-[#dc2626] text-[#dc2626] shadow-sm' : 'bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:border-zinc-600'}`}
                     >
-                      <ShieldCheck size={20} className="mb-2" />
-                      <span className="font-semibold text-sm">Organizador</span>
+                      <ShieldCheck size={22} className="mb-2" />
+                      <span className="font-bold text-sm">Organizador</span>
                     </button>
                   </div>
                 </div>
@@ -185,15 +207,15 @@ export default function Login() {
 
             {/* Campos Comunes */}
             <div className="form-control w-full">
-              <label className="label mb-1.5 px-0 mt-2">
-                <span className="text-zinc-400 font-semibold text-sm">Correo Electrónico</span>
+              <label className="label pb-2">
+                <span className="label-text text-xs font-bold uppercase tracking-wider text-zinc-500">Correo Electrónico</span>
               </label>
-              <label className="input bg-transparent border border-zinc-800 text-zinc-100 focus-within:border-red-500/50 rounded-md flex items-center gap-3 w-full h-11 px-3">
-                <Mail size={18} className="text-zinc-400" />
-                <input
-                  type="email"
-                  className="grow bg-transparent outline-none focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:outline-none focus:border-red-500 focus-visible:border-red-500 w-full"
-                  placeholder="Escribe tu correo"
+              <label className="input bg-zinc-900 border border-zinc-800 focus-within:border-[#dc2626] focus-within:ring-1 focus-within:ring-[#dc2626] focus-within:outline-none rounded-xl flex items-center gap-3 w-full py-6 transition-colors shadow-none">
+                <Mail size={18} className="text-zinc-500" />
+                <input 
+                  type="email" 
+                  className="grow bg-transparent text-white outline-none focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:outline-none font-medium placeholder-zinc-600" 
+                  placeholder="piloto@rally.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -202,15 +224,15 @@ export default function Login() {
             </div>
 
             <div className="form-control w-full mb-2">
-              <label className="label mb-1.5 px-0 mt-2">
-                <span className="text-zinc-400 font-semibold text-sm">Contraseña</span>
+              <label className="label pb-2">
+                <span className="label-text text-xs font-bold uppercase tracking-wider text-zinc-500">Contraseña</span>
               </label>
-              <label className="input bg-transparent border border-zinc-800 text-zinc-100 focus-within:border-red-500/50 rounded-md flex items-center gap-3 w-full h-11 px-3">
-                <Lock size={18} className="text-zinc-400" />
-                <input
-                  type="password"
-                  className="grow bg-transparent outline-none focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:outline-none focus:border-red-500 focus-visible:border-red-500 w-full"
-                  placeholder="Escribe tu contraseña"
+              <label className="input bg-zinc-900 border border-zinc-800 focus-within:border-[#dc2626] focus-within:ring-1 focus-within:ring-[#dc2626] focus-within:outline-none rounded-xl flex items-center gap-3 w-full py-6 transition-colors shadow-none">
+                <Lock size={18} className="text-zinc-500" />
+                <input 
+                  type="password" 
+                  className="grow bg-transparent text-white outline-none focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:outline-none font-medium placeholder-zinc-600" 
+                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -218,10 +240,10 @@ export default function Login() {
               </label>
             </div>
 
-            <div className="form-control mt-2">
-              <button
-                type="submit"
-                className="w-full h-11 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-md transition-all duration-200 border-none disabled:opacity-70 flex justify-center items-center shadow-sm text-sm"
+            <div className="form-control mt-4">
+              <button 
+                type="submit" 
+                className="w-full h-14 bg-[#dc2626] hover:bg-red-500 text-white shadow-lg shadow-red-900/20 active:scale-[0.98] font-bold rounded-xl transition-all duration-200 border-none disabled:opacity-70 flex flex-row justify-center items-center text-lg" 
                 disabled={loading}
               >
                 {loading ? "Cargando..." : (mode === 'login' ? 'Entrar al Paddock' : 'Registrar Cuenta')}
@@ -230,9 +252,9 @@ export default function Login() {
           </form>
 
           <div className="flex items-center gap-4 my-8">
-            <div className="h-px bg-zinc-800 flex-1"></div>
-            <span className="text-zinc-600 text-xs font-semibold uppercase tracking-wider">o continuar con</span>
-            <div className="h-px bg-zinc-800 flex-1"></div>
+             <div className="h-px bg-zinc-800 flex-1"></div>
+             <span className="text-zinc-600 text-xs font-bold uppercase">O ENTRA CON</span>
+             <div className="h-px bg-zinc-800 flex-1"></div>
           </div>
 
           {/* OAuth Buttons */}
@@ -240,7 +262,7 @@ export default function Login() {
             type="button"
             onClick={() => handleOAuthLogin('google')}
             disabled={loading}
-            className="w-full h-11 bg-[#09090b] border border-zinc-800 hover:bg-zinc-800/50 text-zinc-300 font-semibold rounded-md flex items-center justify-center gap-3 text-sm transition-colors"
+            className="w-full h-14 rounded-xl border border-zinc-800 bg-transparent hover:bg-zinc-900 text-zinc-300 font-semibold flex items-center justify-center gap-3 transition-colors disabled:opacity-50"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />

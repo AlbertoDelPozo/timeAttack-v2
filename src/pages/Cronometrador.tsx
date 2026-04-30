@@ -1,27 +1,54 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Button, Select, SelectItem, Spinner } from '@nextui-org/react';
+import { Button, Select as NextUISelect, SelectItem, Spinner } from '@nextui-org/react';
+import { Trophy, Flag, Clock, Layers } from 'lucide-react';
 
 export default function Cronometrador({ userId, sessionId, rallyId }: { userId?: string, sessionId?: string, rallyId?: string }) {
-  const [pilotos, setPilotos] = useState<any[]>([]);
-  const [config, setConfig] = useState({ num_tramos: 1, num_pasadas: 1 });
+  // Cascading Selectors
+  const [championships, setChampionships] = useState<any[]>([]);
+  const [allRallies, setAllRallies] = useState<any[]>([]);
+  const [selectedCamp, setSelectedCamp] = useState<string>('');
+  const [selectedRally, setSelectedRally] = useState<string>(rallyId || '');
+
+  const [pilotosInscritos, setPilotosInscritos] = useState<any[]>([]);
+  const [pilotosPendientes, setPilotosPendientes] = useState<any[]>([]);
+  const [pilotosCompletados, setPilotosCompletados] = useState<any[]>([]);
+  const [numTramos, setNumTramos] = useState<number>(1);
+  const [numPasadas, setNumPasadas] = useState<number>(1);
+  const [uiMode, setUiMode] = useState<'pendientes' | 'edicion'>('pendientes');
+  const [configStatus, setConfigStatus] = useState<'idle' | 'ok' | 'missing'>('idle');
 
   // Contexto seleccionado
-  const [tramo, setTramo] = useState<number>(1);
   const [pasada, setPasada] = useState<number>(1);
 
   // Piloto
   const [pilotoId, setPilotoId] = useState('');
-  
-  // Tiempos (Strings para los inputs numéricos)
-  const [minutos, setMinutos] = useState('');
-  const [segundos, setSegundos] = useState('');
-  const [milesimas, setMilesimas] = useState('');
-  const [penalizacion, setPenalizacion] = useState('');
+
+  // Tiempos Multi-Tramo
+  type TramoData = { tiempo: string; penalizacion: string };
+  const [tramosData, setTramosData] = useState<Record<number, TramoData>>({});
 
   const [mensaje, setMensaje] = useState<{ texto: string, tipo: 'success' | 'error' } | null>(null);
   const [sessionLapTimes, setSessionLapTimes] = useState<any[]>([]);
-  const [loadingTop, setLoadingTop] = useState(true);
+  const [loadingTop, setLoadingTop] = useState(false);
+
+  // 1. Fetch initial ALL data for Dropdowns
+  useEffect(() => {
+    let isMounted = true;
+    if (!userId) return;
+    supabase.from('championships').select('*').eq('club_id', userId).order('created_at', { ascending: false })
+      .then(({ data }) => { if (isMounted && data) setChampionships(data); });
+
+    supabase.from('rallies').select('*').order('created_at', { ascending: false })
+      .then(({ data }) => { if (isMounted && data) setAllRallies(data); });
+    return () => { isMounted = false; };
+  }, [userId]);
+
+  const filteredRallies = allRallies.filter(r => r.championship_id === selectedCamp);
+
+  useEffect(() => {
+    if (rallyId) setSelectedRally(rallyId);
+  }, [rallyId]);
 
   const fetchSessionTimes = async () => {
     if (!userId) return;
@@ -32,8 +59,8 @@ export default function Cronometrador({ userId, sessionId, rallyId }: { userId?:
       .order('created_at', { ascending: false })
       .limit(5);
 
-    if (rallyId) {
-      q = q.eq('rally_id', rallyId);
+    if (selectedRally) {
+      q = q.eq('rally_id', selectedRally);
     } else if (sessionId) {
       q = q.eq('session_id', sessionId);
     } else {
@@ -44,8 +71,9 @@ export default function Cronometrador({ userId, sessionId, rallyId }: { userId?:
     if (data) setSessionLapTimes(data);
   };
 
-  useEffect(() => { fetchSessionTimes(); }, [userId, sessionId, rallyId]);
+  useEffect(() => { fetchSessionTimes(); }, [userId, sessionId, selectedRally]);
 
+  // Handle Pilots & Race Config Fetch
   useEffect(() => {
     let isMounted = true;
 
@@ -54,14 +82,13 @@ export default function Cronometrador({ userId, sessionId, rallyId }: { userId?:
       setLoadingTop(true);
 
       try {
-        if (rallyId || sessionId) {
-          // Si es un rally específico, cargamos sus inscripciones para los pilotos (+ dorsales y categorias)
-          const targetCol = rallyId ? 'rally_id' : 'session_id';
-          const targetVal = rallyId || sessionId;
-          
+        if (selectedRally || sessionId) {
+          const targetCol = selectedRally ? 'rally_id' : 'session_id';
+          const targetVal = selectedRally || sessionId;
+
           const { data: insData, error: insErr } = await supabase
             .from('inscriptions')
-            .select(`pilot_id, category_id, number, pilots ( name ), categories ( name )`)
+            .select(`id, pilot_id, category_id, pilots (*), categories ( name )`)
             .eq(targetCol, targetVal);
 
           if (insErr) throw insErr;
@@ -71,122 +98,243 @@ export default function Cronometrador({ userId, sessionId, rallyId }: { userId?:
               id: i.pilot_id,
               name: i.pilots?.name || 'Desconocido',
               category_id: i.category_id,
-              number: i.number || null
+              number: i.pilots?.dorsal || i.pilots?.num_dorsal || i.dorsal || null
             })).sort((a, b) => (a.number || 999) - (b.number || 999));
-            
-            setPilotos(parsedPilots);
+
+            setPilotosInscritos(parsedPilots);
           }
         } else {
-          // Fallback global (cronometro libre)
-          const { data: pilotsData, error: pilotsError } = await supabase.from('pilots').select('id, name').eq('club_id', userId);
-          if (pilotsError) throw pilotsError;
-          if (isMounted && pilotsData) {
-            setPilotos(pilotsData.map(p => ({ ...p, category_id: null, number: null })));
-          }
+          if (isMounted) setPilotosInscritos([]);
         }
-
-        // Configuración de Tramos y Pasadas
-        let tramos_cfg = 1, pasadas_cfg = 1;
-        if (rallyId) {
-          const { data: configData } = await supabase.from('race_config').select('num_tramos, num_pasadas').eq('rally_id', rallyId).maybeSingle();
-          if (configData) { tramos_cfg = configData.num_tramos || 1; pasadas_cfg = configData.num_pasadas || 1; }
-        } else {
-          // Prueba actual heredada globalmente (legacy)
-          const { data: cfgLegacy } = await supabase.from('race_config').select('num_tramos, num_pasadas').eq('club_id', userId).is('rally_id', null).maybeSingle();
-          if (cfgLegacy) { tramos_cfg = cfgLegacy.num_tramos || 1; pasadas_cfg = cfgLegacy.num_pasadas || 1; }
-        }
-        
-        if (isMounted) setConfig({ num_tramos: tramos_cfg, num_pasadas: pasadas_cfg });
-
       } catch (error: any) {
-        console.error('Error fetching datos de cronómetro:', error);
+        console.error('Error fetching pilots for cronómetro:', error);
       } finally {
-         if (isMounted) setLoadingTop(false);
+        if (isMounted) setLoadingTop(false);
+      }
+    };
+
+    const fetchRaceConfig = async () => {
+      if (!selectedRally && !userId) return;
+
+      console.log("Buscando config para Rally ID (Misión 102):", selectedRally);
+
+      let num = 1;
+      let foundConfig = false;
+
+      // Lectura DDL nativa: Tabla rallies
+      if (selectedRally) {
+        const { data: rallyData, error: rallyErr } = await supabase
+          .from('rallies')
+          .select('stages, passes')
+          .eq('id', selectedRally)
+          .maybeSingle();
+
+        if (rallyErr) {
+          console.error("Error fetching rally config:", rallyErr);
+        }
+
+        if (rallyData) {
+          console.log("Configuración extraída de tabla rallies:", rallyData);
+          num = rallyData.stages || 1;
+          if (isMounted) setNumPasadas(rallyData.passes || 1);
+          foundConfig = true;
+        }
+      }
+
+      if (isMounted) {
+        setNumTramos(num);
+        setConfigStatus(foundConfig ? 'ok' : 'missing');
       }
     };
 
     fetchSelectData();
+    fetchRaceConfig();
     return () => { isMounted = false; };
-  }, [userId, rallyId, sessionId]);
+  }, [userId, selectedRally, sessionId]);
 
-  const handlePadChange = (e: React.ChangeEvent<HTMLInputElement>, setter: React.Dispatch<React.SetStateAction<string>>, maxLength: number) => {
-    let val = e.target.value.replace(/\D/g, ''); // Ensure only numbers
-    if (val.length > maxLength) val = val.slice(0, maxLength);
-    setter(val);
+  // Lógica Exclusión Dinámica "Pendientes"
+  useEffect(() => {
+    let isMounted = true;
+    const fetchLapTimesToExclude = async () => {
+      if (!selectedRally || !pasada) {
+        if (isMounted) setPilotosPendientes(pilotosInscritos);
+        return;
+      }
+
+      setLoadingTop(true);
+      try {
+        // Buscamos a los pilotos que ya han rellenado TODOS los tramos de esta pasada?
+        // Si hacen multi-tramo, el piloto terminará la pasada entera de golpe normalmente.
+        // Vamos a excluir a los pilotos que tienen AL MÚLTIPLE número de registros igual a num_tramos.
+        const { data: doneData } = await supabase
+          .from('lap_times')
+          .select('pilot_id')
+          .eq('rally_id', selectedRally)
+          .eq('pasada_num', pasada);
+
+        if (isMounted) {
+          if (!doneData || doneData.length === 0) {
+            setPilotosPendientes(pilotosInscritos);
+            setPilotosCompletados([]);
+          } else {
+            const counts = new Map<string, number>();
+            doneData.forEach(d => {
+              counts.set(d.pilot_id, (counts.get(d.pilot_id) || 0) + 1);
+            });
+            // Excluimos solo a los que han completado todos los tramos de esta pasada
+            setPilotosPendientes(pilotosInscritos.filter(p => (counts.get(p.id) || 0) < numTramos));
+            // Completados/Parciales para modo edición
+            setPilotosCompletados(pilotosInscritos.filter(p => (counts.get(p.id) || 0) > 0));
+          }
+        }
+      } catch (err) {
+        console.error(err);
+        if (isMounted) {
+          setPilotosPendientes(pilotosInscritos);
+          setPilotosCompletados([]);
+        }
+      } finally {
+        if (isMounted) setLoadingTop(false);
+      }
+    };
+
+    fetchLapTimesToExclude();
+    return () => { isMounted = false; };
+  }, [pilotosInscritos, selectedRally, pasada, sessionLapTimes, numTramos]);
+
+  // Smart Fetching (Auto-rellenado)
+  useEffect(() => {
+    let isMounted = true;
+    const fetchPilotData = async () => {
+      if (!pilotoId || !selectedRally || !pasada) {
+        if (isMounted) setTramosData({});
+        return;
+      }
+
+      const { data } = await supabase.from('lap_times')
+        .select('*')
+        .eq('rally_id', selectedRally)
+        .eq('pilot_id', pilotoId)
+        .eq('pasada_num', pasada);
+
+      if (isMounted) {
+        if (data && data.length > 0) {
+          const newTramos: Record<number, TramoData> = {};
+          data.forEach(lap => {
+            const trackMs = lap.track_time_ms || 0;
+            newTramos[lap.tramo_num] = {
+              tiempo: trackMs > 0 ? (trackMs / 1000).toFixed(3) : '',
+              penalizacion: lap.penalty_ms ? String(lap.penalty_ms / 1000) : ''
+            };
+          });
+          setTramosData(newTramos);
+        } else {
+          setTramosData({});
+        }
+      }
+    };
+    fetchPilotData();
+    return () => { isMounted = false; };
+  }, [pilotoId, selectedRally, pasada]);
+
+  const updateTramoData = (tNum: number, key: keyof TramoData, val: string) => {
+    setTramosData(prev => ({
+      ...prev,
+      [tNum]: { ...(prev[tNum] || { tiempo: '', penalizacion: '' }), [key]: val }
+    }));
   };
 
-  const calculateMilliseconds = (min: string, sec: string, ms: string) => {
-    const minVal = parseInt(min || '0', 10);
-    const secVal = parseInt(sec || '0', 10);
-    const msVal = parseInt(ms || '0', 10);
-    // Si el msVal se introduce como "5", podría significar 500 o 5, asumiremos direct match de input o lo paddearemos?
-    // En rally, 5 = 005. Si meten "50", es 050. Usaremos direct match numérico. Pero para UI es mejor que paddeen.
-    return (minVal * 60000) + (secVal * 1000) + msVal;
+  const hasAnyValidData = () => {
+    return Object.keys(tramosData).some(k => {
+      const t = tramosData[Number(k)];
+      if (!t) return false;
+      const ms = Math.round(parseFloat(t.tiempo || '0') * 1000);
+      return ms > 0 || parseFloat(t.penalizacion || '0') > 0;
+    });
   };
+
+  const isValidToSave = typeof selectedRally !== "undefined" && selectedRally !== '' && pilotoId && hasAnyValidData();
 
   const guardarTiempo = async () => {
     try {
-      if (!pilotoId) {
-        setMensaje({ texto: 'Selecciona un piloto primero.', tipo: 'error' });
-        return;
-      }
-      if (!minutos && !segundos && !milesimas) {
-        setMensaje({ texto: 'Introduce un tiempo de pista válido.', tipo: 'error' });
+      if (!isValidToSave) {
+        setMensaje({ texto: 'Faltan datos o el tiempo es cero.', tipo: 'error' });
         return;
       }
 
-      const selectedPilot = pilotos.find(p => p.id === pilotoId);
+      const activeTramoKeys = Object.keys(tramosData).map(Number).filter(k => {
+        const t = tramosData[k];
+        const ms = Math.round(parseFloat(t?.tiempo || '0') * 1000);
+        return ms > 0 || parseFloat(t?.penalizacion || '0') > 0;
+      });
+
+      if (activeTramoKeys.length === 0) {
+        setMensaje({ texto: 'No has introducido ningún tiempo válido.', tipo: 'error' });
+        return;
+      }
+
+      const selectedPilot = pilotosInscritos.find(p => p.id === pilotoId);
       const catId = selectedPilot?.category_id || null;
 
-      const trackTimeMs = calculateMilliseconds(minutos, segundos, milesimas);
-      const pen = parseFloat(penalizacion || '0');
-      const penaltyMs = isNaN(pen) ? 0 : Math.round(pen * 1000);
-      const totalTimeMs = trackTimeMs + penaltyMs;
+      // Implementación Check & Write (Misión 98) 
+      // Iteramos asíncronamente para cada tramo que el usuario haya rellenado en pantalla
+      for (const tNum of activeTramoKeys) {
+        const t = tramosData[tNum];
+        const trackMs = Math.round(parseFloat(t?.tiempo || '0') * 1000);
+        const pen = parseFloat(t?.penalizacion || '0');
+        const penMs = isNaN(pen) ? 0 : Math.round(pen * 1000);
 
-      // Check if already exists for avoid duplicates
-      let queryExistentes = supabase
-        .from('lap_times').select('id')
-        .eq('club_id', userId)
-        .eq('pilot_id', pilotoId)
-        .eq('pasada_num', pasada)
-        .eq('tramo_num', tramo);
+        const payload = {
+          pilot_id: pilotoId,
+          category_id: catId,
+          tramo_num: tNum,
+          pasada_num: pasada,
+          track_time_ms: trackMs,
+          penalty_ms: penMs,
+          total_time_ms: trackMs + penMs,
+          club_id: userId,
+          rally_id: selectedRally
+        };
 
-      if (rallyId) queryExistentes = queryExistentes.eq('rally_id', rallyId);
-      else if (sessionId) queryExistentes = queryExistentes.eq('session_id', sessionId);
-      else queryExistentes = queryExistentes.is('session_id', null).is('rally_id', null);
+        // 1. Buscar si el tiempo ya existe para este piloto en esta prueba, tramo y pasada específica.
+        const { data: existingRecord, error: checkError } = await supabase
+          .from('lap_times')
+          .select('id')
+          .eq('pilot_id', pilotoId)
+          .eq('rally_id', selectedRally)
+          .eq('tramo_num', tNum)
+          .eq('pasada_num', pasada)
+          .maybeSingle();
 
-      const { data: existentes } = await queryExistentes;
-      if (existentes && existentes.length > 0) {
-        setMensaje({ texto: 'Ese piloto ya tiene tiempo en este tramo y pasada.', tipo: 'error' });
-        return;
+        if (checkError) {
+          console.error("Error comprobando existencia:", checkError);
+          throw checkError;
+        }
+
+        if (existingRecord) {
+          // 2A. ACTUALIZAR (UPDATE) si ya existía
+          const { error: updateError } = await supabase
+            .from('lap_times')
+            .update(payload)
+            .eq('id', existingRecord.id);
+
+          if (updateError) throw updateError;
+        } else {
+          // 2B. CREAR (INSERT) si es un tiempo nuevo
+          const { error: insertError } = await supabase
+            .from('lap_times')
+            .insert(payload);
+
+          if (insertError) throw insertError;
+        }
       }
 
-      const payload = {
-        pilot_id: pilotoId,
-        category_id: catId, // si no tiene null
-        tramo_num: tramo,
-        pasada_num: pasada,
-        track_time_ms: trackTimeMs,
-        penalty_ms: penaltyMs,
-        total_time_ms: totalTimeMs,
-        club_id: userId,
-        rally_id: rallyId || null,
-        session_id: (!rallyId && sessionId) ? sessionId : null 
-      };
+      setMensaje({ texto: '¡Tiempos registrados con éxito!', tipo: 'success' });
 
-      const { error } = await supabase.from('lap_times').insert([payload]);
-      if (error) throw error;
-
-      setMensaje({ texto: '¡Tiempo registrado con éxito!', tipo: 'success' });
-      
-      // Reset variables
-      setMinutos('');
-      setSegundos('');
-      setMilesimas('');
-      setPenalizacion('');
       setPilotoId('');
-      
       setTimeout(() => setMensaje(null), 4000);
+
+      // Update session lap times locally
       fetchSessionTimes();
 
     } catch (error: any) {
@@ -195,61 +343,88 @@ export default function Cronometrador({ userId, sessionId, rallyId }: { userId?:
     }
   };
 
+return (
+    <div className="w-full flex-1 flex flex-col md:max-w-[1200px] max-w-full mx-auto md:py-6 relative h-full">
 
-  return (
-    <div className="w-full flex-1 flex flex-col md:max-w-4xl max-w-full mx-auto md:py-6 relative h-full">
+      <h1 className="text-3xl lg:text-4xl font-black text-white px-2 mt-4 md:mt-0 mb-6 hidden md:block tracking-tight text-center uppercase italic">
+        <span className="text-red-600">Race</span> Dashboard
+      </h1>
 
-      <h1 className="text-3xl font-black text-white px-2 mt-4 md:mt-0 mb-6 hidden md:block tracking-tight text-center">Dashboard de Cronometraje</h1>
+      {/* BLOQUE SUPERIOR: CONTEXTO Y SELECTORES EN CASCADA */}
+      <div className="bg-[#09090b] border border-zinc-800 rounded-lg shadow-sm p-4 mb-4 md:mb-6 flex flex-col gap-4">
+        <div className="flex flex-col md:flex-row gap-4 w-full">
+          {/* Selector de Campeonato */}
+          <div className="flex-1 w-full">
+            <label className="text-[10px] sm:text-xs font-bold text-zinc-500 flex items-center gap-2 uppercase tracking-wider mb-2">
+              <Trophy size={14} /> Campeonato
+            </label>
+            <select
+              className="w-full h-[40px] sm:h-[44px] bg-zinc-950 border border-zinc-800 text-zinc-100 px-3 rounded-lg focus:border-red-500 focus:ring-0 outline-none transition-all shadow-sm"
+              value={selectedCamp}
+              onChange={(e) => { setSelectedCamp(e.target.value); setSelectedRally(''); }}
+              disabled={!!rallyId}
+            >
+              <option value="">Seleccionar Competición...</option>
+              {championships.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
 
-      {/* BLOQUE SUPERIOR: CONTEXTO (Tramo / Pasada) */}
-      <div className="bg-[#09090b] border border-zinc-800 rounded-lg shadow-sm p-4 mb-4 md:mb-6">
-        <div className="flex items-center gap-4 justify-between">
-           <div className="flex gap-4 w-full">
-             <Select
-                label="Tramo"
-                variant="bordered"
-                selectedKeys={[String(tramo)]}
-                onSelectionChange={(k) => setTramo(Number(Array.from(k)[0]))}
-                className="flex-1"
-                classNames={{ trigger: "border-zinc-800 bg-zinc-950", value: "font-bold text-zinc-100", label: "text-zinc-500" }}
-             >
-                {Array.from({ length: config.num_tramos }, (_, i) => i + 1).map(num => (
-                  <SelectItem key={String(num)} value={String(num)}>Tramo {num}</SelectItem>
-                ))}
-             </Select>
-             <Select
-                label="Pasada"
-                variant="bordered"
-                selectedKeys={[String(pasada)]}
-                onSelectionChange={(k) => setPasada(Number(Array.from(k)[0]))}
-                className="flex-1"
-                classNames={{ trigger: "border-zinc-800 bg-zinc-950", value: "font-bold text-zinc-100", label: "text-zinc-500" }}
-             >
-                {Array.from({ length: config.num_pasadas }, (_, i) => i + 1).map(num => (
-                  <SelectItem key={String(num)} value={String(num)}>Pasada {num}</SelectItem>
-                ))}
-             </Select>
-           </div>
+          {/* Selector de Rally */}
+          <div className="flex-1 w-full">
+            <label className="text-[10px] sm:text-xs font-bold text-zinc-500 flex items-center gap-2 uppercase tracking-wider mb-2">
+              <Flag size={14} /> Prueba / Rally
+            </label>
+            <select
+              className="w-full h-[40px] sm:h-[44px] bg-zinc-950 border border-zinc-800 text-zinc-100 px-3 rounded-lg focus:border-red-500 focus:ring-0 outline-none transition-all shadow-sm disabled:opacity-50"
+              value={selectedRally}
+              onChange={(e) => setSelectedRally(e.target.value)}
+              disabled={!selectedCamp && !rallyId}
+            >
+              <option value="">Seleccionar Prueba Activa...</option>
+              {rallyId
+                ? allRallies.filter(r => r.id === rallyId).map(r => <option key={r.id} value={r.id}>{r.name}</option>)
+                : filteredRallies.map(r => <option key={r.id} value={r.id}>{r.name}</option>)
+              }
+            </select>
+          </div>
+
+          {/* Selector de Pasada */}
+          <div className="flex-1 w-full">
+            <label className="text-[10px] sm:text-xs font-bold text-zinc-500 flex items-center gap-2 uppercase tracking-wider mb-2">
+              <Layers size={14} /> Pasada Activa
+            </label>
+            <select
+              className="w-full h-[40px] sm:h-[44px] bg-zinc-950 border border-zinc-800 text-zinc-100 px-3 rounded-lg focus:border-red-500 focus:ring-0 outline-none transition-all shadow-sm disabled:opacity-50"
+              value={pasada}
+              onChange={(e) => setPasada(Number(e.target.value))}
+              disabled={!selectedRally || configStatus === 'missing'}
+            >
+              {Array.from({ length: numPasadas || 1 }, (_, i) => i + 1).map(num => (
+                <option key={String(num)} value={String(num)}>Pasada {num}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
       <div className="flex-1 flex flex-col lg:flex-row gap-4 md:gap-6 min-h-0">
-        
-        {/* BLOQUE IZQUIERDO: PILOTOS GRID */}
-        <div className="flex-1 bg-[#09090b] border border-zinc-800 rounded-lg shadow-sm p-4 overflow-y-auto min-h-[250px] lg:h-full">
-          <div className="flex items-center justify-between mb-4">
-             <h3 className="text-zinc-400 text-sm font-bold uppercase tracking-wider">Selector de Piloto</h3>
-             {loadingTop && <Spinner size="sm" color="default" />}
+        {/* BLOQUE IZQUIERDO: GRID DE PILOTOS (Estilo mejorado de MAIN) */}
+        <div className="flex-1 bg-[#09090b] border border-zinc-800 rounded-lg shadow-sm p-4 overflow-y-auto min-h-[250px] lg:h-full relative flex flex-col">
+          <div className="flex items-center justify-between mb-4 sticky top-0 bg-[#09090b] z-10 py-1">
+            <h3 className="text-zinc-400 text-sm font-bold uppercase tracking-wider flex items-center gap-2">
+              Selector de Piloto {pasada && <span className="text-red-500 font-black">P{pasada}</span>}
+            </h3>
+            {loadingTop && <Spinner size="sm" color="danger" />}
           </div>
           
-          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-3">
-             {pilotos.map(p => {
-               const isSelected = p.id === pilotoId;
+          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-3 xl:grid-cols-5 gap-2 md:gap-3">
+             {pilotosInscritos.map(p => {
+               const isSelected = p.pilot_id === pilotoId;
                return (
                  <button
                    key={p.id}
                    type="button"
-                   onClick={() => setPilotoId(p.id)}
+                   onClick={() => setPilotoId(p.pilot_id)}
                    className={`h-24 flex flex-col items-center justify-center rounded-xl border transition-all active:scale-95 p-1 ${
                      isSelected 
                        ? 'bg-red-600/10 border-red-600 shadow-[0_0_15px_-3px_rgba(220,38,38,0.3)]' 
@@ -260,14 +435,14 @@ export default function Cronometrador({ userId, sessionId, rallyId }: { userId?:
                      {p.number || '-'}
                    </span>
                    <span className="text-[10px] md:text-xs text-center font-semibold text-zinc-500 line-clamp-2 leading-tight px-1">
-                     {p.name}
+                     {p.pilots?.name || 'Piloto'}
                    </span>
                  </button>
                );
              })}
-             {pilotos.length === 0 && !loadingTop && (
-               <div className="col-span-full py-10 text-center text-zinc-500 text-sm">
-                 No hay pilotos inscritos.
+             {pilotosInscritos.length === 0 && !loadingTop && (
+               <div className="col-span-full py-10 text-center text-zinc-500 text-sm italic">
+                 No hay pilotos inscritos en este rally.
                </div>
              )}
           </div>
@@ -277,93 +452,136 @@ export default function Cronometrador({ userId, sessionId, rallyId }: { userId?:
         <div className="w-full lg:w-[420px] shrink-0 bg-[#09090b] border border-zinc-800 rounded-lg shadow-sm p-5 md:p-6 lg:h-full flex flex-col justify-center relative">
           
           {mensaje && (
-            <div className={`absolute top-4 left-4 right-4 px-4 py-3 rounded-md text-sm font-bold border text-center z-10 ${mensaje.tipo === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-red-500/10 border-red-500/30 text-red-500'}`}>
+            <div className={`absolute top-4 left-4 right-4 px-4 py-3 rounded-md text-sm font-bold border text-center z-10 animate-appearance-in ${mensaje.tipo === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-red-500/10 border-red-500/30 text-red-500'}`}>
               {mensaje.texto}
             </div>
           )}
 
-          <div className="text-center mb-6 pt-4">
-             <div className="text-zinc-400 font-bold uppercase tracking-widest text-xs mb-1">Entrada de Telemetría</div>
-             <div className="text-zinc-500 text-xs">Formato: MM : SS . MMM</div>
+{/* MODE SELECTOR */}
+            <div className="flex items-center bg-zinc-950 border border-zinc-800 p-1 rounded-lg w-full sm:w-auto">
+              <button
+                onClick={() => { setUiMode('pendientes'); setPilotoId(''); setMensaje(null); }}
+                className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold uppercase rounded-md transition-all ${uiMode === 'pendientes' ? 'bg-red-600 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+              >
+                🏁 Pendientes
+              </button>
+              <button
+                onClick={() => { setUiMode('edicion'); setPilotoId(''); setMensaje(null); }}
+                className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold uppercase rounded-md transition-all ${uiMode === 'edicion' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+              >
+                📝 Edición
+              </button>
+            </div>
+
+          {(!selectedRally) ? (
+            <div className="w-full h-40 flex flex-col items-center justify-center text-zinc-500 text-sm border-2 border-dashed border-zinc-800 rounded-xl bg-zinc-900/30">
+              <Trophy size={32} className="mb-2 text-zinc-700" />
+              Selecciona una competición para ver los pilotos.
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-3 xl:grid-cols-5 gap-2 md:gap-3 pb-8">
+              {(uiMode === 'pendientes' ? pilotosPendientes : pilotosCompletados).map(p => {
+                const isSelected = p.pilot_id === pilotoId;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => { setPilotoId(p.pilot_id); setMensaje(null); }}
+                    className={`h-20 sm:h-24 flex flex-col items-center justify-center rounded-xl border transition-all active:scale-95 p-1 ${isSelected
+                      ? 'bg-red-600/10 border-red-600 shadow-[0_0_15px_-3px_rgba(220,38,38,0.3)]'
+                      : 'bg-zinc-950 border-zinc-800 hover:border-zinc-600 hover:bg-zinc-900'
+                      }`}
+                  >
+                    <span className={`text-3xl sm:text-4xl font-black font-mono leading-none mb-1 ${isSelected ? 'text-red-500' : 'text-zinc-300'}`}>
+                      {p.number || '-'}
+                    </span>
+                    <span className="text-[10px] md:text-[11px] text-center font-semibold text-zinc-500 line-clamp-2 leading-tight px-1 hidden sm:block">
+                      {p.pilots?.name || 'Piloto'}
+                    </span>
+                  </button>
+                );
+              })}
+
+              {/* ESTADOS VACÍOS */}
+              {pilotosInscritos.length === 0 && !loadingTop && (
+                <div className="col-span-full py-10 text-center text-zinc-500 text-sm italic">
+                  Aún no hay pilotos en la lista de inscritos de este Rally.
+                </div>
+              )}
+
+              {uiMode === 'pendientes' && pilotosInscritos.length > 0 && pilotosPendientes.length === 0 && !loadingTop && (
+                <div className="col-span-full py-12 px-4 flex flex-col items-center justify-center gap-3 text-center border-2 border-dashed border-emerald-500/20 rounded-xl bg-emerald-500/5">
+                  <Flag className="text-emerald-500" size={32} />
+                  <span className="text-emerald-400 font-bold text-sm">Manga Completada</span>
+                  <span className="text-zinc-400 text-xs text-balance">Todos los pilotos registrados.</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* BLOQUE DERECHO: FORMULARIO MULTI-TRAMO CON ESTILO MEJORADO */}
+        <div className="w-full lg:w-[480px] shrink-0 bg-[#09090b] border border-zinc-800 rounded-lg shadow-sm p-4 md:p-6 lg:h-full flex flex-col relative overflow-y-auto">
+
+          <div className="text-center mb-4 pt-2">
+            <div className="text-zinc-400 font-bold uppercase tracking-widest text-xs mb-1">
+              {uiMode === 'edicion' ? 'Modo Corrección' : 'Entrada de Telemetría'}
+            </div>
+            <div className="text-zinc-600 text-[10px]">FORMATO: SEGUNDOS . MILÉSIMAS</div>
           </div>
 
-          <form className="flex flex-col gap-6" onSubmit={(e) => { e.preventDefault(); guardarTiempo(); }}>
-             {/* Inputs de Tiempo (Gigantes) */}
-             <div className="flex items-end justify-center gap-2">
-                {/* Minutos */}
-                <div className="flex flex-col items-center">
-                   <span className="text-zinc-500 text-xs font-bold uppercase mb-1">MIN</span>
-                   <input
-                     type="number" inputMode="numeric" pattern="[0-9]*"
-                     placeholder="00"
-                     value={minutos}
-                     onChange={(e) => handlePadChange(e, setMinutos, 2)}
-                     className="w-20 md:w-24 h-24 bg-zinc-950 border border-zinc-800 rounded-xl text-center text-4xl md:text-5xl font-black font-mono text-white focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-all placeholder:text-zinc-800"
-                   />
-                </div>
+          {mensaje && (
+            <div className={`mb-6 p-4 rounded-xl text-sm font-bold border text-center shadow-sm ${mensaje.tipo === 'success' ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400' : 'bg-red-500/10 border-red-500/50 text-red-500'}`}>
+              {mensaje.texto}
+            </div>
+          )}
 
-                <span className="text-4xl text-zinc-700 font-black mb-6">:</span>
+          <form className="flex flex-col flex-1" onSubmit={(e) => { e.preventDefault(); guardarTiempo(); }}>
+             {configStatus === 'ok' && (
+               <div className="flex flex-col gap-6 mb-6">
+                  {Array.from({ length: numTramos || 1 }, (_, i) => i + 1).map(tNum => {
+                     const data = tramosData[tNum] || { tiempo: '', penalizacion: '' };
+                   return (
+                     <div key={tNum} className="flex flex-col gap-2 p-4 bg-zinc-900 border border-zinc-800 rounded-2xl relative group">
+                        <div className="absolute -top-3 left-4 bg-red-600 text-white font-black px-3 py-0.5 rounded-full text-[10px] italic tracking-tighter">
+                          TC {tNum}
+                        </div>
+                        
+                        <div className="flex items-center gap-3">
+                           <div className="flex-1">
+                             <input
+                               type="number" inputMode="decimal" step="0.001"
+                               placeholder="0.000"
+                               value={data.tiempo}
+                               onChange={(e) => updateTramoData(tNum, 'tiempo', e.target.value)}
+                               className="w-full h-16 bg-zinc-950 border border-zinc-800 rounded-xl text-center text-3xl font-black font-mono text-white focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-all placeholder:text-zinc-900"
+                             />
+                           </div>
+                           <div className="w-24">
+                             <input
+                               type="number" inputMode="numeric" step="0.1"
+                               placeholder="+PEN"
+                               value={data.penalizacion}
+                               onChange={(e) => updateTramoData(tNum, 'penalizacion', e.target.value)}
+                               className="w-full h-16 bg-amber-500/5 border border-amber-500/20 text-center text-lg font-bold font-mono text-amber-500 rounded-xl focus:border-amber-500 outline-none placeholder:text-amber-900/20"
+                             />
+                           </div>
+                        </div>
+                     </div>
+                   );
+                  })}
+               </div>
+             )}
 
-                {/* Segundos */}
-                <div className="flex flex-col items-center">
-                   <span className="text-zinc-500 text-xs font-bold uppercase mb-1">SEG</span>
-                   <input
-                     type="number" inputMode="numeric" pattern="[0-9]*"
-                     placeholder="00"
-                     value={segundos}
-                     onChange={(e) => handlePadChange(e, setSegundos, 2)}
-                     className="w-20 md:w-24 h-24 bg-zinc-950 border border-zinc-800 rounded-xl text-center text-4xl md:text-5xl font-black font-mono text-white focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-all placeholder:text-zinc-800"
-                   />
-                </div>
-
-                <span className="text-4xl text-zinc-700 font-black mb-6">.</span>
-
-                {/* Milésimas */}
-                <div className="flex flex-col items-center">
-                   <span className="text-zinc-500 text-xs font-bold uppercase mb-1">MIL</span>
-                   <input
-                     type="number" inputMode="numeric" pattern="[0-9]*"
-                     placeholder="000"
-                     value={milesimas}
-                     onChange={(e) => handlePadChange(e, setMilesimas, 3)}
-                     className="w-24 md:w-28 h-24 bg-zinc-950 border border-zinc-700 rounded-xl text-center text-4xl md:text-5xl font-black font-mono text-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-all placeholder:text-zinc-800"
-                   />
-                </div>
+             <div className="mt-auto">
+               <button
+                 type="submit"
+                 disabled={!pilotoId}
+                 className={`w-full h-20 ${uiMode === 'edicion' ? 'bg-amber-600 hover:bg-amber-500' : 'bg-red-600 hover:bg-red-500'} disabled:bg-zinc-900 disabled:text-zinc-800 text-white font-black text-xl tracking-widest uppercase rounded-2xl transition-all active:scale-[0.98] shadow-lg`}
+               >
+                 {uiMode === 'edicion' ? 'Actualizar Registro' : 'Registrar Pasada'}
+               </button>
              </div>
-
-             {/* Penalización */}
-             <div className="mt-4 px-2">
-                <div className="flex items-center justify-between border border-amber-500/20 bg-amber-500/5 rounded-xl p-3 pr-4 focus-within:border-amber-500/50 transition-colors hidden md:flex">
-                  <span className="text-amber-600/70 text-sm font-bold ml-2">Penalización (+seg)</span>
-                  <input
-                     type="number" inputMode="numeric" step="0.1"
-                     placeholder="0.0"
-                     value={penalizacion}
-                     onChange={(e) => setPenalizacion(e.target.value)}
-                     className="w-20 bg-transparent text-right text-xl font-bold font-mono text-amber-500 outline-none placeholder:text-amber-900/30"
-                  />
-                </div>
-                 {/* Mobile version */}
-                 <div className="md:hidden flex flex-col border border-amber-500/20 bg-amber-500/5 rounded-xl p-3 focus-within:border-amber-500/50 transition-colors">
-                  <span className="text-amber-600/70 text-sm font-bold text-center mb-2">Penalización (+seg)</span>
-                  <input
-                     type="number" inputMode="numeric" step="0.1"
-                     placeholder="0.0"
-                     value={penalizacion}
-                     onChange={(e) => setPenalizacion(e.target.value)}
-                     className="w-full bg-transparent text-center text-2xl font-bold font-mono text-amber-500 outline-none placeholder:text-amber-900/30"
-                  />
-                </div>
-             </div>
-
-             {/* Guardar */}
-             <button
-               type="submit"
-               disabled={!pilotoId}
-               className="w-full h-20 md:h-24 bg-red-600 hover:bg-red-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-black text-2xl tracking-widest uppercase rounded-xl shadow-lg mt-4 transition-all active:scale-[0.98]"
-             >
-               Registrar Tiempo
-             </button>
           </form>
         </div>
       </div>

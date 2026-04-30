@@ -51,5 +51,6 @@ module.exports = {
       },
       addCommonColors: true,
     }),
+    require("daisyui"),
   ],
 };
