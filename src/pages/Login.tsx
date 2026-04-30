@@ -5,15 +5,15 @@ import { Mail, Lock, User, ShieldCheck, Flag, Trophy, Timer } from 'lucide-react
 
 export default function Login() {
   const [mode, setMode] = useState<'login' | 'register'>('login');
-  
+
   // States compartidos
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
+
   // States de Registro
   const [displayName, setDisplayName] = useState('');
   const [role, setRole] = useState<'piloto' | 'club'>('piloto');
-  
+
   // Feedback
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -41,11 +41,11 @@ export default function Login() {
             role: role,
             display_name: displayName
           });
-          
+
           if (profileError) {
-             console.error("No se pudo crear el perfil automáticamente. Caerá al Onboarding si hace login.", profileError);
+            console.error("No se pudo crear el perfil automáticamente. Caerá al Onboarding si hace login.", profileError);
           } else if (role === 'club') {
-             await supabase.from('clubs').insert({ id: data.user.id, name: displayName });
+            await supabase.from('clubs').insert({ id: data.user.id, name: displayName });
           }
         }
       }
@@ -71,67 +71,86 @@ export default function Login() {
   };
 
   return (
-    <div className="flex min-h-screen w-full bg-[#09090b]">
-      {/* Lado Gráfico (Dark/Rally) */}
-      <div className="hidden lg:flex w-1/2 relative bg-[#050505] overflow-hidden flex-col justify-between items-start pt-[5vh] pb-[5vh]">
-        {/* Abstract Dark Pattern / Noise */}
+<div className="min-h-screen w-full bg-[#09090b] flex flex-col lg:flex-row relative overflow-hidden font-sans">
+
+      {/* Columna Izquierda - Branding Motorsport (Versión Híbrida) */}
+      <div className="hidden lg:flex relative flex-1 flex-col justify-center items-start bg-[#050505] border-r border-zinc-800 p-20 overflow-hidden">
+        {/* Patrón de puntos y efectos de la versión functionality-fix */}
         <div className="absolute inset-0 z-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#dc2626 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
         <div className="absolute inset-0 bg-gradient-to-br from-black via-transparent to-[#1a0505] opacity-90 z-0 pointer-events-none"></div>
-        <div className="absolute top-0 right-0 w-full h-[50%] bg-gradient-to-b from-[#dc2626]/5 to-transparent blur-3xl z-0 pointer-events-none"></div>
-        
-        <div className="z-10 pl-16 pt-10">
-          <div className="w-16 h-1 w-full bg-[#dc2626] mb-8"></div>
-          <h1 className="text-5xl lg:text-7xl font-black text-white tracking-widest uppercase italic opacity-95">TIME<br/><span className="text-[#dc2626]">ATTACK</span></h1>
-          <p className="text-zinc-400 mt-6 text-xl max-w-sm tracking-wide">Sistema avanzado de telemetría y live timing para el motorsport real.</p>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-600/5 blur-[120px] rounded-full pointer-events-none"></div>
+
+        <div className="relative z-10 flex flex-col items-start justify-center max-w-lg w-full">
+          <div className="w-16 h-1.5 bg-[#dc2626] mb-8"></div>
+          <h1 className="text-6xl xl:text-7xl font-black text-white tracking-widest uppercase italic leading-none mb-6">
+            TIME<br/><span className="text-[#dc2626]">ATTACK</span>
+          </h1>
+          <p className="text-zinc-400 text-xl md:text-2xl leading-relaxed font-medium mb-12 max-w-md">
+            Sistema avanzado de telemetría y live timing para el motorsport real.
+          </p>
+
+          <div className="grid grid-cols-2 gap-4 w-full">
+            <div className="flex gap-3 items-center backdrop-blur-md bg-white/5 border border-white/10 px-4 py-3 rounded-2xl">
+               <Trophy className="text-[#dc2626]" size={24} />
+               <div>
+                  <p className="text-white font-bold text-sm">Clasificación</p>
+                  <p className="text-zinc-500 text-[10px] uppercase tracking-tighter">Live Timing 0-delay</p>
+               </div>
+            </div>
+            <div className="flex gap-3 items-center backdrop-blur-md bg-white/5 border border-white/10 px-4 py-3 rounded-2xl">
+               <Timer className="text-[#dc2626]" size={24} />
+               <div>
+                  <p className="text-white font-bold text-sm">Telemetría</p>
+                  <p className="text-zinc-500 text-[10px] uppercase tracking-tighter">Multi-Tramo Pro</p>
+               </div>
+            </div>
+          </div>
         </div>
 
-        <div className="z-10 pl-16 pb-10 flex gap-6">
-          <div className="flex gap-3 items-center backdrop-blur-md bg-white/5 border border-white/10 px-4 py-3 rounded-2xl">
-             <Trophy className="text-[#dc2626]" size={24} />
-             <div>
-                <p className="text-white font-bold text-sm">Clasificación</p>
-                <p className="text-zinc-500 text-xs">Transmisión 0-delay</p>
-             </div>
-          </div>
-          <div className="flex gap-3 items-center backdrop-blur-md bg-white/5 border border-white/10 px-4 py-3 rounded-2xl">
-             <Timer className="text-[#dc2626]" size={24} />
-             <div>
-                <p className="text-white font-bold text-sm">Telemetría Pro</p>
-                <p className="text-zinc-500 text-xs">Multi-Tramo Asíncrono</p>
-             </div>
-          </div>
+        <div className="absolute bottom-8 left-20 text-zinc-600 text-sm font-bold tracking-widest uppercase italic">
+          © 2026 Motorsport Devs
         </div>
       </div>
 
-      {/* Lado Formulario */}
-      <div className="w-full lg:w-1/2 flex justify-center items-center p-4 sm:p-8 bg-[#09090b] relative z-10 shadow-[-20px_0_40px_rgba(0,0,0,0.5)]">
-        
-        <div className="w-full max-w-md bg-[#09090b] relative">
-          
-          <div className="text-center lg:text-left mb-8">
-            <h2 className="text-3xl font-black text-[#ededed] drop-shadow-sm tracking-tight lg:hidden mb-2 italic">TIME<span className="text-[#dc2626]">ATTACK</span></h2>
-            <h3 className="text-2xl font-bold text-white mb-2">{mode === 'login' ? 'Bienvenido al Paddock' : 'Únete a la Competición'}</h3>
-            <p className="text-zinc-500 text-sm">Ingresa tus credenciales para acceder a la herramienta de cronometraje.</p>
+      {/* Columna Derecha - Formulario de Autenticación */}
+      <div className="flex-1 flex justify-center items-center p-6 md:p-12 relative bg-[#09090b] shadow-[-20px_0_60px_rgba(0,0,0,0.8)]">
+        <div className="w-full max-w-md mx-auto flex flex-col">
+
+          {/* Header en móvil (Logo compacto) */}
+          <div className="lg:hidden flex flex-col items-center gap-2 mb-10 pt-8">
+            <h2 className="text-4xl font-black text-zinc-100 tracking-tight italic uppercase leading-none">
+              TIME<span className="text-[#dc2626]">ATTACK</span>
+            </h2>
+            <div className="w-12 h-1 bg-[#dc2626]"></div>
           </div>
 
-          {/* Selector Login / Register */}
-          <div className="flex bg-[#121212] p-1.5 rounded-2xl border border-zinc-800 mb-8 mx-auto">
-            <button 
+          <div className="text-center lg:text-left mb-8">
+            <h3 className="text-3xl font-bold text-white mb-2">
+              {mode === 'login' ? 'Bienvenido al Paddock' : 'Únete a la Competición'}
+            </h3>
+            <p className="text-zinc-500 text-sm">
+              Accede a la plataforma profesional de gestión de tiempos.
+            </p>
+          </div>
+
+          {/* Selector Login / Register (Estilo modernizado) */}
+          <div className="flex bg-[#121212] p-1.5 rounded-2xl border border-zinc-800 mb-10 w-full">
+            <button
               type="button"
-              className={`flex-1 py-2.5 rounded-xl font-bold transition-all text-sm ${mode === 'login' ? 'bg-zinc-800 text-white shadow-md' : 'text-zinc-500 hover:text-white'}`}
+              className={`flex-1 py-2.5 rounded-xl font-bold transition-all text-sm ${mode === 'login' ? 'bg-zinc-800 text-white shadow-lg' : 'text-zinc-500 hover:text-white'}`}
               onClick={() => { setMode('login'); setErrorMsg(null); }}
             >
               Iniciar Sesión
             </button>
-            <button 
+            <button
               type="button"
               className={`flex-1 py-2.5 rounded-xl font-bold transition-all text-sm ${mode === 'register' ? 'bg-[#dc2626] text-white shadow-md shadow-[#dc2626]/20' : 'text-zinc-500 hover:text-white'}`}
               onClick={() => { setMode('register'); setErrorMsg(null); }}
             >
-              Crear Cuenta
+              Registro
             </button>
           </div>
-          
+
           {errorMsg && (
             <div className="alert alert-error bg-red-500/10 text-red-500 border border-red-500/50 text-sm mb-6 rounded-xl font-bold p-4">
               <span>{errorMsg}</span>
@@ -165,7 +184,7 @@ export default function Login() {
                     <span className="label-text text-xs font-bold uppercase tracking-wider text-zinc-500">Tipo de Cuenta</span>
                   </label>
                   <div className="grid grid-cols-2 gap-3">
-                    <button 
+                    <button
                       type="button"
                       onClick={() => setRole('piloto')}
                       className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all ${role === 'piloto' ? 'bg-zinc-800 border-zinc-500 text-white shadow-md' : 'bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:border-zinc-600'}`}
@@ -173,7 +192,7 @@ export default function Login() {
                       <Flag size={22} className="mb-2" />
                       <span className="font-bold text-sm">Piloto</span>
                     </button>
-                    <button 
+                    <button
                       type="button"
                       onClick={() => setRole('club')}
                       className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all ${role === 'club' ? 'bg-[#dc2626]/10 border-[#dc2626] text-[#dc2626] shadow-sm' : 'bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:border-zinc-600'}`}
@@ -239,7 +258,7 @@ export default function Login() {
           </div>
 
           {/* OAuth Buttons */}
-          <button 
+          <button
             type="button"
             onClick={() => handleOAuthLogin('google')}
             disabled={loading}

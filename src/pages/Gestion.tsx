@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Trash2, Plus, Pencil, Check, X, ChevronDown, ChevronRight, Trophy, Flag, Clock, Users } from 'lucide-react';
 import Cronometrador from './Cronometrador';
+import { Button, Card, CardBody, Tabs, Tab } from '@nextui-org/react';
 
 const formatMs = (ms: number) => (ms / 1000).toFixed(3);
 
@@ -587,19 +588,22 @@ export default function Gestion({ userId }: { userId?: string }) {
       <h1 className="text-3xl md:text-4xl font-extrabold text-[#ededed] mb-4 md:mb-8 drop-shadow-sm text-center">Panel de Gestión</h1>
 
       {/* Tabs Menu */}
-      <div className="tabs tabs-boxed bg-[#1e1e1e] p-2 rounded-2xl border border-[#333333] mb-8 w-full max-w-md mx-auto grid grid-cols-2 shadow-2xl">
-        <button
-          className={`tab h-12 text-base font-bold rounded-xl transition-all ${activeTab === 'evento' ? 'bg-[#DA0037] text-white shadow-lg' : 'text-[#a1a1aa] hover:text-[#ededed]'}`}
-          onClick={() => setActiveTab('evento')}
+      <div className="w-full max-w-md mx-auto mb-8">
+        <Tabs
+          selectedKey={activeTab}
+          onSelectionChange={(key) => setActiveTab(key as 'evento' | 'campeonatos')}
+          color="primary"
+          variant="solid"
+          fullWidth
+          classNames={{
+            tabList: "bg-zinc-900/40 border border-zinc-800 rounded-2xl p-1 shadow-2xl",
+            tab: "h-12 text-sm font-bold rounded-xl tracking-wide",
+            cursor: "bg-primary shadow-lg shadow-primary/20",
+          }}
         >
-          🏁 Prueba Actual
-        </button>
-        <button
-          className={`tab h-12 text-base font-bold rounded-xl transition-all ${activeTab === 'campeonatos' ? 'bg-[#DA0037] text-white shadow-lg' : 'text-[#a1a1aa] hover:text-[#ededed]'}`}
-          onClick={() => setActiveTab('campeonatos')}
-        >
-          🏆 Campeonatos
-        </button>
+          <Tab key="evento" title="🏁 Prueba Actual" />
+          <Tab key="campeonatos" title="🏆 Campeonatos" />
+        </Tabs>
       </div>
 
       {activeTab === 'evento' && (
@@ -671,65 +675,133 @@ export default function Gestion({ userId }: { userId?: string }) {
                 </div>
               </div>
 
-              {/* Panel Categorías */}
-              <div className="card bg-[#1e1e1e] shadow-2xl border border-[#333333] rounded-2xl md:rounded-3xl">
-                <div className="card-body p-4 md:p-8">
-                  <h2 className="card-title text-2xl font-bold mb-4">Gestión de Categorías</h2>
-
-                  <form onSubmit={handleInsertCategoria} className="flex gap-2 mb-6 items-center">
-                    <input
-                      type="text"
-                      placeholder="Nombre de la nueva categoría"
-                      className="input w-full rounded-xl bg-[#121212] border border-[#333333] focus:border-[#DA0037] focus:ring-1 focus:ring-[#DA0037] focus:outline-none text-[#ededed] py-6 px-4"
-                      value={nuevaCategoria}
-                      onChange={(e) => setNuevaCategoria(e.target.value)}
-                      required
-                    />
-                    <button type="submit" className="btn rounded-full bg-[#DA0037] hover:bg-[#b9002f] border-none text-[#ededed] shadow-lg shadow-[#DA0037]/20 h-full min-h-[3rem] px-6 flex items-center gap-2">
-                      <Plus size={20} />
-                      <span>Añadir</span>
-                    </button>
-                  </form>
-
-                  <div className="overflow-x-auto max-h-48 border border-[#333333] rounded-2xl">
-                    <table className="table w-full text-base">
-                      <thead className="bg-base-300 sticky top-0 z-10">
-                        <tr>
-                          <th>Categoría</th>
-                          <th className="w-16 text-center">Acción</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {categorias.map((c) => (
-                          <tr key={c.id} className="hover:bg-[#2a2a2a] transition-colors border-b border-[#333333]">
-                            <td className="font-semibold py-2 px-2 md:py-4 md:px-4">{c.name}</td>
-                            <td className="text-center py-2 px-2 md:py-4 md:px-4">
-                              <button
-                                className="btn btn-ghost btn-md text-[#ef4444] hover:bg-[#ef4444]/10 hover:text-[#ff0000] rounded-full transition-colors"
-                                onClick={() => handleDeleteCategoria(c.id)}
-                                title="Eliminar Categoría"
-                              >
-                                <Trash2 size={20} />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                        {categorias.length === 0 && (
-                          <tr><td colSpan={2} className="text-center italic text-base-content/50">No hay categorías</td></tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+              <div className="form-control w-full">
+                <Button type="submit" color="primary" variant="shadow" size="lg" className="w-full h-[3.8rem] rounded-xl font-bold uppercase tracking-wider">
+                  Guardar Configuración
+                </Button>
               </div>
+            </form>
+          </CardBody>
+        </Card>
+      </div>
 
-            </div>
+      <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8 items-start">
+        
+        {/* Columna Izquierda: Pilotos y Categorías */}
+        <div className="flex flex-col gap-4 md:gap-8">
+          
+          {/* Panel Pilotos */}
+          <Card isBlurred className="bg-zinc-900/40 border border-zinc-800 shadow-2xl rounded-2xl md:rounded-3xl mb-4 md:mb-8">
+            <CardBody className="p-4 md:p-8">
+              <h2 className="card-title text-2xl font-bold mb-4">Gestión de Pilotos</h2>
+              
+              <form onSubmit={handleInsertPiloto} className="flex flex-col md:flex-row gap-2 mb-6 items-center">
+                <input 
+                  type="number" 
+                  placeholder="Dorsal" 
+                  className="input w-32 rounded-xl bg-[#121212] border border-[#333333] focus:border-[#DA0037] focus:ring-1 focus:ring-[#DA0037] focus:outline-none text-[#ededed] py-6 px-4" 
+                  value={nuevoDorsal}
+                  onChange={(e) => setNuevoDorsal(e.target.value)}
+                />
+                <input 
+                  type="text" 
+                  placeholder="Nombre del nuevo piloto" 
+                  className="input flex-1 w-full rounded-xl bg-[#121212] border border-[#333333] focus:border-[#DA0037] focus:ring-1 focus:ring-[#DA0037] focus:outline-none text-[#ededed] py-6 px-4" 
+                  value={nuevoPiloto}
+                  onChange={(e) => setNuevoPiloto(e.target.value)}
+                  required
+                />
+                <Button type="submit" color="primary" variant="shadow" className="rounded-full shadow-lg h-[3rem] px-6 flex items-center gap-2 w-full md:w-auto mt-2 md:mt-0 font-bold tracking-wider">
+                  <Plus size={20} />
+                  Añadir
+                </Button>
+              </form>
 
-            {/* Columna Derecha: Historial de Tiempos */}
-            <div className="card bg-[#1e1e1e] shadow-2xl border border-[#333333] rounded-2xl md:rounded-3xl h-full">
-              <div className="card-body p-4 md:p-8">
-                <h2 className="card-title text-2xl font-bold mb-4 text-[#ededed]">Últimos 10 Tiempos Registrados</h2>
-                <p className="text-sm text-[#a1a1aa] mb-4">Puedes editar ✏️ o borrar 🗑️ los registros en caso de error.</p>
+              <div className="overflow-x-auto max-h-64 border border-[#333333] rounded-2xl">
+                <table className="table w-full text-base">
+                  <thead className="bg-base-300 sticky top-0 z-10">
+                    <tr>
+                      <th className="w-20 text-center">Dorsal</th>
+                      <th>Nombre</th>
+                      <th className="w-16 text-center">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pilotos.map((p) => (
+                      <tr key={p.id} className="hover:bg-[#2a2a2a] transition-colors border-b border-[#333333]">
+                        <td className="text-center font-mono font-bold text-[#a1a1aa] py-2 px-2 md:py-4 md:px-4">{p.dorsal || '-'}</td>
+                        <td className="font-semibold py-2 px-2 md:py-4 md:px-4 text-[#ededed]">{p.name}</td>
+                        <td className="text-center py-2 px-2 md:py-4 md:px-4">
+                          <button 
+                            className="btn btn-ghost btn-md text-[#ef4444] hover:bg-[#ef4444]/10 hover:text-[#ff0000] rounded-full transition-colors"
+                            onClick={() => setPilotoAEliminar(p)}
+                            title="Eliminar Piloto"
+                          >
+                            <Trash2 size={20} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {pilotos.length === 0 && (
+                      <tr><td colSpan={3} className="text-center italic text-base-content/50">No hay pilotos</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardBody>
+          </Card>
+
+          {/* Panel Categorías */}
+          <Card isBlurred className="bg-zinc-900/40 border border-zinc-800 shadow-2xl rounded-2xl md:rounded-3xl">
+            <CardBody className="p-4 md:p-8">
+              <h2 className="card-title text-2xl font-bold mb-4">Gestión de Categorías</h2>
+              
+              <form onSubmit={handleInsertCategoria} className="flex gap-2 mb-6 items-center">
+                <input 
+                  type="text" 
+                  placeholder="Nombre de la nueva categoría" 
+                  className="input w-full rounded-xl bg-[#121212] border border-[#333333] focus:border-[#DA0037] focus:ring-1 focus:ring-[#DA0037] focus:outline-none text-[#ededed] py-6 px-4" 
+                  value={nuevaCategoria}
+                  onChange={(e) => setNuevaCategoria(e.target.value)}
+                  required
+                />
+                <Button type="submit" color="primary" variant="shadow" className="rounded-full shadow-lg h-[3rem] px-6 flex items-center gap-2 font-bold tracking-wider">
+                  <Plus size={20} />
+                  Añadir
+                </Button>
+              </form>
+
+              <div className="overflow-x-auto max-h-48 border border-[#333333] rounded-2xl">
+                <table className="table w-full text-base">
+                  <thead className="bg-base-300 sticky top-0 z-10">
+                    <tr>
+                      <th>Categoría</th>
+                      <th className="w-16 text-center">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {categorias.map((c) => (
+                      <tr key={c.id} className="hover:bg-[#2a2a2a] transition-colors border-b border-[#333333]">
+                        <td className="font-semibold py-2 px-2 md:py-4 md:px-4">{c.name}</td>
+                        <td className="text-center py-2 px-2 md:py-4 md:px-4">
+                          <button 
+                            className="btn btn-ghost btn-md text-[#ef4444] hover:bg-[#ef4444]/10 hover:text-[#ff0000] rounded-full transition-colors"
+                            onClick={() => handleDeleteCategoria(c.id)}
+                            title="Eliminar Categoría"
+                          >
+                            <Trash2 size={20} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {categorias.length === 0 && (
+                      <tr><td colSpan={2} className="text-center italic text-base-content/50">No hay categorías</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardBody>
+          </Card>
 
                 {mensajeTiempos && (
                   <div className={`alert ${mensajeTiempos.tipo === 'success' ? 'alert-success' : 'alert-error'} mb-4 shadow-sm text-white font-bold rounded-xl border-none`}>
@@ -737,105 +809,112 @@ export default function Gestion({ userId }: { userId?: string }) {
                   </div>
                 )}
 
-                <div className="overflow-x-auto rounded-2xl border border-[#333333] flex-1">
-                  <table className="table w-full text-sm shrink-0">
-                    <thead className="bg-base-300">
-                      <tr>
-                        <th>Piloto</th>
-                        <th>Cat.</th>
-                        <th className="text-right">T. Pista + Pen.</th>
-                        <th className="w-20 text-center">Acciones</th>
+{/* Columna Derecha: Historial de Tiempos */}
+        <Card isBlurred className="bg-zinc-900/40 border border-zinc-800 shadow-2xl rounded-2xl md:rounded-3xl h-full">
+          <CardBody className="p-4 md:p-8">
+            <h2 className="card-title text-2xl font-bold mb-4 text-[#ededed]">Últimos 10 Tiempos Registrados</h2>
+            <p className="text-sm text-[#a1a1aa] mb-4">Puedes editar ✏️ o borrar 🗑️ los registros en caso de error.</p>
+
+            <div className="overflow-x-auto rounded-2xl border border-zinc-800 flex-1">
+              <table className="table w-full text-sm shrink-0">
+                <thead className="bg-zinc-950 text-zinc-400">
+                  <tr>
+                    <th className="py-3 px-4 text-left font-bold uppercase tracking-wider">Piloto</th>
+                    <th className="py-3 px-4 text-left font-bold uppercase tracking-wider">Cat.</th>
+                    <th className="py-3 px-4 text-right font-bold uppercase tracking-wider">T. Pista + Pen.</th>
+                    <th className="py-3 px-4 text-center font-bold uppercase tracking-wider w-24">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-800">
+                  {tiempos.map((t) => {
+                    const isEditing = t.id === editandoTramoId;
+                    return (
+                      <tr key={t.id} className="hover:bg-zinc-800/40 transition-colors">
+                        <td className="py-3 px-4 font-semibold text-zinc-200">{t.pilots?.name}</td>
+                        <td className="py-3 px-4">
+                          <span className="px-2 py-1 rounded-full bg-zinc-800 text-zinc-400 text-[10px] font-bold uppercase border border-zinc-700">
+                            {t.categories?.name}
+                          </span>
+                        </td>
+
+                        <td className="py-3 px-4 text-right font-mono">
+                          {isEditing ? (
+                            <div className="flex flex-col gap-1 items-end">
+                              <input
+                                type="number"
+                                step="0.001"
+                                className="input input-xs w-24 bg-zinc-950 border border-zinc-700 text-white text-right font-mono rounded-md focus:border-red-500 outline-none"
+                                value={tiempoEditado}
+                                onChange={(e) => setTiempoEditado(e.target.value)}
+                              />
+                              <input
+                                type="number"
+                                step="0.1"
+                                className="input input-xs w-24 bg-red-500/10 border border-red-500/50 text-red-500 text-right font-mono mt-1 rounded-md outline-none"
+                                value={penalizacionEditada}
+                                onChange={(e) => setPenalizacionEditada(e.target.value)}
+                              />
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-end">
+                              <span className="font-bold text-zinc-100">{formatMs(t.track_time_ms)}</span>
+                              {t.penalty_ms > 0 && (
+                                <span className="text-red-500 text-[10px] font-black mt-0.5">
+                                  (+{(t.penalty_ms / 1000).toFixed(1)}s)
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </td>
+
+                        <td className="py-3 px-4">
+                          <div className="flex justify-center gap-2">
+                            {isEditing ? (
+                              <>
+                                <button className="p-1.5 text-emerald-500 hover:bg-emerald-500/20 rounded-lg transition-colors" onClick={() => guardarEdicionTiempo(t.id)}>
+                                  <Check size={18} />
+                                </button>
+                                <button className="p-1.5 text-zinc-500 hover:bg-zinc-800 rounded-lg transition-colors" onClick={() => setEditandoTramoId(null)}>
+                                  <X size={18} />
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button className="p-1.5 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors" onClick={() => {
+                                  setEditandoTramoId(t.id);
+                                  setTiempoEditado((t.track_time_ms / 1000).toFixed(3));
+                                  setPenalizacionEditada((t.penalty_ms / 1000).toFixed(1));
+                                }}>
+                                  <Pencil size={18} />
+                                </button>
+                                <button className="p-1.5 text-red-600 hover:bg-red-600/10 rounded-lg transition-colors" onClick={() => handleDeleteTiempo(t.id)}>
+                                  <Trash2 size={18} />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {tiempos.map((t) => {
-                        const isEditing = t.id === editandoTramoId;
-                        return (
-                          <tr key={t.id} className="hover:bg-[#2a2a2a] transition-colors border-b border-[#333333]">
-                            <td className="font-semibold py-2 px-2 md:py-4 md:px-4 align-middle">{t.pilots?.name}</td>
-                            <td className="py-2 px-2 md:py-4 md:px-4 align-middle"><span className="badge badge-sm badge-neutral rounded-full px-2">{t.categories?.name}</span></td>
-
-                            <td className="text-right font-mono py-2 px-2 md:py-4 md:px-4 align-middle">
-                              {isEditing ? (
-                                <div className="flex flex-col gap-1 items-end">
-                                  <input
-                                    type="number"
-                                    step="0.001"
-                                    className="input input-xs md:input-sm w-20 md:w-24 bg-[#121212] border border-[#333333] text-[#ededed] text-right font-mono rounded"
-                                    value={tiempoEditado}
-                                    onChange={(e) => setTiempoEditado(e.target.value)}
-                                    title="Tiempo Pista (seg)"
-                                  />
-                                  <input
-                                    type="number"
-                                    step="0.1"
-                                    className="input input-xs md:input-sm w-20 md:w-24 bg-error/10 border border-error/50 text-error text-right font-mono mt-1 rounded"
-                                    value={penalizacionEditada}
-                                    onChange={(e) => setPenalizacionEditada(e.target.value)}
-                                    title="Penalización (seg)"
-                                  />
-                                </div>
-                              ) : (
-                                <div className="flex flex-col items-end">
-                                  <span className="font-bold text-[#ededed]">{formatMs(t.track_time_ms)}</span>
-                                  {t.penalty_ms > 0 && <span className="text-error text-xs font-bold mt-1">(+{(t.penalty_ms / 1000).toFixed(1)}s)</span>}
-                                </div>
-                              )}
-                            </td>
-
-                            <td className="text-center py-2 px-2 md:py-4 md:px-4 align-middle">
-                              {isEditing ? (
-                                <div className="flex justify-center gap-1">
-                                  <button
-                                    className="btn btn-ghost btn-xs text-green-500 hover:bg-green-500/20 rounded"
-                                    onClick={() => guardarEdicionTiempo(t.id)}
-                                    title="Guardar cambios"
-                                  >
-                                    <Check size={18} />
-                                  </button>
-                                  <button
-                                    className="btn btn-ghost btn-xs text-[#a1a1aa] hover:bg-[#333333] rounded"
-                                    onClick={() => setEditandoTramoId(null)}
-                                    title="Cancelar"
-                                  >
-                                    <X size={18} />
-                                  </button>
-                                </div>
-                              ) : (
-                                <div className="flex justify-center gap-1 md:gap-2">
-                                  <button
-                                    className="btn btn-ghost btn-xs md:btn-sm text-[#3b82f6] hover:bg-[#3b82f6]/10 rounded-full transition-colors"
-                                    onClick={() => {
-                                      setEditandoTramoId(t.id);
-                                      setTiempoEditado((t.track_time_ms / 1000).toFixed(3));
-                                      setPenalizacionEditada((t.penalty_ms / 1000).toFixed(1));
-                                    }}
-                                    title="Editar Tiempo"
-                                  >
-                                    <Pencil size={18} />
-                                  </button>
-                                  <button
-                                    className="btn btn-ghost btn-xs md:btn-sm text-[#ef4444] hover:bg-[#ef4444]/10 hover:text-[#ff0000] rounded-full transition-colors"
-                                    onClick={() => handleDeleteTiempo(t.id)}
-                                    title="Borrar Tiempo Erróneo"
-                                  >
-                                    <Trash2 size={18} />
-                                  </button>
-                                </div>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                      {tiempos.length === 0 && (
-                        <tr><td colSpan={4} className="text-center italic text-base-content/50 p-4">No hay tiempos en el historial</td></tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                    );
+                  })}
+                  {tiempos.length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="py-12 text-center italic text-zinc-600 bg-zinc-950/20">
+                        No hay tiempos registrados en el historial
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </CardBody>
+        </Card>
 
               </div>
             </div>
+            
+          </CardBody>
+        </Card>
 
           </div>
 

@@ -64,7 +64,7 @@ export default function Cronometrador({ userId, sessionId, rallyId }: { userId?:
     } else if (sessionId) {
       q = q.eq('session_id', sessionId);
     } else {
-      q = q.is('session_id', null);
+      q = q.is('session_id', null).is('rally_id', null);
     }
 
     const { data } = await q;
@@ -79,6 +79,7 @@ export default function Cronometrador({ userId, sessionId, rallyId }: { userId?:
 
     const fetchSelectData = async () => {
       if (!userId) return;
+      setLoadingTop(true);
 
       try {
         if (selectedRally || sessionId) {
@@ -342,19 +343,23 @@ export default function Cronometrador({ userId, sessionId, rallyId }: { userId?:
     }
   };
 
-  return (
+return (
     <div className="w-full flex-1 flex flex-col md:max-w-[1200px] max-w-full mx-auto md:py-6 relative h-full">
 
-      <h1 className="text-3xl lg:text-4xl font-black text-white px-2 mt-4 md:mt-0 mb-6 hidden md:block tracking-tight text-center">Dashboard de Cronometraje</h1>
+      <h1 className="text-3xl lg:text-4xl font-black text-white px-2 mt-4 md:mt-0 mb-6 hidden md:block tracking-tight text-center uppercase italic">
+        <span className="text-red-600">Race</span> Dashboard
+      </h1>
 
-      {/* BLOQUE SUPERIOR: CONTEXTO ROOT Y PASADA */}
+      {/* BLOQUE SUPERIOR: CONTEXTO Y SELECTORES EN CASCADA */}
       <div className="bg-[#09090b] border border-zinc-800 rounded-lg shadow-sm p-4 mb-4 md:mb-6 flex flex-col gap-4">
-        {/* FILA 1: CASCADA CAMPEONATO / RALLY */}
         <div className="flex flex-col md:flex-row gap-4 w-full">
+          {/* Selector de Campeonato */}
           <div className="flex-1 w-full">
-            <label className="text-[10px] sm:text-xs font-bold text-zinc-500 flex items-center gap-2 uppercase tracking-wider mb-2"><Trophy size={14} /> Campeonato</label>
+            <label className="text-[10px] sm:text-xs font-bold text-zinc-500 flex items-center gap-2 uppercase tracking-wider mb-2">
+              <Trophy size={14} /> Campeonato
+            </label>
             <select
-              className="w-full h-[40px] sm:h-[44px] bg-zinc-950 border border-zinc-800 text-zinc-100 px-3 rounded-lg focus:border-red-500 focus:ring-0 focus:outline-none outline-none transition-all shadow-sm"
+              className="w-full h-[40px] sm:h-[44px] bg-zinc-950 border border-zinc-800 text-zinc-100 px-3 rounded-lg focus:border-red-500 focus:ring-0 outline-none transition-all shadow-sm"
               value={selectedCamp}
               onChange={(e) => { setSelectedCamp(e.target.value); setSelectedRally(''); }}
               disabled={!!rallyId}
@@ -364,10 +369,13 @@ export default function Cronometrador({ userId, sessionId, rallyId }: { userId?:
             </select>
           </div>
 
+          {/* Selector de Rally */}
           <div className="flex-1 w-full">
-            <label className="text-[10px] sm:text-xs font-bold text-zinc-500 flex items-center gap-2 uppercase tracking-wider mb-2"><Flag size={14} /> Prueba / Rally</label>
+            <label className="text-[10px] sm:text-xs font-bold text-zinc-500 flex items-center gap-2 uppercase tracking-wider mb-2">
+              <Flag size={14} /> Prueba / Rally
+            </label>
             <select
-              className="w-full h-[40px] sm:h-[44px] bg-zinc-950 border border-zinc-800 text-zinc-100 px-3 rounded-lg focus:border-red-500 focus:ring-0 focus:outline-none outline-none transition-all shadow-sm disabled:opacity-50"
+              className="w-full h-[40px] sm:h-[44px] bg-zinc-950 border border-zinc-800 text-zinc-100 px-3 rounded-lg focus:border-red-500 focus:ring-0 outline-none transition-all shadow-sm disabled:opacity-50"
               value={selectedRally}
               onChange={(e) => setSelectedRally(e.target.value)}
               disabled={!selectedCamp && !rallyId}
@@ -380,10 +388,13 @@ export default function Cronometrador({ userId, sessionId, rallyId }: { userId?:
             </select>
           </div>
 
+          {/* Selector de Pasada */}
           <div className="flex-1 w-full">
-            <label className="text-[10px] sm:text-xs font-bold text-zinc-500 flex items-center gap-2 uppercase tracking-wider mb-2"><Layers size={14} /> Pasada Activa</label>
+            <label className="text-[10px] sm:text-xs font-bold text-zinc-500 flex items-center gap-2 uppercase tracking-wider mb-2">
+              <Layers size={14} /> Pasada Activa
+            </label>
             <select
-              className="w-full h-[40px] sm:h-[44px] bg-zinc-950 border border-zinc-800 text-zinc-100 px-3 rounded-lg focus:border-red-500 focus:ring-0 focus:outline-none outline-none transition-all shadow-sm disabled:opacity-50"
+              className="w-full h-[40px] sm:h-[44px] bg-zinc-950 border border-zinc-800 text-zinc-100 px-3 rounded-lg focus:border-red-500 focus:ring-0 outline-none transition-all shadow-sm disabled:opacity-50"
               value={pasada}
               onChange={(e) => setPasada(Number(e.target.value))}
               disabled={!selectedRally || configStatus === 'missing'}
@@ -397,18 +408,58 @@ export default function Cronometrador({ userId, sessionId, rallyId }: { userId?:
       </div>
 
       <div className="flex-1 flex flex-col lg:flex-row gap-4 md:gap-6 min-h-0">
-
-        {/* BLOQUE IZQUIERDO: PILOTOS GRID & MODO */}
+        {/* BLOQUE IZQUIERDO: GRID DE PILOTOS (Estilo mejorado de MAIN) */}
         <div className="flex-1 bg-[#09090b] border border-zinc-800 rounded-lg shadow-sm p-4 overflow-y-auto min-h-[250px] lg:h-full relative flex flex-col">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sticky top-0 bg-[#09090b] z-10 py-1 gap-4 sm:gap-0">
-            <div className="flex items-center gap-2">
-              <h3 className="text-zinc-400 text-sm font-bold uppercase tracking-wider">
-                Parrilla {pasada && `(Pasada ${pasada})`}
-              </h3>
-              {loadingTop && <Spinner size="sm" color="danger" />}
-            </div>
+          <div className="flex items-center justify-between mb-4 sticky top-0 bg-[#09090b] z-10 py-1">
+            <h3 className="text-zinc-400 text-sm font-bold uppercase tracking-wider flex items-center gap-2">
+              Selector de Piloto {pasada && <span className="text-red-500 font-black">P{pasada}</span>}
+            </h3>
+            {loadingTop && <Spinner size="sm" color="danger" />}
+          </div>
+          
+          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-3 xl:grid-cols-5 gap-2 md:gap-3">
+             {pilotosInscritos.map(p => {
+               const isSelected = p.pilot_id === pilotoId;
+               return (
+                 <button
+                   key={p.id}
+                   type="button"
+                   onClick={() => setPilotoId(p.pilot_id)}
+                   className={`h-24 flex flex-col items-center justify-center rounded-xl border transition-all active:scale-95 p-1 ${
+                     isSelected 
+                       ? 'bg-red-600/10 border-red-600 shadow-[0_0_15px_-3px_rgba(220,38,38,0.3)]' 
+                       : 'bg-zinc-950 border-zinc-800 hover:border-zinc-600'
+                   }`}
+                 >
+                   <span className={`text-4xl font-black font-mono leading-none mb-1 ${isSelected ? 'text-red-500' : 'text-zinc-300'}`}>
+                     {p.number || '-'}
+                   </span>
+                   <span className="text-[10px] md:text-xs text-center font-semibold text-zinc-500 line-clamp-2 leading-tight px-1">
+                     {p.pilots?.name || 'Piloto'}
+                   </span>
+                 </button>
+               );
+             })}
+             {pilotosInscritos.length === 0 && !loadingTop && (
+               <div className="col-span-full py-10 text-center text-zinc-500 text-sm italic">
+                 No hay pilotos inscritos en este rally.
+               </div>
+             )}
+          </div>
+        </div>
 
-            {/* MODE SELECTOR */}
+        {/* BLOQUE DERECHO: FORMULARIO */}
+        <div className="w-full lg:w-[420px] shrink-0 bg-[#09090b] border border-zinc-800 rounded-lg shadow-sm p-5 md:p-6 lg:h-full flex flex-col justify-center relative">
+          
+          {mensaje && (
+            <div className={`absolute top-4 left-4 right-4 px-4 py-3 rounded-md text-sm font-bold border text-center z-10 animate-appearance-in ${mensaje.tipo === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-red-500/10 border-red-500/30 text-red-500'}`}>
+              {mensaje.texto}
+            </div>
+          )}
+            </div>
+          )}
+
+{/* MODE SELECTOR */}
             <div className="flex items-center bg-zinc-950 border border-zinc-800 p-1 rounded-lg w-full sm:w-auto">
               <button
                 onClick={() => { setUiMode('pendientes'); setPilotoId(''); setMensaje(null); }}
@@ -433,12 +484,12 @@ export default function Cronometrador({ userId, sessionId, rallyId }: { userId?:
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-3 xl:grid-cols-5 gap-2 md:gap-3 pb-8">
               {(uiMode === 'pendientes' ? pilotosPendientes : pilotosCompletados).map(p => {
-                const isSelected = p.id === pilotoId;
+                const isSelected = p.pilot_id === pilotoId;
                 return (
                   <button
                     key={p.id}
                     type="button"
-                    onClick={() => { setPilotoId(p.id); setMensaje(null); }}
+                    onClick={() => { setPilotoId(p.pilot_id); setMensaje(null); }}
                     className={`h-20 sm:h-24 flex flex-col items-center justify-center rounded-xl border transition-all active:scale-95 p-1 ${isSelected
                       ? 'bg-red-600/10 border-red-600 shadow-[0_0_15px_-3px_rgba(220,38,38,0.3)]'
                       : 'bg-zinc-950 border-zinc-800 hover:border-zinc-600 hover:bg-zinc-900'
@@ -448,7 +499,7 @@ export default function Cronometrador({ userId, sessionId, rallyId }: { userId?:
                       {p.number || '-'}
                     </span>
                     <span className="text-[10px] md:text-[11px] text-center font-semibold text-zinc-500 line-clamp-2 leading-tight px-1 hidden sm:block">
-                      {p.name}
+                      {p.pilots?.name || 'Piloto'}
                     </span>
                   </button>
                 );
@@ -464,35 +515,22 @@ export default function Cronometrador({ userId, sessionId, rallyId }: { userId?:
               {uiMode === 'pendientes' && pilotosInscritos.length > 0 && pilotosPendientes.length === 0 && !loadingTop && (
                 <div className="col-span-full py-12 px-4 flex flex-col items-center justify-center gap-3 text-center border-2 border-dashed border-emerald-500/20 rounded-xl bg-emerald-500/5">
                   <Flag className="text-emerald-500" size={32} />
-                  <span className="text-emerald-400 font-bold text-sm">
-                    Manga Completada
-                  </span>
-                  <span className="text-zinc-400 text-xs text-balance">
-                    Todos los pilotos han registrado la Pasada completa. Revisa la Edición si hay errores.
-                  </span>
-                </div>
-              )}
-
-              {uiMode === 'edicion' && pilotosInscritos.length > 0 && pilotosCompletados.length === 0 && !loadingTop && (
-                <div className="col-span-full py-12 px-4 flex flex-col items-center justify-center text-center">
-                  <span className="text-zinc-500 font-bold text-sm mb-1">Cero Tiempos Registrados</span>
-                  <span className="text-zinc-600 text-xs text-balance">
-                    Ningún piloto tiene cronometraje en esta pasada aún. Ve a la pestaña PENDIENTES.
-                  </span>
+                  <span className="text-emerald-400 font-bold text-sm">Manga Completada</span>
+                  <span className="text-zinc-400 text-xs text-balance">Todos los pilotos registrados.</span>
                 </div>
               )}
             </div>
           )}
         </div>
 
-        {/* BLOQUE DERECHO: FORMULARIO MULTI-TRAMO */}
-        <div className="w-full lg:w-[480px] shrink-0 bg-[#09090b] border border-zinc-800 rounded-lg shadow-sm p-4 md:p-6 lg:h-full flex flex-col relative overflow-y-auto overflow-x-hidden">
+        {/* BLOQUE DERECHO: FORMULARIO MULTI-TRAMO CON ESTILO MEJORADO */}
+        <div className="w-full lg:w-[480px] shrink-0 bg-[#09090b] border border-zinc-800 rounded-lg shadow-sm p-4 md:p-6 lg:h-full flex flex-col relative overflow-y-auto">
 
           <div className="text-center mb-4 pt-2">
-            <div className="text-zinc-300 font-bold uppercase tracking-widest text-xs mb-1">
-              {uiMode === 'edicion' ? 'Modo Corrección / Editor' : 'Telemetría Avanzada'}
+            <div className="text-zinc-400 font-bold uppercase tracking-widest text-xs mb-1">
+              {uiMode === 'edicion' ? 'Modo Corrección' : 'Entrada de Telemetría'}
             </div>
-            <div className="text-zinc-600 text-xs">Formato: [ Segundos.Milésimas ] | Puedes omitir tramos</div>
+            <div className="text-zinc-600 text-[10px]">FORMATO: SEGUNDOS . MILÉSIMAS</div>
           </div>
 
           {mensaje && (
@@ -502,47 +540,35 @@ export default function Cronometrador({ userId, sessionId, rallyId }: { userId?:
           )}
 
           <form className="flex flex-col flex-1" onSubmit={(e) => { e.preventDefault(); guardarTiempo(); }}>
-             
-             {/* Advertencia de Configuración (Misión 101) */}
-             {configStatus === 'missing' && (
-               <div className="mb-6 p-6 rounded-xl text-2xl font-black border-2 text-center shadow-lg bg-orange-500/20 border-orange-500 text-orange-400">
-                 Falta configuración de tramos en la DB
-               </div>
-             )}
-
-             {/* Dynamic TC Inputs */}
              {configStatus === 'ok' && (
-               <div className="flex flex-col gap-4 mb-6">
+               <div className="flex flex-col gap-6 mb-6">
                   {Array.from({ length: numTramos || 1 }, (_, i) => i + 1).map(tNum => {
                      const data = tramosData[tNum] || { tiempo: '', penalizacion: '' };
-                   
                    return (
-                     <div key={tNum} className="flex flex-col sm:flex-row items-center gap-2 p-3 bg-zinc-900 border border-zinc-800 rounded-xl mt-1 relative w-full group">
-                        <div className="absolute -top-3 left-3 bg-zinc-900 border border-zinc-700 text-white font-black px-2 py-0.5 rounded text-xs shadow-sm shadow-zinc-950">
-                          TRAMO {tNum}
+                     <div key={tNum} className="flex flex-col gap-2 p-4 bg-zinc-900 border border-zinc-800 rounded-2xl relative group">
+                        <div className="absolute -top-3 left-4 bg-red-600 text-white font-black px-3 py-0.5 rounded-full text-[10px] italic tracking-tighter">
+                          TC {tNum}
                         </div>
                         
-                        <div className="flex flex-1 items-end justify-center sm:justify-start gap-1 sm:gap-2 pt-2 px-1">
-                           <div className="flex flex-col flex-1">
+                        <div className="flex items-center gap-3">
+                           <div className="flex-1">
                              <input
                                type="number" inputMode="decimal" step="0.001"
                                placeholder="0.000"
                                value={data.tiempo}
                                onChange={(e) => updateTramoData(tNum, 'tiempo', e.target.value)}
-                               className="w-full h-14 bg-zinc-950 border border-zinc-800 rounded-lg text-center text-2xl font-black font-mono text-white focus:border-red-500 focus:ring-1 focus:outline-none outline-none transition-colors placeholder:text-zinc-800"
+                               className="w-full h-16 bg-zinc-950 border border-zinc-800 rounded-xl text-center text-3xl font-black font-mono text-white focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-all placeholder:text-zinc-900"
                              />
                            </div>
-                        </div>
-                        
-                        {/* Penalty */}
-                        <div className="flex w-full sm:w-28 pt-2 sm:pt-2 mt-1 sm:mt-0">
-                           <input
-                             type="number" inputMode="numeric" step="0.1"
-                             placeholder="+ PEN"
-                             value={data.penalizacion}
-                             onChange={(e) => updateTramoData(tNum, 'penalizacion', e.target.value)}
-                             className="w-full h-10 sm:h-14 bg-amber-500/5 border border-amber-500/20 text-center text-lg font-bold font-mono text-amber-500 rounded-lg focus:border-amber-500/50 focus:outline-none outline-none placeholder:text-amber-900/40 transition-colors"
-                           />
+                           <div className="w-24">
+                             <input
+                               type="number" inputMode="numeric" step="0.1"
+                               placeholder="+PEN"
+                               value={data.penalizacion}
+                               onChange={(e) => updateTramoData(tNum, 'penalizacion', e.target.value)}
+                               className="w-full h-16 bg-amber-500/5 border border-amber-500/20 text-center text-lg font-bold font-mono text-amber-500 rounded-xl focus:border-amber-500 outline-none placeholder:text-amber-900/20"
+                             />
+                           </div>
                         </div>
                      </div>
                    );
@@ -550,22 +576,20 @@ export default function Cronometrador({ userId, sessionId, rallyId }: { userId?:
                </div>
              )}
 
-             {/* Spacer */}
-             <div className="flex-1"></div>
-
-             {/* Guardar / Actualizar */}
-             <div className="sticky bottom-0 pt-2 pb-1 bg-[#09090b] z-10 w-full mt-auto">
+             <div className="mt-auto">
                <button
                  type="submit"
-                 disabled={!isValidToSave}
-                 className={`w-full h-16 sm:h-20 ${uiMode === 'edicion' ? 'bg-amber-600 hover:bg-amber-500 shadow-[0_0_20px_-5px_rgba(217,119,6,0.5)]' : 'bg-red-600 hover:bg-red-500 shadow-[0_0_20px_-5px_rgba(220,38,38,0.5)]'} disabled:bg-zinc-900 disabled:border disabled:border-zinc-800 disabled:text-zinc-700 text-white font-black text-lg md:text-xl tracking-widest uppercase rounded-xl disabled:shadow-none transition-all active:scale-[0.98]`}
+                 disabled={!pilotoId}
+                 className={`w-full h-20 ${uiMode === 'edicion' ? 'bg-amber-600 hover:bg-amber-500' : 'bg-red-600 hover:bg-red-500'} disabled:bg-zinc-900 disabled:text-zinc-800 text-white font-black text-xl tracking-widest uppercase rounded-2xl transition-all active:scale-[0.98] shadow-lg`}
                >
-                 {uiMode === 'edicion' ? 'Guardar Cambios' : 'Guardar Pasada'}
+                 {uiMode === 'edicion' ? 'Actualizar Registro' : 'Registrar Pasada'}
                </button>
              </div>
           </form>
+          </form>
         </div>
       </div>
+
     </div>
   );
 }

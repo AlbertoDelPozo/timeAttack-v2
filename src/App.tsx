@@ -1,16 +1,21 @@
+
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import { Session } from '@supabase/supabase-js';
 import { Trophy, Timer, Settings, LogOut, LogIn } from 'lucide-react';
-import { NextUIProvider } from '@nextui-org/react';
+import { NextUIProvider, Spinner, Button } from '@nextui-org/react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 import Login from './pages/Login';
 import Cronometrador from './pages/Cronometrador';
 import Clasificacion from './pages/Clasificacion';
 import Management from './pages/Management';
+import Championships from './pages/Championships';
+import RallyManager from './pages/RallyManager';
 import Onboarding from './pages/Onboarding';
+import RightSidebar from './components/layout/RightSidebar';
+import DashboardLayout from './components/layout/DashboardLayout';
 
 // ── Page transition wrapper ───────────────────────────────────
 import { Transition, Variants } from 'framer-motion';
@@ -203,9 +208,9 @@ function AppContent() {
 
   if (loading || (session && !profile)) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#171717]">
-        <span className="loading loading-spinner text-[#DA0037] loading-lg mb-4"></span>
-        <p className="text-[#a1a1aa] font-bold tracking-tight">Cargando telemetría...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-transparent">
+        <Spinner size="lg" color="danger" />
+        <p className="text-zinc-400 font-semibold tracking-tight text-sm">Cargando telemetría...</p>
       </div>
     );
   }
@@ -227,13 +232,24 @@ function AppContent() {
 
   // ── Nuclear Logout ─────────────────────────────────────────
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setSession(null);
-    setProfile(null);
-    // Clear any cached storage
-    Object.keys(localStorage).forEach(k => { if (k.startsWith('sb-')) localStorage.removeItem(k); });
-    Object.keys(sessionStorage).forEach(k => { if (k.startsWith('sb-')) sessionStorage.removeItem(k); });
-    window.location.href = '/';
+const handleLogout = async () => {
+    try {
+      // 1. Petición oficial a Supabase
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error("Error en Supabase signOut:", error);
+    } finally {
+      // 2. Destrucción forzada de la memoria local
+      localStorage.clear(); 
+      sessionStorage.clear();
+
+      // 3. Limpieza manual de estados de React
+      setSession(null);
+      setProfile(null);
+
+      // 4. LA OPCIÓN NUCLEAR: Redirección dura del navegador.
+      window.location.href = "/"; 
+    }
   };
 
   return (
@@ -250,21 +266,35 @@ function AppContent() {
                 <Route path="/" element={<PageWrapper><Home /></PageWrapper>} />
                 <Route path="/login" element={<PageWrapper>{isAuth ? redirectAfterLogin() : <Login />}</PageWrapper>} />
                 <Route path="/onboarding" element={<PageWrapper>{isAuth && needsOnboarding ? <Onboarding /> : <Navigate to="/" replace />}</PageWrapper>} />
+                
+                {/* Rutas Protegidas para Oficiales/Club */}
                 <Route
                   path="/cronometrador"
                   element={<PageWrapper><ProtectedRoute allowedRole="club"><Cronometrador userId={session?.user?.id} /></ProtectedRoute></PageWrapper>}
                 />
                 <Route
+                  path="/campeonatos"
+                  element={<PageWrapper><ProtectedRoute allowedRole="club"><Championships userId={session?.user?.id} /></ProtectedRoute></PageWrapper>}
+                />
+                <Route
+                  path="/gestion-rally/:rallyId"
+                  element={<PageWrapper><ProtectedRoute allowedRole="club"><RallyManager userId={session?.user?.id} /></ProtectedRoute></PageWrapper>}
+                />
+                <Route
                   path="/gestion"
                   element={<PageWrapper><ProtectedRoute allowedRole="club"><Management userId={session?.user?.id} /></ProtectedRoute></PageWrapper>}
                 />
+                
+                {/* Ruta Pública */}
                 <Route path="/clasificacion" element={<PageWrapper><Clasificacion /></PageWrapper>} />
+                <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </AnimatePresence>
           </div>
         </main>
       </div>
     </div>
+  );
   );
 }
 
