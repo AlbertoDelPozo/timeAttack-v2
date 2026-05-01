@@ -17,6 +17,7 @@ import Onboarding from './pages/Onboarding';
 import PilotoDashboard from './pages/PilotoDashboard';
 import PilotoExplorar from './pages/PilotoExplorar';
 import PilotoMisPruebas from './pages/PilotoMisPruebas';
+import Home from './pages/Home';
 import RightSidebar from './components/layout/RightSidebar';
 import DashboardLayout from './components/layout/DashboardLayout';
 
@@ -187,21 +188,6 @@ function MobileNavbar({ session, profile, handleLogout }: { session: Session | n
         ) : (
           <Link to="/login" className="p-2 rounded-lg text-brand-500"><LogIn size={20} /></Link>
         )}
-      </div>
-    </div>
-  );
-}
-
-// ── Home ──────────────────────────────────────────────────────
-function Home() {
-  return (
-    <div className="container mx-auto bg-base-100 rounded-box p-6 min-h-[50vh] flex flex-col items-center justify-center border border-base-300 text-center">
-      <h1 className="text-4xl font-bold mb-4">Bienvenido a TimeAttack v2</h1>
-      <p className="text-lg text-base-content/60 max-w-xl">
-        Sistema de control de tiempos para rally. Si eres oficial de carrera, inicia sesión para acceder al cronómetro. El público puede ver la clasificación general en tiempo real.
-      </p>
-      <div className="flex gap-4 mt-8">
-        <Link to="/clasificacion" className="btn btn-primary btn-lg">Ver Clasificación</Link>
       </div>
     </div>
   );

@@ -13,6 +13,15 @@ module.exports = {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
       },
+      keyframes: {
+        'grid-pulse': {
+          '0%, 100%': { opacity: '0' },
+          '50%': { opacity: '0.5' },
+        },
+      },
+      animation: {
+        'grid-pulse': 'grid-pulse 3s ease-in-out infinite',
+      },
       colors: {
         brand: {
           50:  '#fff0f5',
