@@ -35,3 +35,4 @@ CLAUDE.md
 ruvector.db
 tsconfig.tsbuildinfo
 .gitignore
+docs/migrations/001_pilot_dashboard.sql

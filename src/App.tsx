@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import { Session } from '@supabase/supabase-js';
-import { Trophy, Timer, Settings, LogOut, LogIn, Award } from 'lucide-react';
+import { Trophy, Timer, Settings, LogOut, LogIn, Award, LayoutDashboard, Compass, ClipboardList } from 'lucide-react';
 import { NextUIProvider, Spinner, Button } from '@nextui-org/react';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -14,6 +14,9 @@ import Management from './pages/Management';
 import Championships from './pages/Championships';
 import RallyManager from './pages/RallyManager';
 import Onboarding from './pages/Onboarding';
+import PilotoDashboard from './pages/PilotoDashboard';
+import PilotoExplorar from './pages/PilotoExplorar';
+import PilotoMisPruebas from './pages/PilotoMisPruebas';
 import RightSidebar from './components/layout/RightSidebar';
 import DashboardLayout from './components/layout/DashboardLayout';
 
@@ -82,6 +85,31 @@ function Sidebar({ session, profile, handleLogout }: { session: Session | null, 
             </Link>
           </>
         )}
+        {session && profile?.role === 'piloto' && (
+          <>
+            <Link
+              to="/piloto"
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === '/piloto' ? 'bg-brand-950/60 text-brand-100 border-l-2 border-brand-500 shadow-sm' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white border-l-2 border-transparent'}`}
+            >
+              <LayoutDashboard size={18} />
+              <span>Mi Panel</span>
+            </Link>
+            <Link
+              to="/piloto/explorar"
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === '/piloto/explorar' ? 'bg-brand-950/60 text-brand-100 border-l-2 border-brand-500 shadow-sm' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white border-l-2 border-transparent'}`}
+            >
+              <Compass size={18} />
+              <span>Explorar</span>
+            </Link>
+            <Link
+              to="/piloto/mis-pruebas"
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === '/piloto/mis-pruebas' ? 'bg-brand-950/60 text-brand-100 border-l-2 border-brand-500 shadow-sm' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white border-l-2 border-transparent'}`}
+            >
+              <ClipboardList size={18} />
+              <span>Mis Pruebas</span>
+            </Link>
+          </>
+        )}
         <Link
           to="/clasificacion"
           className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === '/clasificacion' ? 'bg-brand-950/60 text-brand-100 border-l-2 border-brand-500 shadow-sm' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white border-l-2 border-transparent'}`}
@@ -135,6 +163,19 @@ function MobileNavbar({ session, profile, handleLogout }: { session: Session | n
             </Link>
             <Link to="/campeonatos" className={`p-2 rounded-lg border-b-2 ${location.pathname === '/campeonatos' ? 'bg-brand-950/60 text-brand-100 border-brand-500' : 'text-zinc-400 border-transparent'}`}>
               <Award size={20} />
+            </Link>
+          </>
+        )}
+        {session && profile?.role === 'piloto' && (
+          <>
+            <Link to="/piloto" className={`p-2 rounded-lg border-b-2 ${location.pathname === '/piloto' ? 'bg-brand-950/60 text-brand-100 border-brand-500' : 'text-zinc-400 border-transparent'}`}>
+              <LayoutDashboard size={20} />
+            </Link>
+            <Link to="/piloto/explorar" className={`p-2 rounded-lg border-b-2 ${location.pathname === '/piloto/explorar' ? 'bg-brand-950/60 text-brand-100 border-brand-500' : 'text-zinc-400 border-transparent'}`}>
+              <Compass size={20} />
+            </Link>
+            <Link to="/piloto/mis-pruebas" className={`p-2 rounded-lg border-b-2 ${location.pathname === '/piloto/mis-pruebas' ? 'bg-brand-950/60 text-brand-100 border-brand-500' : 'text-zinc-400 border-transparent'}`}>
+              <ClipboardList size={20} />
             </Link>
           </>
         )}
@@ -240,6 +281,7 @@ function AppContent() {
   const redirectAfterLogin = () => {
     if (needsOnboarding) return <Navigate to="/onboarding" replace />;
     if (profile?.role === 'club') return <Navigate to="/gestion" replace />;
+    if (profile?.role === 'piloto') return <Navigate to="/piloto" replace />;
     return <Navigate to="/clasificacion" replace />;
   };
 
@@ -303,6 +345,20 @@ function AppContent() {
                   element={<PageWrapper><ProtectedRoute allowedRole="club"><Management userId={session?.user?.id} /></ProtectedRoute></PageWrapper>}
                 />
                 
+                {/* Rutas Protegidas para Pilotos */}
+                <Route
+                  path="/piloto"
+                  element={<PageWrapper><ProtectedRoute allowedRole="piloto"><PilotoDashboard userId={session?.user?.id} displayName={profile?.display_name} /></ProtectedRoute></PageWrapper>}
+                />
+                <Route
+                  path="/piloto/explorar"
+                  element={<PageWrapper><ProtectedRoute allowedRole="piloto"><PilotoExplorar userId={session?.user?.id} displayName={profile?.display_name} /></ProtectedRoute></PageWrapper>}
+                />
+                <Route
+                  path="/piloto/mis-pruebas"
+                  element={<PageWrapper><ProtectedRoute allowedRole="piloto"><PilotoMisPruebas userId={session?.user?.id} /></ProtectedRoute></PageWrapper>}
+                />
+
                 {/* Ruta Pública */}
                 <Route path="/clasificacion" element={<PageWrapper><Clasificacion /></PageWrapper>} />
                 <Route path="*" element={<Navigate to="/" replace />} />
