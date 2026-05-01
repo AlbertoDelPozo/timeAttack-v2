@@ -130,7 +130,7 @@ function RallyManagementPanel({ rallyId, clubId }: { rallyId: string, clubId: st
           <CardBody className="p-5 md:p-6">
             <h4 className="text-xl font-bold mb-4 text-white">Configuración del Rally</h4>
             {mensajeConfig && (
-              <div className={`mb-4 px-4 py-2 rounded-lg text-sm font-semibold border ${mensajeConfig.tipo === 'success' ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
+              <div className={`mb-4 px-4 py-2 rounded-lg text-sm font-semibold border ${mensajeConfig.tipo === 'success' ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-brand-500/10 border-brand-500/30 text-brand-400'}`}>
                 {mensajeConfig.texto}
               </div>
             )}
@@ -270,11 +270,11 @@ export function ChampionshipAccordion({
       {!expandedCamp ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
           {championships.map(camp => (
-            <div key={camp.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-red-500/50 transition-all cursor-pointer shadow-lg flex flex-col group/camp" onClick={() => setExpandedCamp(camp.id)}>
+            <div key={camp.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:border-brand-500/50 transition-all cursor-pointer shadow-lg flex flex-col group/camp" onClick={() => setExpandedCamp(camp.id)}>
               <div className="flex items-start justify-between mb-4">
                 <h3 className="text-xl font-bold text-zinc-100 tracking-tight leading-tight">{camp.name}</h3>
                 <button
-                  className="text-zinc-600 hover:text-red-500 hover:bg-red-500/10 rounded-md p-1.5 transition-colors opacity-0 group-hover/camp:opacity-100"
+                  className="text-zinc-600 hover:text-brand-500 hover:bg-brand-500/10 rounded-md p-1.5 transition-colors opacity-0 group-hover/camp:opacity-100"
                   onClick={(e) => {
                     e.stopPropagation();
                     if (window.confirm("¿Estás seguro? Se borrarán todos los rallies, cortes e inscripciones de este campeonato.")) {
@@ -314,7 +314,7 @@ export function ChampionshipAccordion({
                   setExpandedCamp(null);
                   setExpandedRally(null);
                 }}
-                className="text-zinc-400 hover:text-red-400 flex items-center gap-2 font-medium transition-colors text-sm bg-zinc-800/30 px-3 py-1.5 rounded-lg border border-zinc-800/50 hover:bg-zinc-800/80 w-fit"
+                className="text-zinc-400 hover:text-brand-400 flex items-center gap-2 font-medium transition-colors text-sm bg-zinc-800/30 px-3 py-1.5 rounded-lg border border-zinc-800/50 hover:bg-zinc-800/80 w-fit"
               >
                 ← Volver a Campeonatos
               </button>
@@ -346,7 +346,7 @@ export function ChampionshipAccordion({
                         <div className="flex items-center gap-2 w-full sm:w-auto">
                           {/* El botón de MAIN inyectado en nuestro diseño */}
                           <button
-                            className="flex-1 sm:flex-none text-center font-medium text-sm px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors border border-red-700 shadow-sm"
+                            className="flex-1 sm:flex-none text-center font-medium text-sm px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg transition-colors border border-brand-700 shadow-sm"
                             onClick={(e) => {
                               e.stopPropagation(); // Evitar que se despliegue el acordeón al pulsar el botón
                               navigate(`/gestion-rally/${rally.id}`);
@@ -356,7 +356,7 @@ export function ChampionshipAccordion({
                           </button>
                           
                           <button
-                            className="text-zinc-600 hover:text-red-500 hover:bg-red-500/10 rounded-md p-2 transition-colors opacity-0 group-hover/rally:opacity-100"
+                            className="text-zinc-600 hover:text-brand-500 hover:bg-brand-500/10 rounded-md p-2 transition-colors opacity-0 group-hover/rally:opacity-100"
                             onClick={(e) => {
                               e.stopPropagation();
                               if (window.confirm("¿Borrar esta prueba y todos sus tiempos?")) {
@@ -380,7 +380,7 @@ export function ChampionshipAccordion({
                                 <span className="font-semibold text-zinc-300 flex items-center gap-3"><Clock size={16} className="text-zinc-500" /> {session.name}</span>
                                 <div className="flex items-center gap-3">
                                   <button
-                                    className="text-zinc-600 hover:text-red-500 hover:bg-red-500/10 rounded-md p-1.5 transition-colors opacity-0 group-hover/session:opacity-100"
+                                    className="text-zinc-600 hover:text-brand-500 hover:bg-brand-500/10 rounded-md p-1.5 transition-colors opacity-0 group-hover/session:opacity-100"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       if (window.confirm("¿Borrar este corte e inscripciones?")) {

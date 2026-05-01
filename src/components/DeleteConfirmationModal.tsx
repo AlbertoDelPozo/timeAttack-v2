@@ -38,7 +38,7 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
                     </button>
                     <button
                         onClick={onConfirm}
-                        className="py-2 px-4 rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                        className="py-2 px-4 rounded-md text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500"
                     >
                         Eliminar
                     </button>

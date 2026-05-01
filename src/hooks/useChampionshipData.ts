@@ -1,10 +1,38 @@
 import { useState, useRef, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
+interface Championship {
+  id: string;
+  name: string;
+  club_id: string;
+  created_at: string;
+  default_stages?: number;
+  default_passes?: number;
+  allow_multi_category?: boolean;
+  points_system?: number[];
+}
+
+interface Rally {
+  id: string;
+  name: string;
+  championship_id: string;
+  stages?: number;
+  passes?: number;
+  status?: string;
+  created_at?: string;
+}
+
+interface Session {
+  id: string;
+  name: string;
+  rally_id: string;
+  created_at?: string;
+}
+
 export function useChampionshipData(userId: string | undefined) {
-  const [championships, setChampionships] = useState<any[]>([]);
-  const [rallies, setRallies] = useState<any[]>([]);
-  const [sessions, setSessions] = useState<any[]>([]);
+  const [championships, setChampionships] = useState<Championship[]>([]);
+  const [rallies, setRallies] = useState<Rally[]>([]);
+  const [sessions, setSessions] = useState<Session[]>([]);
 
   const isMounted = useRef(true);
 
@@ -17,7 +45,7 @@ export function useChampionshipData(userId: string | undefined) {
   const [expandedRally, setExpandedRally] = useState<string | null>(null);
 
   const [modalCamp, setModalCamp] = useState(false);
-  const [formCamp, setFormCamp] = useState({ name: '', tramos: 5, pasadas: 3, multi: false, points: '25, 18, 15, 12, 10, 8, 6, 4, 2, 1' });
+  const [formCamp, setFormCamp] = useState({ name: '', stages: 5, passes: 3, allowMultiCategory: false, points: '25, 18, 15, 12, 10, 8, 6, 4, 2, 1' });
 
   const [modalRally, setModalRally] = useState<{ open: boolean, campId: string | null }>({ open: false, campId: null });
   const [formRally, setFormRally] = useState({ name: '', stages: 5, passes: 3 });
@@ -51,22 +79,40 @@ export function useChampionshipData(userId: string | undefined) {
 
   const handleCreateChampionship = async (e: React.FormEvent, categoriasArray: string[]) => {
     e.preventDefault();
+    if (!userId) {
+      alert('Error de autenticación. Por favor, recarga la página.');
+      return;
+    }
     if (!formCamp.name.trim()) {
       alert("⚠️ Por favor, ponle un nombre al campeonato.");
       return;
     }
-    if (formCamp.tramos < 1 || formCamp.pasadas < 1) {
+    if (formCamp.stages < 1 || formCamp.passes < 1) {
       alert("⚠️ El número de tramos y pasadas debe ser al menos 1.");
       return;
     }
     try {
+      // 1. Obtener nombre del club desde profiles
+      const { data: profileData } = await supabase
+        .from('profiles').select('display_name').eq('id', userId).maybeSingle();
+
+      // 2. Garantizar fila en clubs con nombre válido (escudo para cuentas sin clubs record)
+      const { error: clubUpsertError } = await supabase
+        .from('clubs')
+        .upsert(
+          { id: userId, name: profileData?.display_name || 'Mi Club' },
+          { onConflict: 'id', ignoreDuplicates: true }
+        );
+
+      if (clubUpsertError) throw new Error(`No se pudo crear el registro de club: ${clubUpsertError.message}`);
+
       const ptsArray = formCamp.points.split(',').map(p => Number(p.trim())).filter(p => !isNaN(p));
       const { data: newCamp, error } = await supabase.from('championships').insert([{
         name: formCamp.name,
         club_id: userId,
-        default_stages: Number(formCamp.tramos),
-        default_passes: Number(formCamp.pasadas),
-        allow_multi_category: formCamp.multi,
+        default_stages: Number(formCamp.stages),
+        default_passes: Number(formCamp.passes),
+        allow_multi_category: formCamp.allowMultiCategory,
         points_system: ptsArray
       }]).select().single();
 
@@ -85,7 +131,7 @@ export function useChampionshipData(userId: string | undefined) {
       }
 
       setModalCamp(false);
-      setFormCamp({ name: '', tramos: 5, pasadas: 3, multi: false, points: '25, 18, 15, 12, 10, 8, 6, 4, 2, 1' });
+      setFormCamp({ name: '', stages: 5, passes: 3, allowMultiCategory: false, points: '25, 18, 15, 12, 10, 8, 6, 4, 2, 1' });
       
       loadHierarchy();
     } catch (error: any) {

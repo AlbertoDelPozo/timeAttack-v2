@@ -92,14 +92,14 @@ export default function Login() {
       {/* Columna Izquierda - Branding Motorsport (Versión Híbrida) */}
       <div className="hidden lg:flex relative flex-1 flex-col justify-center items-start bg-[#050505] border-r border-zinc-800 p-20 overflow-hidden">
         {/* Patrón de puntos y efectos de la versión functionality-fix */}
-        <div className="absolute inset-0 z-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#dc2626 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
+        <div className="absolute inset-0 z-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#c20e4d 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
         <div className="absolute inset-0 bg-gradient-to-br from-black via-transparent to-[#1a0505] opacity-90 z-0 pointer-events-none"></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-600/5 blur-[120px] rounded-full pointer-events-none"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand-600/5 blur-[120px] rounded-full pointer-events-none"></div>
 
         <div className="relative z-10 flex flex-col items-start justify-center max-w-lg w-full">
-          <div className="w-16 h-1.5 bg-[#dc2626] mb-8"></div>
+          <div className="w-16 h-1.5 bg-[#c20e4d] mb-8"></div>
           <h1 className="text-6xl xl:text-7xl font-black text-white tracking-widest uppercase italic leading-none mb-6">
-            TIME<br/><span className="text-[#dc2626]">ATTACK</span>
+            TIME<br/><span className="text-[#c20e4d]">ATTACK</span>
           </h1>
           <p className="text-zinc-400 text-xl md:text-2xl leading-relaxed font-medium mb-12 max-w-md">
             Sistema avanzado de telemetría y live timing para el motorsport real.
@@ -107,14 +107,14 @@ export default function Login() {
 
           <div className="grid grid-cols-2 gap-4 w-full">
             <div className="flex gap-3 items-center backdrop-blur-md bg-white/5 border border-white/10 px-4 py-3 rounded-2xl">
-               <Trophy className="text-[#dc2626]" size={24} />
+               <Trophy className="text-[#c20e4d]" size={24} />
                <div>
                   <p className="text-white font-bold text-sm">Clasificación</p>
                   <p className="text-zinc-500 text-[10px] uppercase tracking-tighter">Live Timing 0-delay</p>
                </div>
             </div>
             <div className="flex gap-3 items-center backdrop-blur-md bg-white/5 border border-white/10 px-4 py-3 rounded-2xl">
-               <Timer className="text-[#dc2626]" size={24} />
+               <Timer className="text-[#c20e4d]" size={24} />
                <div>
                   <p className="text-white font-bold text-sm">Telemetría</p>
                   <p className="text-zinc-500 text-[10px] uppercase tracking-tighter">Multi-Tramo Pro</p>
@@ -135,9 +135,9 @@ export default function Login() {
           {/* Header en móvil (Logo compacto) */}
           <div className="lg:hidden flex flex-col items-center gap-2 mb-10 pt-8">
             <h2 className="text-4xl font-black text-zinc-100 tracking-tight italic uppercase leading-none">
-              TIME<span className="text-[#dc2626]">ATTACK</span>
+              TIME<span className="text-[#c20e4d]">ATTACK</span>
             </h2>
-            <div className="w-12 h-1 bg-[#dc2626]"></div>
+            <div className="w-12 h-1 bg-[#c20e4d]"></div>
           </div>
 
           <div className="text-center lg:text-left mb-8">
@@ -160,7 +160,7 @@ export default function Login() {
             </button>
             <button
               type="button"
-              className={`flex-1 py-2.5 rounded-xl font-bold transition-all text-sm ${mode === 'register' ? 'bg-[#dc2626] text-white shadow-md shadow-[#dc2626]/20' : 'text-zinc-500 hover:text-white'}`}
+              className={`flex-1 py-2.5 rounded-xl font-bold transition-all text-sm ${mode === 'register' ? 'bg-[#c20e4d] text-white shadow-md shadow-[#c20e4d]/20' : 'text-zinc-500 hover:text-white'}`}
               onClick={() => { setMode('register'); setErrorMsg(null); setSuccessMsg(null); }}
             >
               Registro
@@ -168,7 +168,7 @@ export default function Login() {
           </div>
 
           {errorMsg && (
-            <div className="alert alert-error bg-red-500/10 text-red-500 border border-red-500/50 text-sm mb-6 rounded-xl font-bold p-4">
+            <div className="alert alert-error bg-brand-500/10 text-brand-500 border border-brand-500/50 text-sm mb-6 rounded-xl font-bold p-4">
               <span>{errorMsg}</span>
             </div>
           )}
@@ -188,7 +188,7 @@ export default function Login() {
                   <label className="label pb-2">
                     <span className="label-text text-xs font-bold uppercase tracking-wider text-zinc-500">Nombre / Equipo</span>
                   </label>
-                  <label className="input bg-zinc-900 border border-zinc-800 focus-within:border-[#dc2626] focus-within:ring-1 focus-within:ring-[#dc2626] focus-within:outline-none rounded-xl flex items-center gap-3 w-full py-6 transition-colors shadow-none">
+                  <label className="input bg-zinc-900 border border-zinc-800 focus-within:border-[#c20e4d] focus-within:ring-1 focus-within:ring-[#c20e4d] focus-within:outline-none rounded-xl flex items-center gap-3 w-full py-6 transition-colors shadow-none">
                     <User size={18} className="text-zinc-500" />
                     <input 
                       type="text" 
@@ -217,7 +217,7 @@ export default function Login() {
                     <button
                       type="button"
                       onClick={() => setRole('club')}
-                      className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all ${role === 'club' ? 'bg-[#dc2626]/10 border-[#dc2626] text-[#dc2626] shadow-sm' : 'bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:border-zinc-600'}`}
+                      className={`flex flex-col items-center justify-center p-4 rounded-xl border transition-all ${role === 'club' ? 'bg-[#c20e4d]/10 border-[#c20e4d] text-[#c20e4d] shadow-sm' : 'bg-zinc-900/50 border-zinc-800 text-zinc-500 hover:border-zinc-600'}`}
                     >
                       <ShieldCheck size={22} className="mb-2" />
                       <span className="font-bold text-sm">Organizador</span>
@@ -232,7 +232,7 @@ export default function Login() {
               <label className="label pb-2">
                 <span className="label-text text-xs font-bold uppercase tracking-wider text-zinc-500">Correo Electrónico</span>
               </label>
-              <label className="input bg-zinc-900 border border-zinc-800 focus-within:border-[#dc2626] focus-within:ring-1 focus-within:ring-[#dc2626] focus-within:outline-none rounded-xl flex items-center gap-3 w-full py-6 transition-colors shadow-none">
+              <label className="input bg-zinc-900 border border-zinc-800 focus-within:border-[#c20e4d] focus-within:ring-1 focus-within:ring-[#c20e4d] focus-within:outline-none rounded-xl flex items-center gap-3 w-full py-6 transition-colors shadow-none">
                 <Mail size={18} className="text-zinc-500" />
                 <input 
                   type="email" 
@@ -249,7 +249,7 @@ export default function Login() {
               <label className="label pb-2">
                 <span className="label-text text-xs font-bold uppercase tracking-wider text-zinc-500">Contraseña</span>
               </label>
-              <label className="input bg-zinc-900 border border-zinc-800 focus-within:border-[#dc2626] focus-within:ring-1 focus-within:ring-[#dc2626] focus-within:outline-none rounded-xl flex items-center gap-3 w-full py-6 transition-colors shadow-none">
+              <label className="input bg-zinc-900 border border-zinc-800 focus-within:border-[#c20e4d] focus-within:ring-1 focus-within:ring-[#c20e4d] focus-within:outline-none rounded-xl flex items-center gap-3 w-full py-6 transition-colors shadow-none">
                 <Lock size={18} className="text-zinc-500" />
                 <input 
                   type="password" 
@@ -265,7 +265,7 @@ export default function Login() {
             <div className="form-control mt-4">
               <button 
                 type="submit" 
-                className="w-full h-14 bg-[#dc2626] hover:bg-red-500 text-white shadow-lg shadow-red-900/20 active:scale-[0.98] font-bold rounded-xl transition-all duration-200 border-none disabled:opacity-70 flex flex-row justify-center items-center text-lg" 
+                className="w-full h-14 bg-[#c20e4d] hover:bg-brand-500 text-white shadow-lg shadow-brand-900/20 active:scale-[0.98] font-bold rounded-xl transition-all duration-200 border-none disabled:opacity-70 flex flex-row justify-center items-center text-lg" 
                 disabled={loading}
               >
                 {loading ? "Cargando..." : (mode === 'login' ? 'Entrar al Paddock' : 'Registrar Cuenta')}

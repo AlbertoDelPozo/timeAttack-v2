@@ -179,7 +179,7 @@ export default function Management({ userId }: { userId?: string }) {
                 <h2 className="text-2xl font-bold mb-5 text-white">Configuración del Rally</h2>
 
                 {mensajeConfig && (
-                  <div className={`mb-4 px-4 py-3 rounded-xl text-sm font-semibold border ${mensajeConfig.tipo === 'success' ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
+                  <div className={`mb-4 px-4 py-3 rounded-xl text-sm font-semibold border ${mensajeConfig.tipo === 'success' ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-brand-500/10 border-brand-500/30 text-brand-400'}`}>
                     {mensajeConfig.texto}
                   </div>
                 )}
@@ -365,7 +365,7 @@ export default function Management({ userId }: { userId?: string }) {
                 <p className="text-sm text-zinc-500 mb-5">Edita ✏️ o borra 🗑️ los registros en caso de error.</p>
 
                 {mensajeTiempos && (
-                  <div className={`mb-4 px-4 py-3 rounded-xl text-sm font-semibold border ${mensajeTiempos.tipo === 'success' ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
+                  <div className={`mb-4 px-4 py-3 rounded-xl text-sm font-semibold border ${mensajeTiempos.tipo === 'success' ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-brand-500/10 border-brand-500/30 text-brand-400'}`}>
                     {mensajeTiempos.texto}
                   </div>
                 )}
@@ -403,7 +403,7 @@ export default function Management({ userId }: { userId?: string }) {
                                   />
                                   <input
                                     type="number" step="0.1"
-                                    className="w-24 bg-red-500/10 border border-red-500/30 text-red-400 text-right font-mono text-sm mt-1 rounded-lg px-2 py-1 outline-none focus:border-red-500"
+                                    className="w-24 bg-brand-500/10 border border-brand-500/30 text-brand-400 text-right font-mono text-sm mt-1 rounded-lg px-2 py-1 outline-none focus:border-brand-500"
                                     value={penalizacionEditada}
                                     onChange={(e) => setPenalizacionEditada(e.target.value)}
                                     title="Penalización (seg)"
@@ -465,7 +465,7 @@ export default function Management({ userId }: { userId?: string }) {
             backdrop="blur"
             size="sm"
             classNames={{
-              base: "bg-zinc-900 border border-danger/30 shadow-[0_0_30px_rgba(220,38,38,0.15)]",
+              base: "bg-zinc-900 border border-danger/30 shadow-[0_0_30px_rgba(194,14,77,0.15)]",
               header: "border-b border-zinc-800/60",
               footer: "border-t border-zinc-800/60",
             }}

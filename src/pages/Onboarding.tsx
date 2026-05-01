@@ -52,7 +52,9 @@ export default function Onboarding() {
         name: displayName
       });
       if (clubError) {
-         console.error("Error creando el club:", clubError);
+        setErrorMsg(`Error creando el club: ${clubError.message}`);
+        setLoading(false);
+        return;
       }
     }
 
@@ -81,7 +83,7 @@ export default function Onboarding() {
               </label>
               <input 
                 type="text" 
-                className="input w-full bg-[#121212] border border-[#333333] text-[#ededed] focus:border-[#DA0037] focus:ring-1 focus:ring-[#DA0037] rounded-xl py-6" 
+                className="input w-full bg-[#121212] border border-[#333333] text-[#ededed] focus:border-[#c20e4d] focus:ring-1 focus:ring-[#c20e4d] rounded-xl py-6" 
                 placeholder="Ej: Escudería Ourense / Carlos Sainz"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
@@ -103,7 +105,7 @@ export default function Onboarding() {
                 </button>
                 <button 
                   type="button"
-                  className={`flex-1 py-3 rounded-xl font-bold transition-all ${role === 'club' ? 'bg-[#DA0037] text-white shadow-md shadow-[#DA0037]/20' : 'text-[#a1a1aa] hover:text-white'}`}
+                  className={`flex-1 py-3 rounded-xl font-bold transition-all ${role === 'club' ? 'bg-[#c20e4d] text-white shadow-md shadow-[#c20e4d]/20' : 'text-[#a1a1aa] hover:text-white'}`}
                   onClick={() => setRole('club')}
                 >
                   🏢 Organizador

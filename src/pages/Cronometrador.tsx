@@ -276,9 +276,8 @@ export default function Cronometrador({ userId, sessionId, rallyId }: { userId?:
       const selectedPilot = pilotosInscritos.find(p => p.id === pilotoId);
       const catId = selectedPilot?.category_id || null;
 
-      // Implementación Check & Write (Misión 98) 
-      // Iteramos asíncronamente para cada tramo que el usuario haya rellenado en pantalla
-      for (const tNum of activeTramoKeys) {
+      // Check & Write en paralelo: todos los tramos se procesan simultáneamente
+      await Promise.all(activeTramoKeys.map(async (tNum) => {
         const t = tramosData[tNum];
         const trackMs = Math.round(parseFloat(t?.tiempo || '0') * 1000);
         const pen = parseFloat(t?.penalizacion || '0');
@@ -327,7 +326,7 @@ export default function Cronometrador({ userId, sessionId, rallyId }: { userId?:
 
           if (insertError) throw insertError;
         }
-      }
+      }));
 
       setMensaje({ texto: '¡Tiempos registrados con éxito!', tipo: 'success' });
 
@@ -347,7 +346,7 @@ return (
     <div className="w-full flex-1 flex flex-col md:max-w-[1200px] max-w-full mx-auto md:py-6 relative h-full">
 
       <h1 className="text-3xl lg:text-4xl font-black text-white px-2 mt-4 md:mt-0 mb-6 hidden md:block tracking-tight text-center uppercase italic">
-        <span className="text-red-600">Race</span> Dashboard
+        <span className="text-brand-600">Race</span> Dashboard
       </h1>
 
       {/* BLOQUE SUPERIOR: CONTEXTO Y SELECTORES EN CASCADA */}
@@ -359,7 +358,7 @@ return (
               <Trophy size={14} /> Campeonato
             </label>
             <select
-              className="w-full h-[40px] sm:h-[44px] bg-zinc-950 border border-zinc-800 text-zinc-100 px-3 rounded-lg focus:border-red-500 focus:ring-0 outline-none transition-all shadow-sm"
+              className="w-full h-[40px] sm:h-[44px] bg-zinc-950 border border-zinc-800 text-zinc-100 px-3 rounded-lg focus:border-brand-500 focus:ring-0 outline-none transition-all shadow-sm"
               value={selectedCamp}
               onChange={(e) => { setSelectedCamp(e.target.value); setSelectedRally(''); }}
               disabled={!!rallyId}
@@ -375,7 +374,7 @@ return (
               <Flag size={14} /> Prueba / Rally
             </label>
             <select
-              className="w-full h-[40px] sm:h-[44px] bg-zinc-950 border border-zinc-800 text-zinc-100 px-3 rounded-lg focus:border-red-500 focus:ring-0 outline-none transition-all shadow-sm disabled:opacity-50"
+              className="w-full h-[40px] sm:h-[44px] bg-zinc-950 border border-zinc-800 text-zinc-100 px-3 rounded-lg focus:border-brand-500 focus:ring-0 outline-none transition-all shadow-sm disabled:opacity-50"
               value={selectedRally}
               onChange={(e) => setSelectedRally(e.target.value)}
               disabled={!selectedCamp && !rallyId}
@@ -394,7 +393,7 @@ return (
               <Layers size={14} /> Pasada Activa
             </label>
             <select
-              className="w-full h-[40px] sm:h-[44px] bg-zinc-950 border border-zinc-800 text-zinc-100 px-3 rounded-lg focus:border-red-500 focus:ring-0 outline-none transition-all shadow-sm disabled:opacity-50"
+              className="w-full h-[40px] sm:h-[44px] bg-zinc-950 border border-zinc-800 text-zinc-100 px-3 rounded-lg focus:border-brand-500 focus:ring-0 outline-none transition-all shadow-sm disabled:opacity-50"
               value={pasada}
               onChange={(e) => setPasada(Number(e.target.value))}
               disabled={!selectedRally || configStatus === 'missing'}
@@ -412,30 +411,30 @@ return (
         <div className="flex-1 bg-[#09090b] border border-zinc-800 rounded-lg shadow-sm p-4 overflow-y-auto min-h-[250px] lg:h-full relative flex flex-col">
           <div className="flex items-center justify-between mb-4 sticky top-0 bg-[#09090b] z-10 py-1">
             <h3 className="text-zinc-400 text-sm font-bold uppercase tracking-wider flex items-center gap-2">
-              Selector de Piloto {pasada && <span className="text-red-500 font-black">P{pasada}</span>}
+              Selector de Piloto {pasada && <span className="text-brand-500 font-black">P{pasada}</span>}
             </h3>
             {loadingTop && <Spinner size="sm" color="danger" />}
           </div>
           
-          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-3 xl:grid-cols-5 gap-2 md:gap-3">
+          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-3">
              {pilotosInscritos.map(p => {
-               const isSelected = p.pilot_id === pilotoId;
+               const isSelected = p.id === pilotoId;
                return (
                  <button
                    key={p.id}
                    type="button"
-                   onClick={() => setPilotoId(p.pilot_id)}
+                   onClick={() => setPilotoId(p.id)}
                    className={`h-24 flex flex-col items-center justify-center rounded-xl border transition-all active:scale-95 p-1 ${
-                     isSelected 
-                       ? 'bg-red-600/10 border-red-600 shadow-[0_0_15px_-3px_rgba(220,38,38,0.3)]' 
+                     isSelected
+                       ? 'bg-brand-600/10 border-brand-600 shadow-[0_0_15px_-3px_rgba(194,14,77,0.3)]'
                        : 'bg-zinc-950 border-zinc-800 hover:border-zinc-600'
                    }`}
                  >
-                   <span className={`text-4xl font-black font-mono leading-none mb-1 ${isSelected ? 'text-red-500' : 'text-zinc-300'}`}>
+                   <span className={`text-4xl font-black font-mono leading-none mb-1 ${isSelected ? 'text-brand-500' : 'text-zinc-300'}`}>
                      {p.number || '-'}
                    </span>
                    <span className="text-[10px] md:text-xs text-center font-semibold text-zinc-500 line-clamp-2 leading-tight px-1">
-                     {p.pilots?.name || 'Piloto'}
+                     {p.name}
                    </span>
                  </button>
                );
@@ -452,7 +451,7 @@ return (
         <div className="w-full lg:w-[420px] shrink-0 bg-[#09090b] border border-zinc-800 rounded-lg shadow-sm p-5 md:p-6 lg:h-full flex flex-col justify-center relative">
           
           {mensaje && (
-            <div className={`absolute top-4 left-4 right-4 px-4 py-3 rounded-md text-sm font-bold border text-center z-10 animate-appearance-in ${mensaje.tipo === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-red-500/10 border-red-500/30 text-red-500'}`}>
+            <div className={`absolute top-4 left-4 right-4 px-4 py-3 rounded-md text-sm font-bold border text-center z-10 animate-appearance-in ${mensaje.tipo === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-brand-500/10 border-brand-500/30 text-brand-500'}`}>
               {mensaje.texto}
             </div>
           )}
@@ -461,7 +460,7 @@ return (
             <div className="flex items-center bg-zinc-950 border border-zinc-800 p-1 rounded-lg w-full sm:w-auto">
               <button
                 onClick={() => { setUiMode('pendientes'); setPilotoId(''); setMensaje(null); }}
-                className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold uppercase rounded-md transition-all ${uiMode === 'pendientes' ? 'bg-red-600 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                className={`flex-1 sm:flex-none px-4 py-1.5 text-xs font-bold uppercase rounded-md transition-all ${uiMode === 'pendientes' ? 'bg-brand-600 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
               >
                 🏁 Pendientes
               </button>
@@ -479,24 +478,24 @@ return (
               Selecciona una competición para ver los pilotos.
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-3 xl:grid-cols-5 gap-2 md:gap-3 pb-8">
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-3 pb-8">
               {(uiMode === 'pendientes' ? pilotosPendientes : pilotosCompletados).map(p => {
-                const isSelected = p.pilot_id === pilotoId;
+                const isSelected = p.id === pilotoId;
                 return (
                   <button
                     key={p.id}
                     type="button"
-                    onClick={() => { setPilotoId(p.pilot_id); setMensaje(null); }}
+                    onClick={() => { setPilotoId(p.id); setMensaje(null); }}
                     className={`h-20 sm:h-24 flex flex-col items-center justify-center rounded-xl border transition-all active:scale-95 p-1 ${isSelected
-                      ? 'bg-red-600/10 border-red-600 shadow-[0_0_15px_-3px_rgba(220,38,38,0.3)]'
+                      ? 'bg-brand-600/10 border-brand-600 shadow-[0_0_15px_-3px_rgba(194,14,77,0.3)]'
                       : 'bg-zinc-950 border-zinc-800 hover:border-zinc-600 hover:bg-zinc-900'
                       }`}
                   >
-                    <span className={`text-3xl sm:text-4xl font-black font-mono leading-none mb-1 ${isSelected ? 'text-red-500' : 'text-zinc-300'}`}>
+                    <span className={`text-3xl sm:text-4xl font-black font-mono leading-none mb-1 ${isSelected ? 'text-brand-500' : 'text-zinc-300'}`}>
                       {p.number || '-'}
                     </span>
                     <span className="text-[10px] md:text-[11px] text-center font-semibold text-zinc-500 line-clamp-2 leading-tight px-1 hidden sm:block">
-                      {p.pilots?.name || 'Piloto'}
+                      {p.name}
                     </span>
                   </button>
                 );
@@ -531,7 +530,7 @@ return (
           </div>
 
           {mensaje && (
-            <div className={`mb-6 p-4 rounded-xl text-sm font-bold border text-center shadow-sm ${mensaje.tipo === 'success' ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400' : 'bg-red-500/10 border-red-500/50 text-red-500'}`}>
+            <div className={`mb-6 p-4 rounded-xl text-sm font-bold border text-center shadow-sm ${mensaje.tipo === 'success' ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400' : 'bg-brand-500/10 border-brand-500/50 text-brand-500'}`}>
               {mensaje.texto}
             </div>
           )}
@@ -543,7 +542,7 @@ return (
                      const data = tramosData[tNum] || { tiempo: '', penalizacion: '' };
                    return (
                      <div key={tNum} className="flex flex-col gap-2 p-4 bg-zinc-900 border border-zinc-800 rounded-2xl relative group">
-                        <div className="absolute -top-3 left-4 bg-red-600 text-white font-black px-3 py-0.5 rounded-full text-[10px] italic tracking-tighter">
+                        <div className="absolute -top-3 left-4 bg-brand-600 text-white font-black px-3 py-0.5 rounded-full text-[10px] italic tracking-tighter">
                           TC {tNum}
                         </div>
                         
@@ -554,7 +553,7 @@ return (
                                placeholder="0.000"
                                value={data.tiempo}
                                onChange={(e) => updateTramoData(tNum, 'tiempo', e.target.value)}
-                               className="w-full h-16 bg-zinc-950 border border-zinc-800 rounded-xl text-center text-3xl font-black font-mono text-white focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-all placeholder:text-zinc-900"
+                               className="w-full h-16 bg-zinc-950 border border-zinc-800 rounded-xl text-center text-3xl font-black font-mono text-white focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none transition-all placeholder:text-zinc-900"
                              />
                            </div>
                            <div className="w-24">
@@ -577,7 +576,7 @@ return (
                <button
                  type="submit"
                  disabled={!pilotoId}
-                 className={`w-full h-20 ${uiMode === 'edicion' ? 'bg-amber-600 hover:bg-amber-500' : 'bg-red-600 hover:bg-red-500'} disabled:bg-zinc-900 disabled:text-zinc-800 text-white font-black text-xl tracking-widest uppercase rounded-2xl transition-all active:scale-[0.98] shadow-lg`}
+                 className={`w-full h-20 ${uiMode === 'edicion' ? 'bg-amber-600 hover:bg-amber-500' : 'bg-brand-600 hover:bg-brand-500'} disabled:bg-zinc-900 disabled:text-zinc-800 text-white font-black text-xl tracking-widest uppercase rounded-2xl transition-all active:scale-[0.98] shadow-lg`}
                >
                  {uiMode === 'edicion' ? 'Actualizar Registro' : 'Registrar Pasada'}
                </button>

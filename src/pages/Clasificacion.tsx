@@ -113,7 +113,7 @@ export default function Clasificacion() {
     fetchRallyData();
 
     const canal = supabase
-      .channel('tiempos-en-directo-cls')
+      .channel(`tiempos-en-directo-cls-${selectedRally}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'lap_times' }, () => {
         fetchRallyData();
         setIsUpdating(true);
@@ -239,7 +239,7 @@ export default function Clasificacion() {
         return (
           <div className="flex justify-center w-full">
             <motion.div layout id={`pos-${lap.id}`}>
-              <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold ${lap.index === 0 ? 'bg-red-500/20 text-red-500 border border-red-500/50 shadow-sm shadow-red-900/20' : 'bg-zinc-800 text-zinc-400'}`}>
+              <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold ${lap.index === 0 ? 'bg-brand-500/20 text-brand-500 border border-brand-500/50 shadow-sm shadow-brand-900/20' : 'bg-zinc-800 text-zinc-400'}`}>
                 {lap.index + 1}
               </span>
             </motion.div>
@@ -275,7 +275,7 @@ export default function Clasificacion() {
         return (
           <div className="flex justify-end w-full bg-zinc-950 p-[10px] -my-3 -mr-3 rounded-r-lg border-l border-zinc-800/50">
             <motion.div layout id={`tot-${lap.id}`} className="flex flex-col items-end">
-              <span className={`text-xl tracking-tight font-black ${lap.index === 0 ? 'text-red-500 drop-shadow-[0_0_5px_rgba(220,38,38,0.4)]' : 'text-white'}`}>
+              <span className={`text-xl tracking-tight font-black ${lap.index === 0 ? 'text-brand-500 drop-shadow-[0_0_5px_rgba(194,14,77,0.4)]' : 'text-white'}`}>
                 {formatMsToTime(lap.total_general)}
               </span>
             </motion.div>
@@ -303,7 +303,7 @@ export default function Clasificacion() {
     <div className="bg-zinc-950 min-h-screen w-full flex flex-col p-4 md:p-8 items-center">
       <div className="w-full max-w-7xl flex flex-col items-center">
         <h1 className="text-3xl md:text-5xl font-extrabold text-zinc-100 tracking-tight mb-8">
-          Monitor de <span className="text-red-600">Clasificación</span>
+          Monitor de <span className="text-brand-600">Clasificación</span>
         </h1>
 
         {/* Top Bar / Filters */}
@@ -311,7 +311,7 @@ export default function Clasificacion() {
           <div className="flex-1 w-full md:w-auto">
             <label className="text-xs font-bold text-zinc-500 flex items-center gap-2 uppercase tracking-wider mb-2"><Trophy size={14} /> Campeonato</label>
             <select
-              className="w-full h-[44px] bg-[#09090b] border border-zinc-800 text-zinc-100 px-3 rounded-lg focus:border-red-500 focus:ring-0 focus:outline-none outline-none transition-all shadow-sm"
+              className="w-full h-[44px] bg-[#09090b] border border-zinc-800 text-zinc-100 px-3 rounded-lg focus:border-brand-500 focus:ring-0 focus:outline-none outline-none transition-all shadow-sm"
               value={selectedCamp}
               onChange={(e) => setSelectedCamp(e.target.value)}
             >
@@ -323,7 +323,7 @@ export default function Clasificacion() {
           <div className="flex-1 w-full md:w-auto">
             <label className="text-xs font-bold text-zinc-500 flex items-center gap-2 uppercase tracking-wider mb-2"><Flag size={14} /> Rally</label>
             <select
-              className="w-full h-[44px] bg-[#09090b] border border-zinc-800 text-zinc-100 px-3 rounded-lg focus:border-red-500 focus:ring-0 focus:outline-none outline-none transition-all shadow-sm disabled:opacity-50"
+              className="w-full h-[44px] bg-[#09090b] border border-zinc-800 text-zinc-100 px-3 rounded-lg focus:border-brand-500 focus:ring-0 focus:outline-none outline-none transition-all shadow-sm disabled:opacity-50"
               value={selectedRally}
               onChange={(e) => setSelectedRally(e.target.value)}
               disabled={!selectedCamp}
@@ -337,7 +337,7 @@ export default function Clasificacion() {
           <div className="w-full md:w-48 lg:w-64">
             <label className="text-xs font-bold text-zinc-500 flex items-center gap-2 uppercase tracking-wider mb-2"><Layers size={14} /> Pasada</label>
             <select
-              className="w-full h-[44px] bg-[#09090b] border border-zinc-800 text-zinc-100 px-3 rounded-lg focus:border-red-500 focus:ring-0 focus:outline-none outline-none transition-all shadow-sm disabled:opacity-50"
+              className="w-full h-[44px] bg-[#09090b] border border-zinc-800 text-zinc-100 px-3 rounded-lg focus:border-brand-500 focus:ring-0 focus:outline-none outline-none transition-all shadow-sm disabled:opacity-50"
               value={selectedPasada}
               onChange={(e) => setSelectedPasada(e.target.value)}
               disabled={!selectedRally || maxPasadas === 0}
@@ -352,20 +352,20 @@ export default function Clasificacion() {
         </div>
 
         {/* Data Table */}
-        <div className={`rounded-xl shadow-2xl transition-all duration-300 w-full mb-20 ${isUpdating ? 'shadow-[0_0_20px_rgba(220,38,38,0.2)]' : ''}`}>
+        <div className={`rounded-xl shadow-2xl transition-all duration-300 w-full mb-20 ${isUpdating ? 'shadow-[0_0_20px_rgba(194,14,77,0.2)]' : ''}`}>
           <Table
             aria-label="Clasificación General"
             selectionMode="single"
             classNames={{
               wrapper: "bg-[#09090b] border border-zinc-800 p-0 overflow-hidden rounded-xl",
-              th: "bg-zinc-950 text-red-500 font-bold uppercase tracking-wider py-4 border-b border-zinc-800",
+              th: "bg-zinc-950 text-brand-500 font-bold uppercase tracking-wider py-4 border-b border-zinc-800",
               td: "text-zinc-300 font-mono py-3 font-semibold", // Default for data columns
               emptyWrapper: "text-zinc-500 italic py-12 h-[200px]"
             }}
           >
             <TableHeader columns={columns}>
               {(column) => (
-                <TableColumn key={column.key} align={column.align} className={column.key === "pos" ? "w-16 text-center" : column.key === "tot" ? "bg-zinc-950 text-red-600 font-black" : ""}>
+                <TableColumn key={column.key} align={column.align} className={column.key === "pos" ? "w-16 text-center" : column.key === "tot" ? "bg-zinc-950 text-brand-600 font-black" : ""}>
                   {column.label}
                 </TableColumn>
               )}

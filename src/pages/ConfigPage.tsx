@@ -35,7 +35,7 @@ const ConfigPage = () => {
             <input
               id="numPasadas"
               type="number"
-              className="w-full p-3 rounded-lg bg-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 transition duration-200 spin-button-none"
+              className="w-full p-3 rounded-lg bg-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500 transition duration-200 spin-button-none"
               value={numPasadas}
               onChange={(e) => setNumPasadas(parseInt(e.target.value, 10))}
               min="1"
@@ -52,7 +52,7 @@ const ConfigPage = () => {
             <input
               id="numTramos"
               type="number"
-              className="w-full p-3 rounded-lg bg-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 transition duration-200 spin-button-none"
+              className="w-full p-3 rounded-lg bg-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500 transition duration-200 spin-button-none"
               value={numTramos}
               onChange={(e) => setNumTramos(parseInt(e.target.value, 10))}
               min="1"
@@ -61,7 +61,7 @@ const ConfigPage = () => {
           </div>
           <button
             type="submit"
-            className="w-full py-3 px-4 rounded-lg text-lg font-bold text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition-transform duration-200 transform hover:scale-[1.02]"
+            className="w-full py-3 px-4 rounded-lg text-lg font-bold text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition-transform duration-200 transform hover:scale-[1.02]"
           >
             Comenzar Rally
           </button>

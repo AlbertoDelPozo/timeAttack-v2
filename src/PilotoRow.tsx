@@ -36,8 +36,8 @@ const PilotoRow: React.FC<PilotoRowProps> = ({
 
   return (
     <tr className="hover:bg-gray-700 transition-colors duration-200">
-      <td className="px-2 py-2 text-white font-medium text-xs flex flex-col items-center justify-center overflow-hidden">
-        <span className="flex-shrink flex-grow-0">
+      <td className="px-2 py-2 text-white font-medium text-xs max-w-[120px] overflow-hidden">
+        <span className="block truncate text-center">
           {`${piloto.nombre} ${piloto.apellido}`}
         </span>
       </td>
@@ -88,7 +88,7 @@ const PilotoRow: React.FC<PilotoRowProps> = ({
                         : parseFloat(e.target.value) * 1000
                     )
                   }
-                  className={`w-20 p-1 rounded-lg bg-gray-700 text-white text-sm border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 placeholder-gray-500 transition-colors duration-200 ${isFastestTime(tramo.id, tramoTiempo) ? "font-bold text-green-400" : ""}`}
+                  className={`w-20 p-1 rounded-lg bg-gray-700 text-white text-sm border border-gray-600 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-gray-500 transition-colors duration-200 ${isFastestTime(tramo.id, tramoTiempo) ? "font-bold text-green-400" : ""}`}
                 />
               )}
             </td>
@@ -107,7 +107,7 @@ const PilotoRow: React.FC<PilotoRowProps> = ({
         <td className="px-2 py-2 text-center">
           <button
             onClick={() => onDeletePiloto(piloto)}
-            className="text-red-600 hover:text-red-400 transition-colors duration-200"
+            className="text-brand-600 hover:text-brand-400 transition-colors duration-200"
           >
             &times;
           </button>

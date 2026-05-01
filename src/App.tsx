@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import { Session } from '@supabase/supabase-js';
-import { Trophy, Timer, Settings, LogOut, LogIn } from 'lucide-react';
+import { Trophy, Timer, Settings, LogOut, LogIn, Award } from 'lucide-react';
 import { NextUIProvider, Spinner, Button } from '@nextui-org/react';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -61,23 +61,30 @@ function Sidebar({ session, profile, handleLogout }: { session: Session | null, 
           <>
             <Link
               to="/cronometrador"
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === '/cronometrador' ? 'bg-red-950/60 text-red-100 border-l-2 border-red-500 shadow-sm' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white border-l-2 border-transparent'}`}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === '/cronometrador' ? 'bg-brand-950/60 text-brand-100 border-l-2 border-brand-500 shadow-sm' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white border-l-2 border-transparent'}`}
             >
               <Timer size={18} />
               <span>Cronometrador</span>
             </Link>
             <Link
               to="/gestion"
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === '/gestion' ? 'bg-red-950/60 text-red-100 border-l-2 border-red-500 shadow-sm' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white border-l-2 border-transparent'}`}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === '/gestion' ? 'bg-brand-950/60 text-brand-100 border-l-2 border-brand-500 shadow-sm' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white border-l-2 border-transparent'}`}
             >
               <Settings size={18} />
               <span>Gestión</span>
+            </Link>
+            <Link
+              to="/campeonatos"
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === '/campeonatos' ? 'bg-brand-950/60 text-brand-100 border-l-2 border-brand-500 shadow-sm' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white border-l-2 border-transparent'}`}
+            >
+              <Award size={18} />
+              <span>Campeonatos</span>
             </Link>
           </>
         )}
         <Link
           to="/clasificacion"
-          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === '/clasificacion' ? 'bg-red-950/60 text-red-100 border-l-2 border-red-500 shadow-sm' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white border-l-2 border-transparent'}`}
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${location.pathname === '/clasificacion' ? 'bg-brand-950/60 text-brand-100 border-l-2 border-brand-500 shadow-sm' : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white border-l-2 border-transparent'}`}
         >
           <Trophy size={18} />
           <span>Clasificación</span>
@@ -88,7 +95,7 @@ function Sidebar({ session, profile, handleLogout }: { session: Session | null, 
         <div className="p-4 mt-auto border-t border-zinc-800/60">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-zinc-400 hover:text-brand-400 hover:bg-brand-400/10 rounded-lg transition-colors"
           >
             <LogOut size={18} />
             <span>Salir</span>
@@ -99,7 +106,7 @@ function Sidebar({ session, profile, handleLogout }: { session: Session | null, 
           <div className="p-4 mt-auto border-t border-zinc-800/60">
             <Link
               to="/login"
-              className="w-full flex justify-center items-center gap-2 px-3 py-2.5 text-sm font-medium bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors shadow-md shadow-red-900/20"
+              className="w-full flex justify-center items-center gap-2 px-3 py-2.5 text-sm font-medium bg-brand-600 hover:bg-brand-500 text-white rounded-lg transition-colors shadow-md shadow-brand-900/20"
             >
               <LogIn size={18} />
               <span>Acceso</span>
@@ -122,17 +129,22 @@ function MobileNavbar({ session, profile, handleLogout }: { session: Session | n
       </Link>
       <div className="flex items-center gap-2">
         {session && profile?.role === 'club' && (
-          <Link to="/gestion" className={`p-2 rounded-lg border-b-2 ${location.pathname === '/gestion' ? 'bg-red-950/60 text-red-100 border-red-500' : 'text-zinc-400 border-transparent'}`}>
-            <Settings size={20} />
-          </Link>
+          <>
+            <Link to="/gestion" className={`p-2 rounded-lg border-b-2 ${location.pathname === '/gestion' ? 'bg-brand-950/60 text-brand-100 border-brand-500' : 'text-zinc-400 border-transparent'}`}>
+              <Settings size={20} />
+            </Link>
+            <Link to="/campeonatos" className={`p-2 rounded-lg border-b-2 ${location.pathname === '/campeonatos' ? 'bg-brand-950/60 text-brand-100 border-brand-500' : 'text-zinc-400 border-transparent'}`}>
+              <Award size={20} />
+            </Link>
+          </>
         )}
-        <Link to="/clasificacion" className={`p-2 rounded-lg border-b-2 ${location.pathname === '/clasificacion' ? 'bg-red-950/60 text-red-100 border-red-500' : 'text-zinc-400 border-transparent'}`}>
+        <Link to="/clasificacion" className={`p-2 rounded-lg border-b-2 ${location.pathname === '/clasificacion' ? 'bg-brand-950/60 text-brand-100 border-brand-500' : 'text-zinc-400 border-transparent'}`}>
           <Trophy size={20} />
         </Link>
         {session ? (
-          <button onClick={handleLogout} className="p-2 rounded-lg text-zinc-400 hover:text-red-400"><LogOut size={20} /></button>
+          <button onClick={handleLogout} className="p-2 rounded-lg text-zinc-400 hover:text-brand-400"><LogOut size={20} /></button>
         ) : (
-          <Link to="/login" className="p-2 rounded-lg text-red-500"><LogIn size={20} /></Link>
+          <Link to="/login" className="p-2 rounded-lg text-brand-500"><LogIn size={20} /></Link>
         )}
       </div>
     </div>
@@ -196,10 +208,17 @@ function AppContent() {
       if (event === 'SIGNED_OUT') {
         setSession(null); setProfile(null); setLoading(false);
       } else if (event === 'SIGNED_IN' && session) {
-        const { data: profileData } = await supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle();
-        setSession(session);
-        setProfile(profileData || { notFound: true });
-        setLoading(false);
+        try {
+          const { data: profileData } = await supabase.from('profiles').select('*').eq('id', session.user.id).maybeSingle();
+          setSession(session);
+          setProfile(profileData || { notFound: true });
+        } catch (error) {
+          console.error('Error fetching profile on SIGNED_IN:', error);
+          setSession(session);
+          setProfile({ notFound: true });
+        } finally {
+          setLoading(false);
+        }
       }
     });
 
