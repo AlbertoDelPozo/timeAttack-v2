@@ -36,9 +36,9 @@ export default function RightSidebar() {
                   key={day} 
                   className={`py-1 rounded-md cursor-pointer transition-colors ${
                     isSelected 
-                      ? 'bg-red-600 text-white font-semibold' 
+                      ? 'bg-brand-600 text-white font-semibold' 
                       : hasRally 
-                        ? 'bg-red-600/20 text-red-400 hover:bg-red-600/30 font-semibold' 
+                        ? 'bg-brand-600/20 text-brand-400 hover:bg-brand-600/30 font-semibold' 
                         : 'hover:bg-zinc-800'
                   }`}
                 >
@@ -62,9 +62,9 @@ export default function RightSidebar() {
         <div className="relative pl-3 border-l border-zinc-800 ml-2 space-y-6">
           {/* Mock Event 1 */}
           <div className="relative">
-            <div className="absolute -left-[17px] top-1.5 w-2 h-2 rounded-full bg-red-600 ring-4 ring-[#09090b]"></div>
+            <div className="absolute -left-[17px] top-1.5 w-2 h-2 rounded-full bg-brand-600 ring-4 ring-[#09090b]"></div>
             <div className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-red-500">14 - 15 Abr</span>
+              <span className="text-xs font-medium text-brand-500">14 - 15 Abr</span>
               <h4 className="text-sm font-semibold text-zinc-100 leading-tight">Rally Isla de los Volcanes</h4>
               <p className="text-xs text-zinc-400 flex items-center gap-1.5 mt-0.5">
                 <MapPin size={12} /> Camp. Autonómico de Tierra

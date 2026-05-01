@@ -28,7 +28,7 @@ function Sidebar({ session, profile, handleLogout }: { session: Session | null, 
       {/* Logo */}
       <div className="p-5 border-b border-zinc-800">
         <Link to="/" className="text-xl font-bold tracking-tight text-white flex items-center gap-3 hover:text-zinc-300 transition-colors">
-          <div className="w-8 h-8 bg-red-600 rounded-md flex items-center justify-center shadow-lg shadow-red-900/20">
+          <div className="w-8 h-8 bg-brand-600 rounded-md flex items-center justify-center shadow-lg shadow-brand-900/20">
             <Timer size={18} className="text-white" />
           </div>
           <span>TimeAttack</span>
@@ -55,7 +55,7 @@ function Sidebar({ session, profile, handleLogout }: { session: Session | null, 
       <div className="p-4 border-t border-zinc-800">
         <Button
           onClick={handleLogout}
-          className="w-full flex justify-start items-center gap-3 px-3 py-2 text-sm font-medium bg-transparent hover:bg-red-500/10 text-zinc-400 hover:text-red-500 rounded-md shadow-none"
+          className="w-full flex justify-start items-center gap-3 px-3 py-2 text-sm font-medium bg-transparent hover:bg-brand-500/10 text-zinc-400 hover:text-brand-500 rounded-md shadow-none"
         >
           <LogOut size={18} />
           <span>Cerrar Sesión</span>
@@ -71,7 +71,7 @@ function BottomNav({ session, profile, handleLogout }: { session: Session | null
 
   const tabClass = (path: string) =>
     `flex flex-col items-center gap-1 px-4 py-2 rounded-xl text-xs font-medium transition-colors ${location.pathname.startsWith(path) && path !== '/'
-      ? 'text-red-500'
+      ? 'text-brand-500'
       : 'text-zinc-500 hover:text-zinc-300'
     }`;
 
@@ -95,7 +95,7 @@ function BottomNav({ session, profile, handleLogout }: { session: Session | null
       </Link>
       <button 
         onClick={handleLogout} 
-        className="flex flex-col items-center justify-center gap-1 h-auto min-w-0 px-4 py-2 text-zinc-500 hover:text-red-500"
+        className="flex flex-col items-center justify-center gap-1 h-auto min-w-0 px-4 py-2 text-zinc-500 hover:text-brand-500"
       >
         <LogOut size={20} />
         <span className="text-[10px] leading-none font-medium">Salir</span>
@@ -109,7 +109,7 @@ function TopBar() {
   return (
     <header className="lg:hidden sticky top-0 z-40 bg-[#09090b] border-b border-zinc-800 flex items-center px-4 h-14">
       <Link to="/" className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
-        <div className="w-7 h-7 bg-red-600 rounded-md flex items-center justify-center">
+        <div className="w-7 h-7 bg-brand-600 rounded-md flex items-center justify-center">
           <Timer size={14} className="text-white" />
         </div>
         <span>TimeAttack</span>

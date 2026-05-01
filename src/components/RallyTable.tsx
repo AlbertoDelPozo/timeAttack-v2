@@ -100,7 +100,7 @@ const RallyTable: React.FC = () => {
                     </label>
                     <select
                         id="vista-select"
-                        className="w-full p-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 transition duration-200"
+                        className="w-full p-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-brand-500 transition duration-200"
                         value={modoVista}
                         onChange={(e) =>
                             setModoVista(e.target.value as "edicion" | "lectura")
@@ -117,7 +117,7 @@ const RallyTable: React.FC = () => {
                     {pasadasDisponibles.length > 0 && (
                         <select
                             id="pasada-select"
-                            className="w-full p-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 transition duration-200"
+                            className="w-full p-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-brand-500 transition duration-200"
                             value={selectedPasada === null ? "" : selectedPasada}
                             onChange={(e) =>
                                 setSelectedPasada(
@@ -188,7 +188,7 @@ const RallyTable: React.FC = () => {
                     <div className="lg:col-span-1">
                         <input
                             type="text"
-                            className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 placeholder-gray-500"
+                            className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-gray-500"
                             value={nuevoPilotoNombre}
                             onChange={(e) => setNuevoPilotoNombre(e.target.value)}
                             placeholder="Nombre"
@@ -197,7 +197,7 @@ const RallyTable: React.FC = () => {
                     <div className="lg:col-span-1">
                         <input
                             type="text"
-                            className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 placeholder-gray-500"
+                            className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-gray-500"
                             value={nuevoPilotoApellido}
                             onChange={(e) => setNuevoPilotoApellido(e.target.value)}
                             placeholder="Apellido"
@@ -206,7 +206,7 @@ const RallyTable: React.FC = () => {
                     <div className="lg:col-span-1">
                         <input
                             type="text"
-                            className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 placeholder-gray-500"
+                            className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-gray-500"
                             value={nuevoPilotoCategory}
                             onChange={(e) => setNuevoPilotoCategory(e.target.value)}
                             placeholder="Categoría"
@@ -215,7 +215,7 @@ const RallyTable: React.FC = () => {
                     <div className="lg:col-span-1">
                         <input
                             type="text"
-                            className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 placeholder-gray-500"
+                            className="w-full p-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-gray-500"
                             value={nuevoPilotoCar}
                             onChange={(e) => setNuevoPilotoCar(e.target.value)}
                             placeholder="Coche"
@@ -224,7 +224,7 @@ const RallyTable: React.FC = () => {
                     <div className="lg:col-span-1">
                         <button
                             onClick={handleAddPiloto}
-                            className="w-full py-3 px-4 rounded-lg text-lg font-bold text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition-transform duration-200 transform hover:scale-[1.02]"
+                            className="w-full py-3 px-4 rounded-lg text-lg font-bold text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition-transform duration-200 transform hover:scale-[1.02]"
                         >
                             Añadir Piloto
                         </button>

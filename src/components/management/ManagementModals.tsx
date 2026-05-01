@@ -96,25 +96,27 @@ export function ManagementModals({
                   <Input
                     label="Tramos (x defecto)"
                     type="number"
+                    min={1}
                     variant="bordered"
                     color="primary"
-                    value={String(formCamp.tramos)}
-                    onValueChange={(v) => setFormCamp({ ...formCamp, tramos: Number(v) })}
+                    value={String(formCamp.stages)}
+                    onValueChange={(v) => setFormCamp({ ...formCamp, stages: Math.max(1, Number(v) || 1) })}
                     classNames={{ input: "text-zinc-100", label: "text-zinc-400" }}
                   />
                   <Input
                     label="Pasadas (x defecto)"
                     type="number"
+                    min={1}
                     variant="bordered"
                     color="primary"
-                    value={String(formCamp.pasadas)}
-                    onValueChange={(v) => setFormCamp({ ...formCamp, pasadas: Number(v) })}
+                    value={String(formCamp.passes)}
+                    onValueChange={(v) => setFormCamp({ ...formCamp, passes: Math.max(1, Number(v) || 1) })}
                     classNames={{ input: "text-zinc-100", label: "text-zinc-400" }}
                   />
                 </div>
                 <Checkbox
-                  isSelected={formCamp.multi}
-                  onValueChange={(v) => setFormCamp({ ...formCamp, multi: v })}
+                  isSelected={formCamp.allowMultiCategory}
+                  onValueChange={(v) => setFormCamp({ ...formCamp, allowMultiCategory: v })}
                   color="primary"
                   classNames={{ label: "text-zinc-200 text-sm" }}
                 >
@@ -208,19 +210,21 @@ export function ManagementModals({
                   <Input
                     label="Tramos / Stages"
                     type="number"
+                    min={1}
                     variant="bordered"
                     color="primary"
                     value={String(formRally.stages)}
-                    onValueChange={(v) => setFormRally({ ...formRally, stages: Number(v) })}
+                    onValueChange={(v) => setFormRally({ ...formRally, stages: Math.max(1, Number(v) || 1) })}
                     classNames={{ input: "text-zinc-100", label: "text-zinc-400" }}
                   />
                   <Input
                     label="Pasadas / Passes"
                     type="number"
+                    min={1}
                     variant="bordered"
                     color="primary"
                     value={String(formRally.passes)}
-                    onValueChange={(v) => setFormRally({ ...formRally, passes: Number(v) })}
+                    onValueChange={(v) => setFormRally({ ...formRally, passes: Math.max(1, Number(v) || 1) })}
                     classNames={{ input: "text-zinc-100", label: "text-zinc-400" }}
                   />
                 </div>

@@ -170,7 +170,7 @@ export default function RallyManager({ userId }: { userId?: string }) {
             Volver a Campeonatos
          </Button>
          <h1 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight flex items-center gap-4">
-           <Flag className="text-red-600" size={36} /> {rally?.name || 'Gestión de Prueba'}
+           <Flag className="text-brand-600" size={36} /> {rally?.name || 'Gestión de Prueba'}
          </h1>
          <div className="w-full h-px bg-zinc-800/80 my-2" />
       </div>
@@ -186,14 +186,14 @@ export default function RallyManager({ userId }: { userId?: string }) {
               <CardBody className="p-5 md:p-6">
                 <h4 className="text-xl font-bold mb-4 text-white">Configuración del Rally</h4>
                 {mensajeConfig && (
-                   <div className={`mb-4 px-4 py-2 rounded-lg text-sm font-semibold border ${mensajeConfig.tipo === 'success' ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
+                   <div className={`mb-4 px-4 py-2 rounded-lg text-sm font-semibold border ${mensajeConfig.tipo === 'success' ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-brand-500/10 border-brand-500/30 text-brand-400'}`}>
                      {mensajeConfig.texto}
                    </div>
                 )}
                 <form onSubmit={handleSaveConfig} className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
                    <Input label="Nº de Tramos" type="number" min="1" variant="bordered" color="primary" value={String(stages)} onValueChange={(v) => setStages(v === '' ? '' : Number(v))} classNames={{ input: "text-zinc-100", label: "text-zinc-400 font-semibold" }} isRequired />
                    <Input label="Nº de Pasadas" type="number" min="1" variant="bordered" color="primary" value={String(passes)} onValueChange={(v) => setPasses(v === '' ? '' : Number(v))} classNames={{ input: "text-zinc-100", label: "text-zinc-400 font-semibold" }} isRequired />
-                   <Button type="submit" className="sm:col-span-2 bg-red-600 hover:bg-red-700 text-white rounded-md font-semibold h-11 w-full shadow-none">Guardar Configuración</Button>
+                   <Button type="submit" className="sm:col-span-2 bg-brand-600 hover:bg-brand-700 text-white rounded-md font-semibold h-11 w-full shadow-none">Guardar Configuración</Button>
                 </form>
               </CardBody>
             </Card>
@@ -204,7 +204,7 @@ export default function RallyManager({ userId }: { userId?: string }) {
                  <h4 className="text-xl font-bold mb-4 text-white flex items-center gap-2"><Clock size={18} /> Cortes / Sesiones</h4>
                  <form onSubmit={handleAddSession} className="flex gap-2 mb-4 items-end">
                     <Input type="text" placeholder="Ej. Sábado Mañana" variant="bordered" color="primary" value={newSessionName} onValueChange={setNewSessionName} isRequired classNames={{ input: "text-zinc-100", inputWrapper: "flex-1 border-zinc-700" }} />
-                    <Button type="submit" className="bg-red-600 hover:bg-red-700 text-white rounded-md font-semibold h-10 px-4 shrink-0 shadow-none">Crear Corte</Button>
+                    <Button type="submit" className="bg-brand-600 hover:bg-brand-700 text-white rounded-md font-semibold h-10 px-4 shrink-0 shadow-none">Crear Corte</Button>
                  </form>
                  <div className="flex flex-col gap-2">
                     {sessions.length === 0 ? (
@@ -242,7 +242,7 @@ export default function RallyManager({ userId }: { userId?: string }) {
                        <Select placeholder="Selecciona Cat." aria-label="Selecciona Categoría" variant="bordered" color="primary" isRequired selectedKeys={selectedCatForPilot ? [selectedCatForPilot] : []} onSelectionChange={(keys) => setSelectedCatForPilot(Array.from(keys)[0] as string)} classNames={{ trigger: "border-zinc-700 w-full min-h-unit-10", value: "text-zinc-100" }}>
                           {categories.map(c => <SelectItem key={String(c.id)} value={String(c.id)}>{c.name}</SelectItem>)}
                        </Select>
-                       <Button type="submit" className="bg-red-600 hover:bg-red-700 text-white rounded-md font-semibold h-10 w-full sm:w-auto px-4 shrink-0 shadow-none">Apuntar</Button>
+                       <Button type="submit" className="bg-brand-600 hover:bg-brand-700 text-white rounded-md font-semibold h-10 w-full sm:w-auto px-4 shrink-0 shadow-none">Apuntar</Button>
                     </div>
                  </form>
                  <div className="overflow-x-auto max-h-[300px] rounded-xl border border-zinc-800/60">

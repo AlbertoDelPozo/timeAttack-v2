@@ -12,8 +12,6 @@ import {
 } from '@nextui-org/react';
 
 export default function Championships({ userId }: { userId?: string }) {
-  if (!userId) return null;
-
   const cd = useChampionshipData(userId);
 
   const [modalInscripciones, setModalInscripciones] = useState<{ open: boolean, sessionId: string | null, rallyId: string | null }>({ open: false, sessionId: null, rallyId: null });
@@ -32,6 +30,8 @@ export default function Championships({ userId }: { userId?: string }) {
     isMounted.current = true;
     return () => { isMounted.current = false; };
   }, []);
+
+  if (!userId) return null;
 
   const cargarInscritosFormData = async (rallyId: string) => {
     const { data: insData } = await supabase.from('inscriptions').select('*, pilots(name), categories(name), rally_sessions(name)').eq('rally_id', rallyId);
@@ -87,6 +87,7 @@ export default function Championships({ userId }: { userId?: string }) {
     const nombreCompleto = `${nombrePiloto.trim()} ${apellidosPiloto.trim()}`;
 
     let finalPilotId = '';
+    let pilotWasCreated = false;
     const { data: existPilot } = await supabase.from('pilots').select('id').eq('name', nombreCompleto).eq('club_id', userId).maybeSingle();
 
     if (existPilot) {
@@ -98,6 +99,7 @@ export default function Championships({ userId }: { userId?: string }) {
         .select('id').single();
       if (errPilot) { alert("Error creando piloto: " + errPilot.message); return; }
       finalPilotId = newPilot.id;
+      pilotWasCreated = true;
     }
 
     const { data: existe, error: errCheck } = await supabase
@@ -123,6 +125,9 @@ export default function Championships({ userId }: { userId?: string }) {
     });
 
     if (error) {
+      if (pilotWasCreated) {
+        await supabase.from('pilots').delete().eq('id', finalPilotId);
+      }
       alert("Error al inscribir: " + error.message);
     } else {
       setNombrePiloto('');

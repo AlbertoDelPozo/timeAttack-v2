@@ -209,7 +209,7 @@ function CampeonatosManager({ userId }: { userId: string }) {
           </h2>
           <p className="text-[#a1a1aa] mt-1">Estructura tus pruebas, rallies y sesiones de cronometraje.</p>
         </div>
-        <button className="flex items-center gap-2 bg-red-600 text-white font-medium rounded-lg shadow-md px-4 py-2 hover:bg-red-700 transition-colors border-none" onClick={() => setModalCamp(true)}>
+        <button className="flex items-center gap-2 bg-brand-600 text-white font-medium rounded-lg shadow-md px-4 py-2 hover:bg-brand-700 transition-colors border-none" onClick={() => setModalCamp(true)}>
           <Plus size={18} /> Nuevo Campeonato
         </button>
       </div>
@@ -222,7 +222,7 @@ function CampeonatosManager({ userId }: { userId: string }) {
               onClick={() => setExpandedCamp(expandedCamp === camp.id ? null : camp.id)}
             >
               <div className="flex items-center gap-4">
-                {expandedCamp === camp.id ? <ChevronDown className="text-[#DA0037]" /> : <ChevronRight className="text-[#a1a1aa]" />}
+                {expandedCamp === camp.id ? <ChevronDown className="text-[#c20e4d]" /> : <ChevronRight className="text-[#a1a1aa]" />}
                 <h3 className="text-xl font-bold text-[#ededed]">{camp.name}</h3>
                 <span className="badge badge-neutral shadow-sm border border-[#333333] text-xs">Puntos: {camp.points_system.length}</span>
               </div>
@@ -271,7 +271,7 @@ function CampeonatosManager({ userId }: { userId: string }) {
                 )}
 
                 <div className="flex justify-end mt-4 pr-1">
-                  <button className="flex items-center gap-2 bg-red-600 text-white font-medium rounded-lg shadow-md px-4 py-2 hover:bg-red-700 transition-colors border-none" onClick={() => setModalRally({ open: true, campId: camp.id })}>
+                  <button className="flex items-center gap-2 bg-brand-600 text-white font-medium rounded-lg shadow-md px-4 py-2 hover:bg-brand-700 transition-colors border-none" onClick={() => setModalRally({ open: true, campId: camp.id })}>
                     <Plus size={16} /> Añadir prueba a este campeonato
                   </button>
                 </div>
@@ -295,16 +295,16 @@ function CampeonatosManager({ userId }: { userId: string }) {
             <form onSubmit={handleCreateCampeonato} className="flex flex-col gap-4">
               <div>
                 <label className="label"><span className="label-text text-[#a1a1aa] font-bold">Nombre del Campeonato</span></label>
-                <input type="text" required className="input w-full bg-[#121212] border-[#333333] text-white focus:border-[#DA0037] outline-none" value={formCamp.name} onChange={e => setFormCamp({ ...formCamp, name: e.target.value })} />
+                <input type="text" required className="input w-full bg-[#121212] border-[#333333] text-white focus:border-[#c20e4d] outline-none" value={formCamp.name} onChange={e => setFormCamp({ ...formCamp, name: e.target.value })} />
               </div>
               <div className="flex gap-4">
                 <div className="flex-1">
                   <label className="label"><span className="label-text text-[#a1a1aa] font-bold">Tramos (X Defecto)</span></label>
-                  <input type="number" required min="1" className="input w-full bg-[#121212] border-[#333333] text-white focus:border-[#DA0037] outline-none" value={formCamp.tramos} onChange={e => setFormCamp({ ...formCamp, tramos: Number(e.target.value) })} />
+                  <input type="number" required min="1" className="input w-full bg-[#121212] border-[#333333] text-white focus:border-[#c20e4d] outline-none" value={formCamp.tramos} onChange={e => setFormCamp({ ...formCamp, tramos: Number(e.target.value) })} />
                 </div>
                 <div className="flex-1">
                   <label className="label"><span className="label-text text-[#a1a1aa] font-bold">Pasadas (X Defecto)</span></label>
-                  <input type="number" required min="1" className="input w-full bg-[#121212] border-[#333333] text-white focus:border-[#DA0037] outline-none" value={formCamp.pasadas} onChange={e => setFormCamp({ ...formCamp, pasadas: Number(e.target.value) })} />
+                  <input type="number" required min="1" className="input w-full bg-[#121212] border-[#333333] text-white focus:border-[#c20e4d] outline-none" value={formCamp.pasadas} onChange={e => setFormCamp({ ...formCamp, pasadas: Number(e.target.value) })} />
                 </div>
               </div>
               <div className="form-control">
@@ -318,11 +318,11 @@ function CampeonatosManager({ userId }: { userId: string }) {
                   <span className="label-text text-[#a1a1aa] font-bold">Sistema de Puntuación</span>
                   <span className="text-xs text-[#666666]">Posiciones del 1º hacia abajo, separadas por comas.</span>
                 </label>
-                <input type="text" required className="input w-full bg-[#121212] border-[#333333] text-white focus:border-[#DA0037] font-mono outline-none" value={formCamp.points} onChange={e => setFormCamp({ ...formCamp, points: e.target.value })} />
+                <input type="text" required className="input w-full bg-[#121212] border-[#333333] text-white focus:border-[#c20e4d] font-mono outline-none" value={formCamp.points} onChange={e => setFormCamp({ ...formCamp, points: e.target.value })} />
               </div>
               <div className="flex gap-4 mt-6">
                 <button type="button" className="btn flex-1 bg-[#333333] border-none text-white hover:bg-[#444] rounded-xl" onClick={() => setModalCamp(false)}>Cancelar</button>
-                <button type="submit" className="flex-1 bg-red-600 text-white font-medium rounded-lg shadow-md px-4 py-2 hover:bg-red-700 transition-colors border-none">Crear</button>
+                <button type="submit" className="flex-1 bg-brand-600 text-white font-medium rounded-lg shadow-md px-4 py-2 hover:bg-brand-700 transition-colors border-none">Crear</button>
               </div>
             </form>
           </div>
@@ -335,10 +335,10 @@ function CampeonatosManager({ userId }: { userId: string }) {
           <div className="bg-[#1e1e1e] p-6 rounded-3xl max-w-sm w-full border border-[#333333] shadow-2xl">
             <h3 className="text-xl font-bold text-[#ededed] mb-4 flex items-center gap-2"><Flag className="text-blue-500" /> Nuevo Rally / Prueba</h3>
             <form onSubmit={handleCreateRally} className="flex flex-col gap-4">
-              <input type="text" placeholder="Ej: Rally de Sierra Morena" required className="input w-full bg-[#121212] border-[#333333] text-white focus:border-[#DA0037] outline-none" value={formRallyName} onChange={e => setFormRallyName(e.target.value)} />
+              <input type="text" placeholder="Ej: Rally de Sierra Morena" required className="input w-full bg-[#121212] border-[#333333] text-white focus:border-[#c20e4d] outline-none" value={formRallyName} onChange={e => setFormRallyName(e.target.value)} />
               <div className="flex gap-2">
                 <button type="button" className="btn flex-1 btn-sm h-10 bg-[#333333] border-none text-white hover:bg-[#444] rounded-lg" onClick={() => setModalRally({ open: false, campId: null })}>Cancelar</button>
-                <button type="submit" className="flex-1 h-10 bg-red-600 text-white font-medium rounded-lg shadow-md px-4 hover:bg-red-700 transition-colors border-none flex items-center justify-center">Aceptar</button>
+                <button type="submit" className="flex-1 h-10 bg-brand-600 text-white font-medium rounded-lg shadow-md px-4 hover:bg-brand-700 transition-colors border-none flex items-center justify-center">Aceptar</button>
               </div>
             </form>
           </div>
@@ -622,14 +622,14 @@ export default function Gestion({ userId }: { userId?: string }) {
                 <input 
                   type="number" 
                   placeholder="Dorsal" 
-                  className="input w-32 rounded-xl bg-[#121212] border border-[#333333] focus:border-[#DA0037] focus:ring-1 focus:ring-[#DA0037] focus:outline-none text-[#ededed] py-6 px-4" 
+                  className="input w-32 rounded-xl bg-[#121212] border border-[#333333] focus:border-[#c20e4d] focus:ring-1 focus:ring-[#c20e4d] focus:outline-none text-[#ededed] py-6 px-4" 
                   value={nuevoDorsal}
                   onChange={(e) => setNuevoDorsal(e.target.value)}
                 />
                 <input 
                   type="text" 
                   placeholder="Nombre del nuevo piloto" 
-                  className="input flex-1 w-full rounded-xl bg-[#121212] border border-[#333333] focus:border-[#DA0037] focus:ring-1 focus:ring-[#DA0037] focus:outline-none text-[#ededed] py-6 px-4" 
+                  className="input flex-1 w-full rounded-xl bg-[#121212] border border-[#333333] focus:border-[#c20e4d] focus:ring-1 focus:ring-[#c20e4d] focus:outline-none text-[#ededed] py-6 px-4" 
                   value={nuevoPiloto}
                   onChange={(e) => setNuevoPiloto(e.target.value)}
                   required
@@ -656,7 +656,7 @@ export default function Gestion({ userId }: { userId?: string }) {
                         <td className="font-semibold py-2 px-2 md:py-4 md:px-4 text-[#ededed]">{p.name}</td>
                         <td className="text-center py-2 px-2 md:py-4 md:px-4">
                           <button 
-                            className="btn btn-ghost btn-md text-[#ef4444] hover:bg-[#ef4444]/10 hover:text-[#ff0000] rounded-full transition-colors"
+                            className="btn btn-ghost btn-md text-[#d9215e] hover:bg-[#d9215e]/10 hover:text-[#e0306a] rounded-full transition-colors"
                             onClick={() => setPilotoAEliminar(p)}
                             title="Eliminar Piloto"
                           >
@@ -683,7 +683,7 @@ export default function Gestion({ userId }: { userId?: string }) {
                 <input 
                   type="text" 
                   placeholder="Nombre de la nueva categoría" 
-                  className="input w-full rounded-xl bg-[#121212] border border-[#333333] focus:border-[#DA0037] focus:ring-1 focus:ring-[#DA0037] focus:outline-none text-[#ededed] py-6 px-4" 
+                  className="input w-full rounded-xl bg-[#121212] border border-[#333333] focus:border-[#c20e4d] focus:ring-1 focus:ring-[#c20e4d] focus:outline-none text-[#ededed] py-6 px-4" 
                   value={nuevaCategoria}
                   onChange={(e) => setNuevaCategoria(e.target.value)}
                   required
@@ -708,7 +708,7 @@ export default function Gestion({ userId }: { userId?: string }) {
                         <td className="font-semibold py-2 px-2 md:py-4 md:px-4">{c.name}</td>
                         <td className="text-center py-2 px-2 md:py-4 md:px-4">
                           <button 
-                            className="btn btn-ghost btn-md text-[#ef4444] hover:bg-[#ef4444]/10 hover:text-[#ff0000] rounded-full transition-colors"
+                            className="btn btn-ghost btn-md text-[#d9215e] hover:bg-[#d9215e]/10 hover:text-[#e0306a] rounded-full transition-colors"
                             onClick={() => handleDeleteCategoria(c.id)}
                             title="Eliminar Categoría"
                           >
@@ -768,14 +768,14 @@ export default function Gestion({ userId }: { userId?: string }) {
                                   <input
                                     type="number"
                                     step="0.001"
-                                    className="input input-xs w-24 bg-zinc-950 border border-zinc-700 text-white text-right font-mono rounded-md focus:border-red-500 outline-none"
+                                    className="input input-xs w-24 bg-zinc-950 border border-zinc-700 text-white text-right font-mono rounded-md focus:border-brand-500 outline-none"
                                     value={tiempoEditado}
                                     onChange={(e) => setTiempoEditado(e.target.value)}
                                   />
                                   <input
                                     type="number"
                                     step="0.1"
-                                    className="input input-xs w-24 bg-red-500/10 border border-red-500/50 text-red-500 text-right font-mono mt-1 rounded-md outline-none"
+                                    className="input input-xs w-24 bg-brand-500/10 border border-brand-500/50 text-brand-500 text-right font-mono mt-1 rounded-md outline-none"
                                     value={penalizacionEditada}
                                     onChange={(e) => setPenalizacionEditada(e.target.value)}
                                   />
@@ -784,7 +784,7 @@ export default function Gestion({ userId }: { userId?: string }) {
                                 <div className="flex flex-col items-end">
                                   <span className="font-bold text-zinc-100">{formatMs(t.track_time_ms)}</span>
                                   {t.penalty_ms > 0 && (
-                                    <span className="text-red-500 text-[10px] font-black mt-0.5">
+                                    <span className="text-brand-500 text-[10px] font-black mt-0.5">
                                       (+{(t.penalty_ms / 1000).toFixed(1)}s)
                                     </span>
                                   )}
@@ -812,7 +812,7 @@ export default function Gestion({ userId }: { userId?: string }) {
                                     }}>
                                       <Pencil size={18} />
                                     </button>
-                                    <button className="p-1.5 text-red-600 hover:bg-red-600/10 rounded-lg transition-colors" onClick={() => handleDeleteTiempo(t.id)}>
+                                    <button className="p-1.5 text-brand-600 hover:bg-brand-600/10 rounded-lg transition-colors" onClick={() => handleDeleteTiempo(t.id)}>
                                       <Trash2 size={18} />
                                     </button>
                                   </>
@@ -856,7 +856,7 @@ export default function Gestion({ userId }: { userId?: string }) {
                     Cancelar
                   </button>
                   <button
-                    className="btn flex-1 bg-error hover:bg-red-700 border-none text-white rounded-xl h-14 font-bold"
+                    className="btn flex-1 bg-error hover:bg-brand-700 border-none text-white rounded-xl h-14 font-bold"
                     onClick={confirmarBorradoPiloto}
                   >
                     Eliminar Todo

@@ -81,7 +81,6 @@ export const RallyDataProvider: React.FC<{ children: React.ReactNode }> = ({
         (sub, tramo) => sub + (tramo.tiempo || 0),
         0
       );
-      pasada.subtotal = subtotal;
       return total + subtotal;
     }, 0);
   };
@@ -101,12 +100,13 @@ export const RallyDataProvider: React.FC<{ children: React.ReactNode }> = ({
                 const newTramos = pasada.tramos.map((tramo) =>
                   tramo.id === tramoId ? { ...tramo, tiempo } : tramo
                 );
-                return { ...pasada, tramos: newTramos };
+                const subtotal = newTramos.reduce((s, t) => s + (t.tiempo || 0), 0);
+                return { ...pasada, tramos: newTramos, subtotal };
               }
               return pasada;
             });
 
-            const total = calculateTotal(newPasadas);
+            const total = newPasadas.reduce((s, p) => s + p.subtotal, 0);
             return { ...piloto, pasadas: newPasadas, total };
           }
           return piloto;
