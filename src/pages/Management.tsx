@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { Trash2, Plus, Pencil, Check, X, Users, Trophy, Clock } from 'lucide-react';
-import Cronometrador from './Cronometrador';
 import {
   Button, Input, Select, SelectItem, Card, CardBody,
   Modal, ModalContent, ModalHeader, ModalBody, ModalFooter,
@@ -33,6 +32,7 @@ export default function Management({ userId }: { userId?: string }) {
   const [tiempoEditado, setTiempoEditado] = useState('');
   const [penalizacionEditada, setPenalizacionEditada] = useState('');
   const [mensajeTiempos, setMensajeTiempos] = useState<{ texto: string, tipo: 'success' | 'error' } | null>(null);
+  const [filterCat, setFilterCat] = useState('');
 
   const isMounted = useRef(true);
   useEffect(() => {
@@ -359,9 +359,19 @@ export default function Management({ userId }: { userId?: string }) {
             {/* Columna Derecha: Historial */}
             <Card isBlurred className="bg-zinc-900/70 border border-zinc-800/80 shadow-xl h-full">
               <CardBody className="p-5 md:p-7">
-                <h2 className="text-xl font-bold mb-2 text-white flex items-center gap-2">
-                  <Clock size={20} className="text-zinc-400" /> Últimos 10 Tiempos
-                </h2>
+                <div className="flex items-center justify-between flex-wrap gap-3 mb-2">
+                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                    <Clock size={20} className="text-zinc-400" /> Últimos 10 Tiempos
+                  </h2>
+                  <select
+                    value={filterCat}
+                    onChange={e => setFilterCat(e.target.value)}
+                    className="h-9 bg-zinc-950 border border-zinc-800 text-zinc-300 text-xs px-3 rounded-lg focus:border-brand-500 outline-none transition-colors"
+                  >
+                    <option value="">Todas las categorías</option>
+                    {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                  </select>
+                </div>
                 <p className="text-sm text-zinc-500 mb-5">Edita ✏️ o borra 🗑️ los registros en caso de error.</p>
 
                 {mensajeTiempos && (
@@ -371,21 +381,21 @@ export default function Management({ userId }: { userId?: string }) {
                 )}
 
                 <div className="overflow-x-auto rounded-xl border border-zinc-800/60">
-                  <table className="w-full text-sm">
+                  <table className="w-full text-sm border-collapse">
                     <thead className="text-xs text-zinc-500 uppercase tracking-wider bg-zinc-950/60">
                       <tr>
-                        <th className="py-3 pl-3 font-medium">Piloto</th>
-                        <th className="py-3 font-medium">Cat.</th>
-                        <th className="py-3 text-right font-medium">T. Pista + Pen.</th>
+                        <th className="sticky left-0 bg-zinc-950 py-3 pl-3 pr-4 font-medium text-left whitespace-nowrap z-10">Piloto</th>
+                        <th className="py-3 px-3 font-medium text-left">Cat.</th>
+                        <th className="py-3 px-3 text-right font-medium whitespace-nowrap">T. Pista + Pen.</th>
                         <th className="py-3 pr-3 text-center font-medium w-20">Acc.</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {lapTimes.map((t) => {
+                      {lapTimes.filter(t => !filterCat || t.categories?.name === filterCat).map((t) => {
                         const isEditing = t.id === editandoTramoId;
                         return (
                           <tr key={t.id} className="border-b border-zinc-800/40 hover:bg-zinc-800/40 transition-colors">
-                            <td className="font-semibold py-3 pl-3 text-zinc-200 align-middle">{t.pilots?.name}</td>
+                            <td className="sticky left-0 bg-zinc-950 font-semibold py-3 pl-3 pr-4 text-zinc-200 align-middle whitespace-nowrap z-10">{t.pilots?.name}</td>
                             <td className="py-3 align-middle">
                               <Chip size="sm" variant="flat" className="bg-zinc-800 text-zinc-300 border border-zinc-700 text-xs">
                                 {t.categories?.name}

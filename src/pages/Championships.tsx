@@ -4,7 +4,6 @@ import { Users, Pencil, Trash2 } from 'lucide-react';
 import { useChampionshipData } from '../hooks/useChampionshipData';
 import { ChampionshipAccordion } from '../components/management/ChampionshipAccordion';
 import { ManagementModals } from '../components/management/ManagementModals';
-import Cronometrador from './Cronometrador';
 import {
   Button, Input, Select, SelectItem,
   Modal, ModalContent, ModalHeader, ModalBody, ModalFooter,
@@ -23,7 +22,6 @@ export default function Championships({ userId }: { userId?: string }) {
   const [catSel, setCatSel] = useState('');
   const [sesionInscripcion, setSesionInscripcion] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [modalCronometro, setModalCronometro] = useState<{ open: boolean, sessionId: string | null, rallyId: string | null }>({ open: false, sessionId: null, rallyId: null });
   const isMounted = useRef(true);
 
   useEffect(() => {
@@ -150,7 +148,7 @@ export default function Championships({ userId }: { userId?: string }) {
         expandedCamp={cd.expandedCamp} setExpandedCamp={cd.setExpandedCamp}
         expandedRally={cd.expandedRally} setExpandedRally={cd.setExpandedRally}
         setModalCamp={cd.setModalCamp} setModalRally={cd.setModalRally} setModalSession={cd.setModalSession}
-        setModalInscripciones={setModalInscripciones} setModalCronometro={setModalCronometro}
+        setModalInscripciones={setModalInscripciones}
         deleteChampionship={cd.deleteChampionship}
         deleteRally={cd.deleteRally}
         deleteSession={cd.deleteSession}
@@ -344,27 +342,6 @@ export default function Championships({ userId }: { userId?: string }) {
         </ModalContent>
       </Modal>
 
-      {/* ─── Modal Cronómetro ─── */}
-      <Modal
-        isOpen={modalCronometro.open}
-        onOpenChange={(open) => { if (!open) setModalCronometro({ open: false, sessionId: null, rallyId: null }); }}
-        backdrop="blur"
-        size="4xl"
-        placement="bottom-center"
-        scrollBehavior="inside"
-        classNames={{
-          base: "bg-zinc-950 border border-zinc-800/60 sm:rounded-2xl max-h-[95vh]",
-          closeButton: "text-zinc-400 hover:text-white hover:bg-zinc-800",
-        }}
-      >
-        <ModalContent>
-          {() => (
-            <ModalBody className="p-0">
-              <Cronometrador userId={userId} sessionId={modalCronometro.sessionId || undefined} rallyId={modalCronometro.rallyId || undefined} />
-            </ModalBody>
-          )}
-        </ModalContent>
-      </Modal>
     </div>
   );
 }
