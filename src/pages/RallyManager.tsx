@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Card, CardBody, Button, Input, Select, SelectItem } from '@nextui-org/react';
-import { ChevronLeft, Flag, Users, Plus, Trash2, Clock } from 'lucide-react';
+import { ChevronLeft, Flag, Users, Plus, Trash2, Clock, Timer } from 'lucide-react';
 
 const getSessionWeight = (sessionName: string) => {
   const name = sessionName.toLowerCase();
@@ -169,9 +169,20 @@ export default function RallyManager({ userId }: { userId?: string }) {
          <Button variant="light" color="default" className="self-start text-zinc-400 hover:text-white px-0 font-medium" startContent={<ChevronLeft size={18} />} onClick={() => navigate(-1)}>
             Volver a Campeonatos
          </Button>
-         <h1 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight flex items-center gap-4">
-           <Flag className="text-brand-600" size={36} /> {rally?.name || 'Gestión de Prueba'}
-         </h1>
+         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+           <h1 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight flex items-center gap-4">
+             <Flag className="text-brand-600" size={36} /> {rally?.name || 'Gestión de Prueba'}
+           </h1>
+           {rally?.championship_id && rallyId && (
+             <Button
+               className="bg-brand-600 hover:bg-brand-500 text-white font-bold tracking-wide shadow-lg shadow-brand-900/20 shrink-0"
+               startContent={<Timer size={18} />}
+               onClick={() => navigate(`/campeonato/${rally.championship_id}/prueba/${rallyId}/cronometrar`)}
+             >
+               Cronometrar
+             </Button>
+           )}
+         </div>
          <div className="w-full h-px bg-zinc-800/80 my-2" />
       </div>
 

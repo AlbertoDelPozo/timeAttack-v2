@@ -227,7 +227,6 @@ interface ChampionshipAccordionProps {
   setModalRally: (state: { open: boolean, campId: string | null }) => void;
   setModalSession: (state: { open: boolean, rallyId: string | null }) => void;
   setModalInscripciones: (state: { open: boolean, sessionId: string | null, rallyId: string | null }) => void;
-  setModalCronometro: (state: { open: boolean, sessionId: string | null, rallyId: string | null }) => void;
   deleteChampionship: (id: string) => void;
   deleteRally: (id: string) => void;
   deleteSession: (id: string) => void;
@@ -238,7 +237,7 @@ export function ChampionshipAccordion({
   championships, rallies, sessions,
   expandedCamp, setExpandedCamp,
   expandedRally, setExpandedRally,
-  setModalCamp, setModalRally, setModalSession, setModalInscripciones, setModalCronometro,
+  setModalCamp, setModalRally, setModalSession, setModalInscripciones,
   deleteChampionship, deleteRally, deleteSession
 }: ChampionshipAccordionProps) {
   const navigate = useNavigate();
@@ -376,7 +375,7 @@ export function ChampionshipAccordion({
                             <p className="text-zinc-500 italic ml-4 py-2 md:ml-14 text-sm">Sin sesiones (cortes) asignadas.</p>
                           ) : (
                             sessions.filter(s => s.rally_id === rally.id).map(session => (
-                              <div key={session.id} className="md:ml-8 md:mr-2 px-4 py-3 bg-zinc-900 border border-zinc-800/50 rounded-lg flex justify-between items-center text-sm shadow-sm hover:bg-zinc-800 transition-colors cursor-pointer group/session relative" onClick={() => setModalCronometro({ open: true, sessionId: session.id, rallyId: rally.id })}>
+                              <div key={session.id} className="md:ml-8 md:mr-2 px-4 py-3 bg-zinc-900 border border-zinc-800/50 rounded-lg flex justify-between items-center text-sm shadow-sm hover:bg-zinc-800 transition-colors cursor-pointer group/session relative" onClick={() => navigate(`/campeonato/${camp.id}/prueba/${rally.id}/cronometrar`)}>
                                 <span className="font-semibold text-zinc-300 flex items-center gap-3"><Clock size={16} className="text-zinc-500" /> {session.name}</span>
                                 <div className="flex items-center gap-3">
                                   <button

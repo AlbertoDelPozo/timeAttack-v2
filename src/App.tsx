@@ -18,6 +18,7 @@ import PilotoDashboard from './pages/PilotoDashboard';
 import PilotoExplorar from './pages/PilotoExplorar';
 import PilotoMisPruebas from './pages/PilotoMisPruebas';
 import Home from './pages/Home';
+import RaceDashboard from './pages/RaceDashboard';
 import RightSidebar from './components/layout/RightSidebar';
 import DashboardLayout from './components/layout/DashboardLayout';
 
@@ -329,6 +330,10 @@ function AppContent() {
                 <Route
                   path="/gestion"
                   element={<PageWrapper><ProtectedRoute allowedRole="club"><Management userId={session?.user?.id} /></ProtectedRoute></PageWrapper>}
+                />
+                <Route
+                  path="/campeonato/:id_campeonato/prueba/:id_prueba/cronometrar"
+                  element={<PageWrapper><ProtectedRoute allowedRole="club"><RaceDashboard userId={session?.user?.id} /></ProtectedRoute></PageWrapper>}
                 />
                 
                 {/* Rutas Protegidas para Pilotos */}
